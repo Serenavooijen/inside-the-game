@@ -1,0 +1,2152 @@
+{
+ "meta": {
+  "title": "Kingsbridge Athletic vs Northgate Rovers",
+  "competition": "Synthetic League - Matchday 9 (fictional)",
+  "venue": "Kingsbridge Park",
+  "date": "2026-10-24",
+  "kickoff_local": "15:00",
+  "weather": "Dry, 13°C, light wind from the west",
+  "referee": "Alan Ostrowski (fictional)",
+  "pitch": {
+   "length_m": 105,
+   "width_m": 68
+  },
+  "coordinate_system": "Absolute pitch coordinates in metres. x = 0..105 along the touchline, y = 0..68 across. In this script all positions are TEAM-RELATIVE: x = 0 is the team's own goal line, the team attacks towards x = 105, small y = the team's right flank. The generator converts to absolute coordinates (home attacks towards x = 105 in the first half).",
+  "added_time": {
+   "1": 2,
+   "2": 5
+  },
+  "final_score": {
+   "home": 2,
+   "away": 2
+  },
+  "seed": 8002,
+  "storyline": "A possession side against a counter-attacking side. Kingsbridge dominate the ball early but their slow centre-back is exposed by Northgate's sprinter. A booked Northgate full-back becomes the target of the equaliser. Kingsbridge's hot-headed holding midfielder collects a second yellow, Northgate use the extra man with a switch to 4-3-3 and go ahead, and Kingsbridge go all-in with a back three and a target man to rescue a point."
+ },
+ "formations": {
+  "4-3-3": {
+   "GK": [
+    5,
+    34
+   ],
+   "RB": [
+    32,
+    8
+   ],
+   "RCB": [
+    24,
+    24
+   ],
+   "LCB": [
+    24,
+    44
+   ],
+   "LB": [
+    32,
+    60
+   ],
+   "DM": [
+    40,
+    34
+   ],
+   "RCM": [
+    50,
+    22
+   ],
+   "LCM": [
+    50,
+    46
+   ],
+   "RW": [
+    68,
+    9
+   ],
+   "ST": [
+    74,
+    34
+   ],
+   "LW": [
+    68,
+    59
+   ]
+  },
+  "4-3-3-deep": {
+   "GK": [
+    5,
+    34
+   ],
+   "RB": [
+    28,
+    8
+   ],
+   "RCB": [
+    21,
+    24
+   ],
+   "LCB": [
+    21,
+    44
+   ],
+   "LB": [
+    28,
+    60
+   ],
+   "DM": [
+    36,
+    34
+   ],
+   "RCM": [
+    45,
+    22
+   ],
+   "LCM": [
+    45,
+    46
+   ],
+   "RW": [
+    62,
+    10
+   ],
+   "ST": [
+    68,
+    34
+   ],
+   "LW": [
+    62,
+    58
+   ]
+  },
+  "4-4-2": {
+   "GK": [
+    5,
+    34
+   ],
+   "RB": [
+    28,
+    9
+   ],
+   "RCB": [
+    22,
+    25
+   ],
+   "LCB": [
+    22,
+    43
+   ],
+   "LB": [
+    28,
+    59
+   ],
+   "RM": [
+    46,
+    10
+   ],
+   "RCM": [
+    42,
+    27
+   ],
+   "LCM": [
+    42,
+    41
+   ],
+   "LM": [
+    46,
+    58
+   ],
+   "RS": [
+    62,
+    28
+   ],
+   "LS": [
+    62,
+    40
+   ]
+  },
+  "4-4-1": {
+   "GK": [
+    5,
+    34
+   ],
+   "RB": [
+    30,
+    9
+   ],
+   "RCB": [
+    23,
+    24
+   ],
+   "LCB": [
+    23,
+    44
+   ],
+   "LB": [
+    30,
+    59
+   ],
+   "RM": [
+    48,
+    10
+   ],
+   "RCM": [
+    44,
+    26
+   ],
+   "LCM": [
+    44,
+    42
+   ],
+   "LM": [
+    48,
+    58
+   ],
+   "ST": [
+    66,
+    34
+   ]
+  },
+  "3-4-2": {
+   "GK": [
+    5,
+    34
+   ],
+   "RCB": [
+    26,
+    18
+   ],
+   "CB": [
+    23,
+    34
+   ],
+   "LCB": [
+    26,
+    50
+   ],
+   "RWB": [
+    54,
+    6
+   ],
+   "RCM": [
+    46,
+    26
+   ],
+   "LCM": [
+    46,
+    42
+   ],
+   "LWB": [
+    54,
+    62
+   ],
+   "RS": [
+    76,
+    27
+   ],
+   "LS": [
+    76,
+    41
+   ]
+  },
+  "5-4-1": {
+   "GK": [
+    5,
+    34
+   ],
+   "RWB": [
+    30,
+    6
+   ],
+   "RCB": [
+    20,
+    20
+   ],
+   "CB": [
+    18,
+    34
+   ],
+   "LCB": [
+    20,
+    48
+   ],
+   "LWB": [
+    30,
+    62
+   ],
+   "RM": [
+    40,
+    14
+   ],
+   "RCM": [
+    38,
+    28
+   ],
+   "LCM": [
+    38,
+    40
+   ],
+   "LM": [
+    40,
+    54
+   ],
+   "ST": [
+    58,
+    34
+   ]
+  }
+ },
+ "teams": {
+  "home": {
+   "id": "KBA",
+   "name": "Kingsbridge Athletic",
+   "short": "Kingsbridge",
+   "colours": {
+    "primary": "#6CB4E4",
+    "secondary": "#FFFFFF"
+   },
+   "coach": "Ingrid Solberg",
+   "identity": "Possession and positional play. High defensive line, aggressive counter-press, full-backs push high. Strength: controlling the ball and the tempo. Weakness: space behind a high line, and a slow right centre-back.",
+   "start_formation": "4-3-3",
+   "style": {
+    "press": 0.75,
+    "line": 6,
+    "tempo": 0.55,
+    "width": 1.15,
+    "directness": 0.35,
+    "shot_appetite": 1.25,
+    "cross_appetite": 1.0
+   },
+   "players": [
+    {
+     "id": "KBA-01",
+     "no": 1,
+     "name": "Tomás Ferreira-Lind",
+     "pos": "GK",
+     "role": "GK",
+     "starter": true,
+     "attr": {
+      "pace": 52,
+      "stamina": 70,
+      "passing": 78,
+      "vision": 70,
+      "dribbling": 40,
+      "finishing": 10,
+      "heading": 30,
+      "tackling": 20,
+      "positioning": 82,
+      "discipline": 90,
+      "composure": 84,
+      "reflexes": 80
+     },
+     "strengths": [
+      "Calm with the ball at his feet, an extra passer in the build-up",
+      "Good positioning, sweeps behind the high line"
+     ],
+     "weaknesses": [
+      "Average shot-stopper on close-range efforts",
+      "Struggles with high crosses into a crowded box"
+     ]
+    },
+    {
+     "id": "KBA-02",
+     "no": 2,
+     "name": "Jayden Okafor-Hale",
+     "pos": "RB",
+     "role": "RB",
+     "starter": true,
+     "attr": {
+      "pace": 84,
+      "stamina": 88,
+      "passing": 72,
+      "vision": 64,
+      "dribbling": 74,
+      "finishing": 45,
+      "heading": 58,
+      "tackling": 66,
+      "positioning": 60,
+      "discipline": 78,
+      "composure": 70
+     },
+     "strengths": [
+      "Tireless overlapping runs",
+      "Quick recovery sprints"
+     ],
+     "weaknesses": [
+      "Positionally loose when the ball is on the far side",
+      "Crosses are inconsistent"
+     ]
+    },
+    {
+     "id": "KBA-05",
+     "no": 5,
+     "name": "Marten Dijkhuis",
+     "pos": "CB",
+     "role": "RCB",
+     "starter": true,
+     "attr": {
+      "pace": 58,
+      "stamina": 74,
+      "passing": 80,
+      "vision": 72,
+      "dribbling": 50,
+      "finishing": 35,
+      "heading": 88,
+      "tackling": 82,
+      "positioning": 84,
+      "discipline": 82,
+      "composure": 86
+     },
+     "strengths": [
+      "Dominant in the air",
+      "Captain and organiser, line-breaking passes from the back"
+     ],
+     "weaknesses": [
+      "Lacks pace: vulnerable to runs in behind a high line",
+      "Turns slowly"
+     ]
+    },
+    {
+     "id": "KBA-04",
+     "no": 4,
+     "name": "Callum Reyes",
+     "pos": "CB",
+     "role": "LCB",
+     "starter": true,
+     "attr": {
+      "pace": 76,
+      "stamina": 78,
+      "passing": 70,
+      "vision": 60,
+      "dribbling": 55,
+      "finishing": 30,
+      "heading": 78,
+      "tackling": 80,
+      "positioning": 74,
+      "discipline": 80,
+      "composure": 72
+     },
+     "strengths": [
+      "Quick cover defender",
+      "Strong one-on-one"
+     ],
+     "weaknesses": [
+      "Limited passing range under pressure",
+      "Sometimes steps out too early"
+     ]
+    },
+    {
+     "id": "KBA-03",
+     "no": 3,
+     "name": "Idris Mbeki",
+     "pos": "LB",
+     "role": "LB",
+     "starter": true,
+     "attr": {
+      "pace": 80,
+      "stamina": 82,
+      "passing": 74,
+      "vision": 66,
+      "dribbling": 70,
+      "finishing": 40,
+      "heading": 62,
+      "tackling": 74,
+      "positioning": 72,
+      "discipline": 84,
+      "composure": 74
+     },
+     "strengths": [
+      "Inverts into midfield in possession",
+      "Disciplined defender"
+     ],
+     "weaknesses": [
+      "Rarely beats a man on the outside",
+      "Weaker on his right foot"
+     ]
+    },
+    {
+     "id": "KBA-06",
+     "no": 6,
+     "name": "Luca Brannigan",
+     "pos": "DM",
+     "role": "DM",
+     "starter": true,
+     "attr": {
+      "pace": 66,
+      "stamina": 84,
+      "passing": 86,
+      "vision": 82,
+      "dribbling": 68,
+      "finishing": 50,
+      "heading": 70,
+      "tackling": 84,
+      "positioning": 80,
+      "discipline": 38,
+      "composure": 60
+     },
+     "strengths": [
+      "Excellent passing range, dictates the tempo",
+      "Wins the ball back quickly in the counter-press"
+     ],
+     "weaknesses": [
+      "Hot-headed: high foul rate, poor discipline",
+      "Loses composure when the team is behind"
+     ]
+    },
+    {
+     "id": "KBA-08",
+     "no": 8,
+     "name": "Noah Visser",
+     "pos": "CM",
+     "role": "RCM",
+     "starter": true,
+     "attr": {
+      "pace": 74,
+      "stamina": 94,
+      "passing": 78,
+      "vision": 72,
+      "dribbling": 72,
+      "finishing": 62,
+      "heading": 60,
+      "tackling": 74,
+      "positioning": 76,
+      "discipline": 80,
+      "composure": 76
+     },
+     "strengths": [
+      "Box-to-box engine, covers the most ground",
+      "Late runs into the box"
+     ],
+     "weaknesses": [
+      "Final pass sometimes rushed",
+      "Not a natural holding midfielder"
+     ]
+    },
+    {
+     "id": "KBA-10",
+     "no": 10,
+     "name": "Elias Kovač",
+     "pos": "AM",
+     "role": "LCM",
+     "starter": true,
+     "attr": {
+      "pace": 70,
+      "stamina": 62,
+      "passing": 90,
+      "vision": 92,
+      "dribbling": 84,
+      "finishing": 72,
+      "heading": 45,
+      "tackling": 48,
+      "positioning": 70,
+      "discipline": 80,
+      "composure": 86
+     },
+     "strengths": [
+      "Creator: most key passes in the team",
+      "Finds pockets between the lines"
+     ],
+     "weaknesses": [
+      "Low defensive work rate",
+      "Fades physically after the hour"
+     ]
+    },
+    {
+     "id": "KBA-07",
+     "no": 7,
+     "name": "Samir El-Haddad",
+     "pos": "RW",
+     "role": "RW",
+     "starter": true,
+     "attr": {
+      "pace": 88,
+      "stamina": 76,
+      "passing": 72,
+      "vision": 68,
+      "dribbling": 88,
+      "finishing": 70,
+      "heading": 50,
+      "tackling": 40,
+      "positioning": 66,
+      "discipline": 74,
+      "composure": 64
+     },
+     "strengths": [
+      "Explosive dribbler in one-on-ones",
+      "Cuts inside on his left foot"
+     ],
+     "weaknesses": [
+      "Poor decision-making in the final third",
+      "Gives the ball away under pressure"
+     ]
+    },
+    {
+     "id": "KBA-09",
+     "no": 9,
+     "name": "Oscar Lindqvist",
+     "pos": "ST",
+     "role": "ST",
+     "starter": true,
+     "attr": {
+      "pace": 78,
+      "stamina": 76,
+      "passing": 66,
+      "vision": 64,
+      "dribbling": 72,
+      "finishing": 86,
+      "heading": 64,
+      "tackling": 38,
+      "positioning": 84,
+      "discipline": 82,
+      "composure": 82
+     },
+     "strengths": [
+      "Clinical first-time finisher",
+      "Smart movement across the front post"
+     ],
+     "weaknesses": [
+      "Weak hold-up play with his back to goal",
+      "Not dominant in aerial duels"
+     ]
+    },
+    {
+     "id": "KBA-11",
+     "no": 11,
+     "name": "Kai Nakamura-Brooks",
+     "pos": "LW",
+     "role": "LW",
+     "starter": true,
+     "attr": {
+      "pace": 92,
+      "stamina": 80,
+      "passing": 74,
+      "vision": 72,
+      "dribbling": 86,
+      "finishing": 78,
+      "heading": 48,
+      "tackling": 42,
+      "positioning": 72,
+      "discipline": 84,
+      "composure": 76
+     },
+     "strengths": [
+      "Fastest player on the pitch",
+      "Cuts in onto his right foot to curl shots"
+     ],
+     "weaknesses": [
+      "Drifts out of games when doubled up",
+      "Little defensive contribution"
+     ]
+    },
+    {
+     "id": "KBA-12",
+     "no": 12,
+     "name": "Ben Hartley",
+     "pos": "GK",
+     "role": null,
+     "starter": false,
+     "attr": {
+      "pace": 50,
+      "stamina": 70,
+      "passing": 60,
+      "vision": 55,
+      "dribbling": 35,
+      "finishing": 10,
+      "heading": 30,
+      "tackling": 20,
+      "positioning": 72,
+      "discipline": 90,
+      "composure": 70,
+      "reflexes": 84
+     },
+     "strengths": [
+      "Strong reflex saves"
+     ],
+     "weaknesses": [
+      "Weak with his feet"
+     ]
+    },
+    {
+     "id": "KBA-15",
+     "no": 15,
+     "name": "Niels Vanderbeek",
+     "pos": "CB",
+     "role": null,
+     "starter": false,
+     "attr": {
+      "pace": 64,
+      "stamina": 76,
+      "passing": 66,
+      "vision": 58,
+      "dribbling": 45,
+      "finishing": 30,
+      "heading": 84,
+      "tackling": 80,
+      "positioning": 76,
+      "discipline": 76,
+      "composure": 70
+     },
+     "strengths": [
+      "Aerially strong",
+      "Simple, safe passing"
+     ],
+     "weaknesses": [
+      "Slow on the turn"
+     ]
+    },
+    {
+     "id": "KBA-14",
+     "no": 14,
+     "name": "Felix Achterberg",
+     "pos": "DM",
+     "role": null,
+     "starter": false,
+     "attr": {
+      "pace": 68,
+      "stamina": 86,
+      "passing": 74,
+      "vision": 64,
+      "dribbling": 60,
+      "finishing": 45,
+      "heading": 74,
+      "tackling": 86,
+      "positioning": 84,
+      "discipline": 66,
+      "composure": 74
+     },
+     "strengths": [
+      "Pure destroyer: screens the back four",
+      "Reads danger early"
+     ],
+     "weaknesses": [
+      "Limited creativity going forward",
+      "Takes tactical fouls (card risk)"
+     ]
+    },
+    {
+     "id": "KBA-17",
+     "no": 17,
+     "name": "Ruben Castellanos",
+     "pos": "RWB",
+     "role": null,
+     "starter": false,
+     "attr": {
+      "pace": 86,
+      "stamina": 84,
+      "passing": 76,
+      "vision": 70,
+      "dribbling": 78,
+      "finishing": 55,
+      "heading": 55,
+      "tackling": 58,
+      "positioning": 60,
+      "discipline": 80,
+      "composure": 72
+     },
+     "strengths": [
+      "Excellent crosser from deep and from the byline",
+      "Fresh legs for a wing-back role"
+     ],
+     "weaknesses": [
+      "Defensively naive",
+      "Leaves space behind him"
+     ]
+    },
+    {
+     "id": "KBA-19",
+     "no": 19,
+     "name": "Declan Moore-Asante",
+     "pos": "ST",
+     "role": null,
+     "starter": false,
+     "attr": {
+      "pace": 62,
+      "stamina": 72,
+      "passing": 60,
+      "vision": 58,
+      "dribbling": 55,
+      "finishing": 80,
+      "heading": 93,
+      "tackling": 45,
+      "positioning": 82,
+      "discipline": 72,
+      "composure": 78
+     },
+     "strengths": [
+      "Target man: wins almost every aerial duel",
+      "Dangerous header from crosses"
+     ],
+     "weaknesses": [
+      "Slow, no threat in behind",
+      "Little involvement in combination play"
+     ]
+    },
+    {
+     "id": "KBA-16",
+     "no": 16,
+     "name": "Mats Eriksen",
+     "pos": "CM",
+     "role": null,
+     "starter": false,
+     "attr": {
+      "pace": 70,
+      "stamina": 82,
+      "passing": 80,
+      "vision": 76,
+      "dribbling": 70,
+      "finishing": 60,
+      "heading": 58,
+      "tackling": 66,
+      "positioning": 72,
+      "discipline": 82,
+      "composure": 78
+     },
+     "strengths": [
+      "Tidy ball circulation"
+     ],
+     "weaknesses": [
+      "Lacks physical presence"
+     ]
+    },
+    {
+     "id": "KBA-18",
+     "no": 18,
+     "name": "Theo Marchetti",
+     "pos": "LB",
+     "role": null,
+     "starter": false,
+     "attr": {
+      "pace": 78,
+      "stamina": 80,
+      "passing": 68,
+      "vision": 60,
+      "dribbling": 66,
+      "finishing": 38,
+      "heading": 60,
+      "tackling": 72,
+      "positioning": 70,
+      "discipline": 84,
+      "composure": 68
+     },
+     "strengths": [
+      "Reliable back-up full-back"
+     ],
+     "weaknesses": [
+      "Offers little going forward"
+     ]
+    }
+   ]
+  },
+  "away": {
+   "id": "NGR",
+   "name": "Northgate Rovers",
+   "short": "Northgate",
+   "colours": {
+    "primary": "#7A1F2B",
+    "secondary": "#F2C14E"
+   },
+   "coach": "Darren Kowalczyk",
+   "identity": "Compact 4-4-2 mid/low block and fast transitions. Win the ball in midfield, play early long balls for a very quick striker. Strength: counter-attacks and defensive organisation. Weakness: little control in possession, a right-back who is vulnerable one-on-one.",
+   "start_formation": "4-4-2",
+   "style": {
+    "press": 0.45,
+    "line": -4,
+    "tempo": 0.7,
+    "width": 1.0,
+    "directness": 0.7,
+    "shot_appetite": 1.45,
+    "cross_appetite": 2.0
+   },
+   "players": [
+    {
+     "id": "NGR-01",
+     "no": 1,
+     "name": "Henrik Saarinen",
+     "pos": "GK",
+     "role": "GK",
+     "starter": true,
+     "attr": {
+      "pace": 50,
+      "stamina": 70,
+      "passing": 55,
+      "vision": 55,
+      "dribbling": 30,
+      "finishing": 10,
+      "heading": 30,
+      "tackling": 20,
+      "positioning": 84,
+      "discipline": 88,
+      "composure": 80,
+      "reflexes": 90
+     },
+     "strengths": [
+      "Outstanding shot-stopper",
+      "Commands his box on crosses"
+     ],
+     "weaknesses": [
+      "Poor distribution, long kicks rarely find a team-mate",
+      "Hesitant when coming off his line"
+     ]
+    },
+    {
+     "id": "NGR-02",
+     "no": 2,
+     "name": "Mateo Quiroga",
+     "pos": "RB",
+     "role": "RB",
+     "starter": true,
+     "attr": {
+      "pace": 72,
+      "stamina": 82,
+      "passing": 72,
+      "vision": 66,
+      "dribbling": 70,
+      "finishing": 40,
+      "heading": 60,
+      "tackling": 62,
+      "positioning": 58,
+      "discipline": 64,
+      "composure": 64
+     },
+     "strengths": [
+      "Good crosser on the overlap",
+      "Links up well with the right midfielder"
+     ],
+     "weaknesses": [
+      "Vulnerable one-on-one against fast wingers",
+      "Commits rash fouls when beaten"
+     ]
+    },
+    {
+     "id": "NGR-04",
+     "no": 4,
+     "name": "Bram Hollander",
+     "pos": "CB",
+     "role": "RCB",
+     "starter": true,
+     "attr": {
+      "pace": 62,
+      "stamina": 78,
+      "passing": 66,
+      "vision": 58,
+      "dribbling": 45,
+      "finishing": 35,
+      "heading": 90,
+      "tackling": 84,
+      "positioning": 84,
+      "discipline": 80,
+      "composure": 80
+     },
+     "strengths": [
+      "Aerial dominance in his own box",
+      "Blocks shots"
+     ],
+     "weaknesses": [
+      "Slow over the first metres",
+      "Uncomfortable playing out from the back"
+     ]
+    },
+    {
+     "id": "NGR-05",
+     "no": 5,
+     "name": "Desmond Achebe-Ward",
+     "pos": "CB",
+     "role": "LCB",
+     "starter": true,
+     "attr": {
+      "pace": 84,
+      "stamina": 80,
+      "passing": 68,
+      "vision": 60,
+      "dribbling": 55,
+      "finishing": 30,
+      "heading": 80,
+      "tackling": 82,
+      "positioning": 76,
+      "discipline": 82,
+      "composure": 74
+     },
+     "strengths": [
+      "Recovery pace",
+      "Aggressive in stepping out to intercept"
+     ],
+     "weaknesses": [
+      "Loses his marker at set pieces"
+     ]
+    },
+    {
+     "id": "NGR-03",
+     "no": 3,
+     "name": "Finn Gallagher",
+     "pos": "LB",
+     "role": "LB",
+     "starter": true,
+     "attr": {
+      "pace": 76,
+      "stamina": 84,
+      "passing": 68,
+      "vision": 60,
+      "dribbling": 62,
+      "finishing": 35,
+      "heading": 64,
+      "tackling": 78,
+      "positioning": 78,
+      "discipline": 82,
+      "composure": 72
+     },
+     "strengths": [
+      "Solid, positionally disciplined defender"
+     ],
+     "weaknesses": [
+      "Offers little in the final third"
+     ]
+    },
+    {
+     "id": "NGR-07",
+     "no": 7,
+     "name": "Jules Moreau",
+     "pos": "RM",
+     "role": "RM",
+     "starter": true,
+     "attr": {
+      "pace": 80,
+      "stamina": 90,
+      "passing": 70,
+      "vision": 66,
+      "dribbling": 72,
+      "finishing": 60,
+      "heading": 52,
+      "tackling": 70,
+      "positioning": 72,
+      "discipline": 82,
+      "composure": 66
+     },
+     "strengths": [
+      "Huge work rate, tracks back",
+      "Supports counters at speed"
+     ],
+     "weaknesses": [
+      "Final ball lacks quality",
+      "Tires after the hour from all the defending"
+     ]
+    },
+    {
+     "id": "NGR-06",
+     "no": 6,
+     "name": "Yannick Brouwer",
+     "pos": "CM",
+     "role": "RCM",
+     "starter": true,
+     "attr": {
+      "pace": 68,
+      "stamina": 88,
+      "passing": 70,
+      "vision": 62,
+      "dribbling": 60,
+      "finishing": 50,
+      "heading": 72,
+      "tackling": 88,
+      "positioning": 80,
+      "discipline": 60,
+      "composure": 70
+     },
+     "strengths": [
+      "Ball-winner: most tackles and interceptions",
+      "Triggers the counter"
+     ],
+     "weaknesses": [
+      "Limited passing range",
+      "Picks up yellows for tactical fouls"
+     ]
+    },
+    {
+     "id": "NGR-08",
+     "no": 8,
+     "name": "Rafael Duarte",
+     "pos": "CM",
+     "role": "LCM",
+     "starter": true,
+     "attr": {
+      "pace": 64,
+      "stamina": 78,
+      "passing": 88,
+      "vision": 90,
+      "dribbling": 72,
+      "finishing": 58,
+      "heading": 55,
+      "tackling": 66,
+      "positioning": 76,
+      "discipline": 84,
+      "composure": 84
+     },
+     "strengths": [
+      "Deep-lying playmaker: long balls over the top",
+      "Calm under pressure"
+     ],
+     "weaknesses": [
+      "Slow to track runners",
+      "Struggles against a high press"
+     ]
+    },
+    {
+     "id": "NGR-11",
+     "no": 11,
+     "name": "Theo Lindgren",
+     "pos": "LM",
+     "role": "LM",
+     "starter": true,
+     "attr": {
+      "pace": 82,
+      "stamina": 78,
+      "passing": 70,
+      "vision": 66,
+      "dribbling": 82,
+      "finishing": 66,
+      "heading": 50,
+      "tackling": 50,
+      "positioning": 66,
+      "discipline": 58,
+      "composure": 60
+     },
+     "strengths": [
+      "Tricky dribbler, draws fouls",
+      "Carries the ball on the counter"
+     ],
+     "weaknesses": [
+      "Goes to ground too easily",
+      "Inconsistent defensive tracking"
+     ]
+    },
+    {
+     "id": "NGR-09",
+     "no": 9,
+     "name": "Marcus Adeyemi-Clarke",
+     "pos": "ST",
+     "role": "RS",
+     "starter": true,
+     "attr": {
+      "pace": 95,
+      "stamina": 74,
+      "passing": 62,
+      "vision": 62,
+      "dribbling": 78,
+      "finishing": 84,
+      "heading": 60,
+      "tackling": 40,
+      "positioning": 86,
+      "discipline": 80,
+      "composure": 80
+     },
+     "strengths": [
+      "Elite sprint speed, runs in behind",
+      "Composed one-on-one finisher"
+     ],
+     "weaknesses": [
+      "Isolated when the team has the ball for long spells",
+      "Prone to cramp late in matches"
+     ]
+    },
+    {
+     "id": "NGR-10",
+     "no": 10,
+     "name": "Jonas Petrov",
+     "pos": "ST",
+     "role": "LS",
+     "starter": true,
+     "attr": {
+      "pace": 66,
+      "stamina": 80,
+      "passing": 76,
+      "vision": 74,
+      "dribbling": 70,
+      "finishing": 72,
+      "heading": 82,
+      "tackling": 52,
+      "positioning": 78,
+      "discipline": 82,
+      "composure": 76
+     },
+     "strengths": [
+      "Hold-up play, brings others into the game",
+      "Wins long balls"
+     ],
+     "weaknesses": [
+      "Not a goal-scorer",
+      "Slow to press"
+     ]
+    },
+    {
+     "id": "NGR-16",
+     "no": 16,
+     "name": "Olli Rautio",
+     "pos": "GK",
+     "role": null,
+     "starter": false,
+     "attr": {
+      "pace": 50,
+      "stamina": 70,
+      "passing": 62,
+      "vision": 55,
+      "dribbling": 30,
+      "finishing": 10,
+      "heading": 30,
+      "tackling": 20,
+      "positioning": 74,
+      "discipline": 88,
+      "composure": 72,
+      "reflexes": 78
+     },
+     "strengths": [
+      "Better distribution than the starter"
+     ],
+     "weaknesses": [
+      "Less agile"
+     ]
+    },
+    {
+     "id": "NGR-22",
+     "no": 22,
+     "name": "Aaron Whitfield",
+     "pos": "RB",
+     "role": null,
+     "starter": false,
+     "attr": {
+      "pace": 80,
+      "stamina": 80,
+      "passing": 64,
+      "vision": 56,
+      "dribbling": 58,
+      "finishing": 30,
+      "heading": 66,
+      "tackling": 82,
+      "positioning": 82,
+      "discipline": 84,
+      "composure": 72
+     },
+     "strengths": [
+      "Defensive full-back, strong one-on-one",
+      "Fast enough to stay with wingers"
+     ],
+     "weaknesses": [
+      "Offers almost nothing going forward"
+     ]
+    },
+    {
+     "id": "NGR-15",
+     "no": 15,
+     "name": "Lewis Okoro",
+     "pos": "CB",
+     "role": null,
+     "starter": false,
+     "attr": {
+      "pace": 66,
+      "stamina": 76,
+      "passing": 60,
+      "vision": 52,
+      "dribbling": 42,
+      "finishing": 30,
+      "heading": 91,
+      "tackling": 82,
+      "positioning": 80,
+      "discipline": 80,
+      "composure": 76
+     },
+     "strengths": [
+      "Aerial specialist, brought on against crosses"
+     ],
+     "weaknesses": [
+      "Slow and limited on the ball"
+     ]
+    },
+    {
+     "id": "NGR-18",
+     "no": 18,
+     "name": "Viktor Halvorsen",
+     "pos": "AM",
+     "role": null,
+     "starter": false,
+     "attr": {
+      "pace": 74,
+      "stamina": 80,
+      "passing": 86,
+      "vision": 88,
+      "dribbling": 82,
+      "finishing": 70,
+      "heading": 50,
+      "tackling": 50,
+      "positioning": 72,
+      "discipline": 82,
+      "composure": 82
+     },
+     "strengths": [
+      "Through-balls into the channels",
+      "Finds space between the lines"
+     ],
+     "weaknesses": [
+      "Not built to defend for long spells"
+     ]
+    },
+    {
+     "id": "NGR-20",
+     "no": 20,
+     "name": "Ismael Diallo-Kerr",
+     "pos": "FW",
+     "role": null,
+     "starter": false,
+     "attr": {
+      "pace": 90,
+      "stamina": 80,
+      "passing": 66,
+      "vision": 64,
+      "dribbling": 84,
+      "finishing": 80,
+      "heading": 58,
+      "tackling": 44,
+      "positioning": 78,
+      "discipline": 78,
+      "composure": 74
+     },
+     "strengths": [
+      "Quick wide forward, attacks the space behind full-backs",
+      "Dangerous against tired legs"
+     ],
+     "weaknesses": [
+      "Disappears in tight spaces",
+      "Wasteful with his first touch"
+     ]
+    },
+    {
+     "id": "NGR-14",
+     "no": 14,
+     "name": "Sam Achterhuis",
+     "pos": "CM",
+     "role": null,
+     "starter": false,
+     "attr": {
+      "pace": 66,
+      "stamina": 84,
+      "passing": 72,
+      "vision": 64,
+      "dribbling": 62,
+      "finishing": 50,
+      "heading": 64,
+      "tackling": 76,
+      "positioning": 76,
+      "discipline": 80,
+      "composure": 72
+     },
+     "strengths": [
+      "Reliable squad midfielder"
+     ],
+     "weaknesses": [
+      "Few standout qualities"
+     ]
+    },
+    {
+     "id": "NGR-17",
+     "no": 17,
+     "name": "Callan Brierley",
+     "pos": "FW",
+     "role": null,
+     "starter": false,
+     "attr": {
+      "pace": 72,
+      "stamina": 76,
+      "passing": 62,
+      "vision": 58,
+      "dribbling": 66,
+      "finishing": 74,
+      "heading": 76,
+      "tackling": 40,
+      "positioning": 74,
+      "discipline": 80,
+      "composure": 70
+     },
+     "strengths": [
+      "Physical striker"
+     ],
+     "weaknesses": [
+      "Lacks pace"
+     ]
+    }
+   ]
+  }
+ },
+ "phases": [
+  {
+   "from": 0,
+   "to": 23,
+   "name": "Kingsbridge in control",
+   "home_possession": 0.65,
+   "home": {
+    "press": 0.8,
+    "line": 7
+   },
+   "away": {
+    "press": 0.4,
+    "line": -5
+   },
+   "narrative": "Kingsbridge build patiently through Brannigan and Kovač, full-backs high, counter-press straight after losing the ball. Northgate sit in a compact 4-4-2 and look for Adeyemi-Clarke early."
+  },
+  {
+   "from": 23,
+   "to": 38,
+   "name": "Shock and frustration",
+   "home_possession": 0.62,
+   "home": {
+    "press": 0.85,
+    "line": 8,
+    "tempo": 0.65
+   },
+   "away": {
+    "press": 0.35,
+    "line": -7
+   },
+   "narrative": "After the 0-1 Kingsbridge push even higher and play faster, which leads to more turnovers. Brannigan's frustration grows; Northgate defend deep and keep threatening on the break."
+  },
+  {
+   "from": 38,
+   "to": 52,
+   "name": "Back on terms",
+   "home_possession": 0.58,
+   "home": {
+    "press": 0.75,
+    "line": 6
+   },
+   "away": {
+    "press": 0.45,
+    "line": -4
+   },
+   "narrative": "The equaliser settles Kingsbridge. After the break Northgate's new right-back closes the left flank, so Kingsbridge attack more down the right through El-Haddad."
+  },
+  {
+   "from": 52,
+   "to": 63,
+   "name": "Ten men",
+   "home_possession": 0.46,
+   "home": {
+    "press": 0.5,
+    "line": 1,
+    "width": 1.0
+   },
+   "away": {
+    "press": 0.55,
+    "line": 0
+   },
+   "narrative": "Brannigan's red card removes Kingsbridge's tempo-setter. They drop into a 4-4-1 and lose control of midfield; Northgate get more of the ball than they are used to."
+  },
+  {
+   "from": 63,
+   "to": 75,
+   "name": "Northgate exploit the extra man",
+   "home_possession": 0.38,
+   "home": {
+    "press": 0.45,
+    "line": -1
+   },
+   "away": {
+    "press": 0.6,
+    "line": 3,
+    "tempo": 0.6,
+    "directness": 0.5
+   },
+   "narrative": "Northgate switch to 4-3-3 and overload the central zone where Kingsbridge are a man short. The space between the lines that Brannigan used to protect is now open."
+  },
+  {
+   "from": 75,
+   "to": 86,
+   "name": "All in",
+   "home_possession": 0.57,
+   "home": {
+    "press": 0.7,
+    "line": 10,
+    "tempo": 0.7,
+    "directness": 0.55,
+    "width": 1.25
+   },
+   "away": {
+    "press": 0.35,
+    "line": -8
+   },
+   "narrative": "Kingsbridge go to a back three with wing-backs and a target man. Lots of crosses, lots of territory, but huge spaces behind them for Northgate's counters."
+  },
+  {
+   "from": 86,
+   "to": 96,
+   "name": "Holding on",
+   "home_possession": 0.62,
+   "home": {
+    "press": 0.75,
+    "line": 11,
+    "directness": 0.6,
+    "width": 1.25
+   },
+   "away": {
+    "press": 0.3,
+    "line": -12
+   },
+   "narrative": "Northgate bring on an extra centre-back and sit in a 5-4-1 to protect the point. Kingsbridge bombard the box; the match ends with a last header saved by Saarinen."
+  }
+ ],
+ "timeline": [
+  {
+   "type": "kickoff",
+   "clock": "00:00",
+   "period": 1,
+   "team": "home"
+  },
+  {
+   "type": "chance",
+   "clock": "08:12",
+   "period": 1,
+   "team": "home",
+   "chain": [
+    {
+     "player": "KBA-06",
+     "action": "pass",
+     "dt": 9,
+     "at": [
+      52,
+      34
+     ]
+    },
+    {
+     "player": "KBA-10",
+     "action": "pass",
+     "dt": 5,
+     "at": [
+      72,
+      42
+     ]
+    },
+    {
+     "player": "KBA-09",
+     "action": "shot",
+     "dt": 0,
+     "at": [
+      91,
+      30
+     ]
+    }
+   ],
+   "outcome": "saved",
+   "xg": 0.18,
+   "description": "Kovač finds Lindqvist between the lines; first-time shot pushed wide by Saarinen.",
+   "significance": "Shows Kingsbridge's main route: Brannigan → Kovač → Lindqvist through the centre."
+  },
+  {
+   "type": "card",
+   "card": "yellow",
+   "clock": "12:40",
+   "period": 1,
+   "team": "away",
+   "player": "NGR-02",
+   "victim": "KBA-11",
+   "at_victim_rel": [
+    64,
+    58
+   ],
+   "reason": "Tactical foul: pulls Nakamura-Brooks back by the shirt after being beaten for pace.",
+   "effect": {
+    "aggression": 0.55,
+    "foul_rate": 0.5,
+    "depth_offset": -4,
+    "duel_penalty": 0.12,
+    "opponent_target_bias": 2.5
+   },
+   "effect_text": "Quiroga can no longer risk going into duels. He stands off Nakamura-Brooks (about 4 m deeper) and loses more one-on-ones. Kingsbridge recognise the weak spot and play noticeably more balls down their left flank."
+  },
+  {
+   "type": "goal",
+   "clock": "23:14",
+   "period": 1,
+   "team": "away",
+   "scorer": "NGR-09",
+   "assist": "NGR-08",
+   "pattern": "counter_attack",
+   "chain": [
+    {
+     "player": "NGR-06",
+     "action": "interception",
+     "dt": 12,
+     "at": [
+      38,
+      30
+     ],
+     "lost_by": "KBA-10"
+    },
+    {
+     "player": "NGR-08",
+     "action": "long_pass",
+     "dt": 9,
+     "at": [
+      42,
+      40
+     ]
+    },
+    {
+     "player": "NGR-09",
+     "action": "carry",
+     "dt": 4,
+     "at": [
+      84,
+      36
+     ]
+    },
+    {
+     "player": "NGR-09",
+     "action": "shot",
+     "dt": 0,
+     "at": [
+      94,
+      37
+     ]
+    }
+   ],
+   "xg": 0.41,
+   "body_part": "right_foot",
+   "description": "Brouwer intercepts Kovač's pass, Duarte plays the ball over the high line in one touch, and Adeyemi-Clarke outruns Dijkhuis and slots it in at the near post. 0-1.",
+   "significance": "Textbook use of Kingsbridge's weak spot: a high line with a slow centre-back against the fastest striker on the pitch (see the data check for where the line was when the ball was played).",
+   "play_pattern": "counter_attack"
+  },
+  {
+   "type": "card",
+   "card": "yellow",
+   "clock": "31:05",
+   "period": 1,
+   "team": "home",
+   "player": "KBA-06",
+   "victim": "NGR-09",
+   "at_victim_rel": [
+    46,
+    30
+   ],
+   "reason": "Late sliding tackle on Adeyemi-Clarke out of frustration after a lost ball.",
+   "effect": {
+    "aggression": 0.85,
+    "foul_rate": 0.85,
+    "depth_offset": -2,
+    "duel_penalty": 0.05
+   },
+   "effect_text": "Brannigan barely adjusts (low discipline rating): he still goes into duels and still counter-presses. The coaching staff note the risk but keep him on because he is their key passer."
+  },
+  {
+   "type": "goal",
+   "clock": "38:41",
+   "period": 1,
+   "team": "home",
+   "scorer": "KBA-11",
+   "assist": "KBA-10",
+   "pattern": "isolation_cut_inside",
+   "chain": [
+    {
+     "player": "KBA-08",
+     "action": "pass",
+     "dt": 14,
+     "at": [
+      55,
+      30
+     ]
+    },
+    {
+     "player": "KBA-10",
+     "action": "pass",
+     "dt": 9,
+     "at": [
+      68,
+      44
+     ]
+    },
+    {
+     "player": "KBA-11",
+     "action": "carry",
+     "dt": 5,
+     "at": [
+      84,
+      56
+     ]
+    },
+    {
+     "player": "KBA-11",
+     "action": "shot",
+     "dt": 0,
+     "at": [
+      90,
+      45
+     ]
+    }
+   ],
+   "xg": 0.09,
+   "body_part": "right_foot",
+   "description": "Kovač switches the play to Nakamura-Brooks, who attacks the booked Quiroga, cuts inside onto his right foot and curls it into the far corner. 1-1.",
+   "significance": "A direct result of the 12th-minute yellow card: Quiroga stood off and gave Nakamura-Brooks room to shoot. A low-xG chance (0.09) finished by individual quality.",
+   "play_pattern": "open_play"
+  },
+  {
+   "type": "chance",
+   "clock": "44:30",
+   "period": 1,
+   "team": "away",
+   "chain": [
+    {
+     "player": "NGR-11",
+     "action": "carry",
+     "dt": 6,
+     "at": [
+      70,
+      52
+     ]
+    },
+    {
+     "player": "NGR-10",
+     "action": "shot",
+     "dt": 0,
+     "at": [
+      88,
+      36
+     ]
+    }
+   ],
+   "outcome": "off_target",
+   "xg": 0.07,
+   "description": "Lindgren carries on the counter, Petrov shoots over from the edge of the box.",
+   "significance": "Northgate stay dangerous on the break, even with little of the ball."
+  },
+  {
+   "type": "period_end",
+   "clock": "45+2:00",
+   "period": 1
+  },
+  {
+   "type": "substitution",
+   "clock": "45:00",
+   "period": 2,
+   "team": "away",
+   "out": "NGR-02",
+   "in": "NGR-22",
+   "reason": "Quiroga is on a yellow and was beaten repeatedly by Nakamura-Brooks; a second yellow was only a matter of time.",
+   "new_formation": "4-4-2",
+   "role_map": {
+    "NGR-22": "RB"
+   },
+   "tactical_change": false,
+   "impact": "No change in system, but a different profile: Whitfield is a pure defender. Northgate's right flank no longer supports attacks (fewer overlaps), and Nakamura-Brooks wins far fewer duels. Kingsbridge stop targeting that side and shift their attacks to the right through El-Haddad.",
+   "player_effects": {
+    "KBA-11": {
+     "dribble_success": 0.75
+    },
+    "NGR-22": {
+     "opponent_target_bias": 0.55
+    }
+   }
+  },
+  {
+   "type": "kickoff",
+   "clock": "45:00",
+   "period": 2,
+   "team": "away"
+  },
+  {
+   "type": "card",
+   "card": "second_yellow",
+   "clock": "52:18",
+   "period": 2,
+   "team": "home",
+   "player": "KBA-06",
+   "victim": "NGR-09",
+   "at_victim_rel": [
+    52,
+    36
+   ],
+   "reason": "Second yellow: trips Adeyemi-Clarke as he breaks through midfield on the counter. Off he goes.",
+   "effect": {
+    "sent_off": true
+   },
+   "effect_text": "Kingsbridge are down to 10 men and lose their tempo-setter and main ball-winner."
+  },
+  {
+   "type": "tactical_change",
+   "clock": "52:50",
+   "period": 2,
+   "team": "home",
+   "new_formation": "4-4-1",
+   "role_map": {
+    "KBA-01": "GK",
+    "KBA-02": "RB",
+    "KBA-05": "RCB",
+    "KBA-04": "LCB",
+    "KBA-03": "LB",
+    "KBA-07": "RM",
+    "KBA-08": "RCM",
+    "KBA-10": "LCM",
+    "KBA-11": "LM",
+    "KBA-09": "ST"
+   },
+   "style": {
+    "press": 0.5,
+    "line": 1
+   },
+   "reason": "Forced reshape after the red card.",
+   "impact": "From 4-3-3 to 4-4-1: the wingers drop back to midfield, the line drops about 6 m and the high press is mostly abandoned. Lindqvist is isolated up front. Expected effect: possession falls from about 58% to about 45%, and Kingsbridge rely more on counters through Nakamura-Brooks."
+  },
+  {
+   "type": "substitution",
+   "clock": "58:30",
+   "period": 2,
+   "team": "home",
+   "out": "KBA-10",
+   "in": "KBA-14",
+   "reason": "Kovač is tired and does little defensively; with 10 men the centre has to be closed.",
+   "new_formation": "4-4-1",
+   "role_map": {
+    "KBA-14": "RCM",
+    "KBA-08": "LCM"
+   },
+   "tactical_change": true,
+   "impact": "Same system, different balance: Achterberg sits in front of the defence, Visser moves to the left of midfield. The centre is tighter, but Kingsbridge lose their creator, so fewer key passes and even less possession. They now play to avoid losing rather than to win."
+  },
+  {
+   "type": "substitution",
+   "clock": "63:20",
+   "period": 2,
+   "team": "away",
+   "out": "NGR-07",
+   "in": "NGR-18",
+   "reason": "Moreau is tired after an hour of defending; Northgate want more quality on the ball.",
+   "new_formation": "4-3-3-deep",
+   "role_map": {
+    "NGR-01": "GK",
+    "NGR-22": "RB",
+    "NGR-04": "RCB",
+    "NGR-05": "LCB",
+    "NGR-03": "LB",
+    "NGR-08": "DM",
+    "NGR-06": "RCM",
+    "NGR-18": "LCM",
+    "NGR-20": "RW",
+    "NGR-09": "ST",
+    "NGR-11": "LW"
+   },
+   "tactical_change": true,
+   "impact": "Double substitution plus a switch from 4-4-2 to 4-3-3: three central midfielders against Kingsbridge's two, with Halvorsen in the pocket where Brannigan used to be. Northgate move from reacting to controlling; their press goes up and the line moves about 7 m higher."
+  },
+  {
+   "type": "substitution",
+   "clock": "63:20",
+   "period": 2,
+   "team": "away",
+   "out": "NGR-10",
+   "in": "NGR-20",
+   "reason": "Petrov's hold-up play matters less now that Northgate have more of the ball; Diallo-Kerr brings pace against tiring legs.",
+   "new_formation": "4-3-3-deep",
+   "role_map": {},
+   "tactical_change": true,
+   "impact": "Part of the switch to 4-3-3: Diallo-Kerr plays on the right and attacks the space behind Mbeki."
+  },
+  {
+   "type": "goal",
+   "clock": "67:05",
+   "period": 2,
+   "team": "away",
+   "scorer": "NGR-20",
+   "assist": "NGR-18",
+   "pattern": "through_ball_between_lines",
+   "chain": [
+    {
+     "player": "NGR-08",
+     "action": "pass",
+     "dt": 13,
+     "at": [
+      48,
+      34
+     ]
+    },
+    {
+     "player": "NGR-18",
+     "action": "through_ball",
+     "dt": 7,
+     "at": [
+      66,
+      38
+     ]
+    },
+    {
+     "player": "NGR-20",
+     "action": "carry",
+     "dt": 3,
+     "at": [
+      88,
+      26
+     ]
+    },
+    {
+     "player": "NGR-20",
+     "action": "shot",
+     "dt": 0,
+     "at": [
+      94,
+      30
+     ]
+    }
+   ],
+   "xg": 0.33,
+   "body_part": "right_foot",
+   "description": "Duarte finds Halvorsen unmarked between the lines; his through ball sends Diallo-Kerr in behind Mbeki, and he finishes across Ferreira-Lind. 1-2.",
+   "significance": "The result of the red card and both substitutions combined: Halvorsen receives the ball in exactly the zone a holding midfielder would normally cover. Four minutes after the tactical switch it pays off.",
+   "play_pattern": "counter_attack"
+  },
+  {
+   "type": "card",
+   "card": "yellow",
+   "clock": "72:30",
+   "period": 2,
+   "team": "away",
+   "player": "NGR-11",
+   "victim": null,
+   "at_victim_rel": [
+    86,
+    50
+   ],
+   "reason": "Simulation: goes down in the box under minimal contact from Okafor-Hale.",
+   "effect": {
+    "dribble_attempts": 0.7,
+    "aggression": 0.9
+   },
+   "effect_text": "Lindgren takes fewer dribbles into the box and passes more. With his credibility gone, the referee will be stricter on him."
+  },
+  {
+   "type": "substitution",
+   "clock": "75:00",
+   "period": 2,
+   "team": "home",
+   "out": "KBA-02",
+   "in": "KBA-17",
+   "reason": "Kingsbridge have to go for it. A wing-back with a better cross replaces the full-back.",
+   "new_formation": "3-4-2",
+   "role_map": {
+    "KBA-01": "GK",
+    "KBA-05": "RCB",
+    "KBA-04": "CB",
+    "KBA-03": "LCB",
+    "KBA-17": "RWB",
+    "KBA-14": "RCM",
+    "KBA-07": "LCM",
+    "KBA-11": "LWB",
+    "KBA-19": "RS",
+    "KBA-09": "LS"
+   },
+   "tactical_change": true,
+   "impact": "Switch to a back three with wing-backs and two strikers. Kingsbridge commit numbers forward: 4-5 players in the box on every cross. Downside: only three defenders against Northgate's three attackers, so every turnover is a potential counter."
+  },
+  {
+   "type": "substitution",
+   "clock": "75:00",
+   "period": 2,
+   "team": "home",
+   "out": "KBA-08",
+   "in": "KBA-19",
+   "reason": "A target man for aerial balls; Visser is running on empty.",
+   "new_formation": "3-4-2",
+   "role_map": {},
+   "tactical_change": true,
+   "impact": "Moore-Asante gives Kingsbridge a plan B: crosses. Expect the number of crosses and headed attempts to rise sharply."
+  },
+  {
+   "type": "card",
+   "card": "yellow",
+   "clock": "79:10",
+   "period": 2,
+   "team": "away",
+   "player": "NGR-06",
+   "victim": "KBA-07",
+   "at_victim_rel": [
+    50,
+    40
+   ],
+   "reason": "Tactical foul: stops El-Haddad on a quick break.",
+   "effect": {
+    "aggression": 0.6,
+    "foul_rate": 0.5,
+    "depth_offset": -3,
+    "duel_penalty": 0.08
+   },
+   "effect_text": "Northgate's ball-winner has to be careful now. Kingsbridge midfielders get more time on the ball in front of the box, so second balls and crosses come in more freely."
+  },
+  {
+   "type": "goal",
+   "clock": "81:37",
+   "period": 2,
+   "team": "home",
+   "scorer": "KBA-19",
+   "assist": "KBA-17",
+   "pattern": "cross_header",
+   "chain": [
+    {
+     "player": "KBA-14",
+     "action": "pass",
+     "dt": 11,
+     "at": [
+      58,
+      30
+     ]
+    },
+    {
+     "player": "KBA-17",
+     "action": "carry",
+     "dt": 6,
+     "at": [
+      86,
+      8
+     ]
+    },
+    {
+     "player": "KBA-17",
+     "action": "cross",
+     "dt": 2,
+     "at": [
+      92,
+      8
+     ]
+    },
+    {
+     "player": "KBA-19",
+     "action": "header",
+     "dt": 0,
+     "at": [
+      97,
+      32
+     ]
+    }
+   ],
+   "xg": 0.22,
+   "body_part": "head",
+   "description": "Castellanos gets to the byline and whips in a cross; Moore-Asante beats Hollander in the air and heads it in. 2-2.",
+   "significance": "Both Kingsbridge substitutes combine for the equaliser. Exactly what the 75th-minute switch was for: wing-back crosses for a target man.",
+   "play_pattern": "open_play"
+  },
+  {
+   "type": "chance",
+   "clock": "84:02",
+   "period": 2,
+   "team": "away",
+   "chain": [
+    {
+     "player": "NGR-18",
+     "action": "through_ball",
+     "dt": 6,
+     "at": [
+      52,
+      36
+     ]
+    },
+    {
+     "player": "NGR-20",
+     "action": "carry",
+     "dt": 3,
+     "at": [
+      84,
+      30
+     ]
+    },
+    {
+     "player": "NGR-20",
+     "action": "shot",
+     "dt": 0,
+     "at": [
+      93,
+      32
+     ]
+    }
+   ],
+   "outcome": "saved",
+   "xg": 0.38,
+   "description": "Counter against the back three: Diallo-Kerr runs through alone, Ferreira-Lind saves with his legs.",
+   "significance": "The risk of the 3-4-2 in action: one pass and Northgate are through."
+  },
+  {
+   "type": "substitution",
+   "clock": "86:10",
+   "period": 2,
+   "team": "away",
+   "out": "NGR-09",
+   "in": "NGR-15",
+   "reason": "Adeyemi-Clarke has cramp; Northgate also want an extra centre-back against the aerial bombardment.",
+   "new_formation": "5-4-1",
+   "role_map": {
+    "NGR-01": "GK",
+    "NGR-22": "RWB",
+    "NGR-04": "RCB",
+    "NGR-15": "CB",
+    "NGR-05": "LCB",
+    "NGR-03": "LWB",
+    "NGR-20": "RM",
+    "NGR-06": "RCM",
+    "NGR-08": "LCM",
+    "NGR-11": "LM",
+    "NGR-18": "ST"
+   },
+   "tactical_change": true,
+   "impact": "From 4-3-3 to 5-4-1: Northgate choose the point. Okoro marks Moore-Asante, the line drops deep and the counter threat almost disappears (no fast striker left). Kingsbridge get the territory but face a packed box."
+  },
+  {
+   "type": "card",
+   "card": "yellow",
+   "clock": "88:20",
+   "period": 2,
+   "team": "home",
+   "player": "KBA-14",
+   "victim": "NGR-20",
+   "at_victim_rel": [
+    48,
+    22
+   ],
+   "reason": "Tactical foul: drags down Diallo-Kerr to stop a 3-on-2 counter.",
+   "effect": {
+    "aggression": 0.6,
+    "foul_rate": 0.5
+   },
+   "effect_text": "A 'professional' yellow: little effect this late in the game, but Achterberg can't afford another tackle."
+  },
+  {
+   "type": "chance",
+   "clock": "90+3:10",
+   "period": 2,
+   "team": "home",
+   "chain": [
+    {
+     "player": "KBA-11",
+     "action": "carry",
+     "dt": 5,
+     "at": [
+      84,
+      60
+     ]
+    },
+    {
+     "player": "KBA-11",
+     "action": "cross",
+     "dt": 2,
+     "at": [
+      90,
+      60
+     ]
+    },
+    {
+     "player": "KBA-19",
+     "action": "header",
+     "dt": 0,
+     "at": [
+      96,
+      36
+     ]
+    }
+   ],
+   "outcome": "saved",
+   "xg": 0.2,
+   "description": "Last chance: Nakamura-Brooks crosses, Moore-Asante's header is tipped over by Saarinen.",
+   "significance": "Northgate's 5-4-1 holds, partly thanks to their goalkeeper."
+  },
+  {
+   "type": "period_end",
+   "clock": "90+5:00",
+   "period": 2
+  }
+ ]
+}

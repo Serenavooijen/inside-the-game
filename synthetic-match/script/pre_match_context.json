@@ -1,0 +1,864 @@
+{
+ "match_context": {
+  "venue": {
+   "name": "Kingsbridge Park",
+   "home_team": "home",
+   "surface": "natural grass",
+   "pitch_condition": "good, slightly firm",
+   "capacity": 24000,
+   "attendance": 21400,
+   "away_fans": 1800
+  },
+  "weather": {
+   "summary": "Dry, 13°C, light wind (11 km/h) from the west",
+   "temperature_c": 13,
+   "wind_kmh": 11,
+   "rain": false,
+   "impact": "No significant impact. A dry, firm pitch slightly favours fast ball circulation and the Kingsbridge passing game."
+  },
+  "referee": {
+   "name": "Alan Ostrowski (fictional)",
+   "avg_yellows_per_game": 4.6,
+   "avg_reds_per_game": 0.21,
+   "avg_fouls_per_game": 23.1,
+   "style": "Plays advantage a lot, lets physical duels go, strict on simulation and on tactical fouls that stop counter-attacks.",
+   "impact": "Good for Northgate's duels in midfield; risky for a hot-headed holding midfielder who has to stop counters."
+  },
+  "stakes": {
+   "summary": "Matchday 9. Kingsbridge (4th) need a win to stay in touch with the top three. Northgate (9th) are unbeaten in four away games and would be happy with a point.",
+   "home_position": 4,
+   "home_points": 17,
+   "away_position": 9,
+   "away_points": 12,
+   "importance": "high for Kingsbridge, medium for Northgate"
+  },
+  "schedule": {
+   "home": {
+    "rest_days": 3,
+    "previous_match": "Cup round 3 away at Pellham Town on Wednesday, won on penalties after 120 minutes",
+    "travel": "home match",
+    "load": "high: 120 minutes three days ago, six starters played the full match",
+    "fatigue_factor": 1.12
+   },
+   "away": {
+    "rest_days": 6,
+    "previous_match": "League match on Saturday (1-1 vs Eastmoor United)",
+    "travel": "210 km by coach, arrived the evening before",
+    "load": "normal",
+    "fatigue_factor": 1.0
+   }
+  },
+  "head_to_head": [
+   {
+    "season": "last season",
+    "venue": "Kingsbridge Park",
+    "result": "Kingsbridge 2-1 Northgate",
+    "note": "Northgate scored on the counter; Kingsbridge won with a late set-piece header"
+   },
+   {
+    "season": "last season",
+    "venue": "Northgate",
+    "result": "Northgate 0-0 Kingsbridge",
+    "note": "Kingsbridge 71% possession, 0.9 xG against a low block"
+   }
+  ]
+ },
+ "teams": {
+  "home": {
+   "league": {
+    "position": 4,
+    "played": 8,
+    "won": 5,
+    "drawn": 2,
+    "lost": 1,
+    "goals_for": 16,
+    "goals_against": 8,
+    "points": 17
+   },
+   "last_matches": [
+    {
+     "md": 8,
+     "opponent": "Harlow Bay",
+     "opp_rank": 15,
+     "venue": "A",
+     "score": "3-0",
+     "result": "W",
+     "xg": 2.6,
+     "xga": 0.5,
+     "possession": 68,
+     "set_piece_xg": 0.4,
+     "note": "Dominant, scored twice from the counter-press"
+    },
+    {
+     "md": 7,
+     "opponent": "Redcliffe City",
+     "opp_rank": 2,
+     "venue": "H",
+     "score": "1-1",
+     "result": "D",
+     "xg": 1.4,
+     "xga": 1.6,
+     "possession": 55,
+     "set_piece_xg": 0.2,
+     "note": "Conceded on a ball in behind the high line"
+    },
+    {
+     "md": 6,
+     "opponent": "Oldmere Athletic",
+     "opp_rank": 18,
+     "venue": "H",
+     "score": "2-0",
+     "result": "W",
+     "xg": 2.1,
+     "xga": 0.3,
+     "possession": 72,
+     "set_piece_xg": 0.6,
+     "note": "Both goals from corners"
+    },
+    {
+     "md": 5,
+     "opponent": "Westbrook Albion",
+     "opp_rank": 6,
+     "venue": "A",
+     "score": "2-1",
+     "result": "W",
+     "xg": 1.7,
+     "xga": 1.2,
+     "possession": 58,
+     "set_piece_xg": 0.1,
+     "note": "Late winner after switching to a back three"
+    },
+    {
+     "md": 4,
+     "opponent": "Saltmarsh FC",
+     "opp_rank": 12,
+     "venue": "H",
+     "score": "0-0",
+     "result": "D",
+     "xg": 1.1,
+     "xga": 0.4,
+     "possession": 74,
+     "set_piece_xg": 0.3,
+     "note": "Could not break down a low 5-4-1 block"
+    },
+    {
+     "md": 3,
+     "opponent": "Greystone Rovers",
+     "opp_rank": 9,
+     "venue": "A",
+     "score": "3-2",
+     "result": "W",
+     "xg": 2.3,
+     "xga": 1.9,
+     "possession": 61,
+     "set_piece_xg": 0.2,
+     "note": "Brannigan sent off in the 70th minute while 2-1 down"
+    },
+    {
+     "md": 2,
+     "opponent": "Fenwick Town",
+     "opp_rank": 3,
+     "venue": "A",
+     "score": "1-3",
+     "result": "L",
+     "xg": 1.3,
+     "xga": 2.2,
+     "possession": 57,
+     "set_piece_xg": 0.1,
+     "note": "Three goals conceded in transition"
+    },
+    {
+     "md": 1,
+     "opponent": "Dunmore United",
+     "opp_rank": 14,
+     "venue": "H",
+     "score": "4-1",
+     "result": "W",
+     "xg": 2.9,
+     "xga": 0.8,
+     "possession": 66,
+     "set_piece_xg": 0.5,
+     "note": "Kovač two assists"
+    }
+   ],
+   "absences": [
+    {
+     "player": "Rasmus Holt",
+     "pos": "CB",
+     "reason": "Hamstring injury, out for 3 weeks",
+     "impact": "Holt is the fastest centre-back in the squad and normally covers for Dijkhuis. Without him the pairing is slower and the high line is riskier."
+    },
+    {
+     "player": "Jonah Ekwueme",
+     "pos": "W",
+     "reason": "Ill",
+     "impact": "One less attacking option on the bench."
+    }
+   ],
+   "mental": {
+    "confidence": 0.78,
+    "summary": "Confident: 4 wins and 2 draws in the last 6. Expected to win at home.",
+    "behind_record": "Struggle emotionally when behind: 2 red cards this season, both while trailing.",
+    "pressure_handling": "Good at home, nervous when chasing a result late.",
+    "composure_when_behind": 0.6
+   },
+   "coach_profile": {
+    "name": "Ingrid Solberg",
+    "approach": "Proactive possession coach",
+    "avg_first_sub_minute": 58,
+    "subs_per_match": 4.3,
+    "behaviour_when_behind": "Goes to a back three with wing-backs and an extra striker (done 3 times this season, one winner).",
+    "behaviour_when_ahead": "Keeps the ball, rarely drops deep.",
+    "flexibility": "high",
+    "game_plan": "Dominate the ball, high press on Northgate's weak build-up, overload the left side through Kovač and Nakamura-Brooks, keep Brannigan as the anchor."
+   },
+   "bench": {
+    "quality_rating": 72,
+    "summary": "A clear plan B in target man Moore-Asante and crossing wing-back Castellanos; a strong defensive midfielder (Achterberg). Little creativity apart from Eriksen."
+   },
+   "set_pieces": {
+    "corner_delivery": "in-swinging to the near post",
+    "corner_short_share": 0.25,
+    "corner_takers": [
+     "KBA-10",
+     "KBA-07"
+    ],
+    "free_kick_direct": "KBA-10",
+    "penalty_taker": "KBA-09",
+    "long_throw_taker": null,
+    "defending_corners": "zonal (six in zones, two on man)",
+    "marking": "zonal",
+    "avg_height_outfield_cm": 180,
+    "set_piece_xg_for_last8": 2.4,
+    "set_piece_xg_against_last8": 1.3,
+    "note": "Dangerous from corners at home; Ferreira-Lind is weak on high balls into a crowded box."
+   },
+   "structure": {
+    "build_up": "Back three in build-up: Mbeki inverts next to Brannigan, Okafor-Hale stays high. Goalkeeper used as an extra passer, 85% short goal kicks.",
+    "build_up_players": 3,
+    "goal_kicks_short_share": 0.85,
+    "pressing": "High press, man-oriented in Northgate's half. Triggers: back pass to the goalkeeper, pass to a full-back near the touchline, bad first touch.",
+    "counterpress": 0.8,
+    "defensive_line": "high (about 45 m from own goal when in possession)",
+    "line_height_label": "high",
+    "compactness_target_m": 30,
+    "marking": "zonal in open play",
+    "attacking_patterns": [
+     "Left-side overload: Kovač in the left half-space, Mbeki inverting, Nakamura-Brooks 1v1",
+     "El-Haddad isolation on the right",
+     "Lindqvist runs to the near post",
+     "Visser late runs into the box"
+    ],
+    "known_weaknesses": [
+     "Space behind the high line",
+     "Rest defence with only two centre-backs when the full-backs push on",
+     "Struggles against low blocks (0-0 vs Saltmarsh)",
+     "Discipline of the holding midfielder"
+    ]
+   }
+  },
+  "away": {
+   "league": {
+    "position": 9,
+    "played": 8,
+    "won": 3,
+    "drawn": 3,
+    "lost": 2,
+    "goals_for": 10,
+    "goals_against": 10,
+    "points": 12
+   },
+   "last_matches": [
+    {
+     "md": 8,
+     "opponent": "Eastmoor United",
+     "opp_rank": 11,
+     "venue": "H",
+     "score": "1-1",
+     "result": "D",
+     "xg": 0.9,
+     "xga": 1.3,
+     "possession": 44,
+     "set_piece_xg": 0.3,
+     "note": "Equaliser in the 88th minute conceded from a cross"
+    },
+    {
+     "md": 7,
+     "opponent": "Pellham Town",
+     "opp_rank": 16,
+     "venue": "A",
+     "score": "2-0",
+     "result": "W",
+     "xg": 1.6,
+     "xga": 0.7,
+     "possession": 39,
+     "set_piece_xg": 0.5,
+     "note": "Long throw → header, counter-attack"
+    },
+    {
+     "md": 6,
+     "opponent": "Fenwick Town",
+     "opp_rank": 3,
+     "venue": "A",
+     "score": "1-1",
+     "result": "D",
+     "xg": 0.8,
+     "xga": 1.9,
+     "possession": 33,
+     "set_piece_xg": 0.1,
+     "note": "Saarinen eight saves"
+    },
+    {
+     "md": 5,
+     "opponent": "Brackwater FC",
+     "opp_rank": 10,
+     "venue": "H",
+     "score": "0-2",
+     "result": "L",
+     "xg": 1.0,
+     "xga": 1.4,
+     "possession": 51,
+     "set_piece_xg": 0.2,
+     "note": "Struggled when they had to make the game themselves"
+    },
+    {
+     "md": 4,
+     "opponent": "Westbrook Albion",
+     "opp_rank": 6,
+     "venue": "A",
+     "score": "2-1",
+     "result": "W",
+     "xg": 1.2,
+     "xga": 1.5,
+     "possession": 36,
+     "set_piece_xg": 0.1,
+     "note": "Two counter-attack goals from Adeyemi-Clarke"
+    },
+    {
+     "md": 3,
+     "opponent": "Redcliffe City",
+     "opp_rank": 2,
+     "venue": "H",
+     "score": "0-3",
+     "result": "L",
+     "xg": 0.6,
+     "xga": 2.4,
+     "possession": 41,
+     "set_piece_xg": 0.0,
+     "note": "Pressed into mistakes in their own build-up"
+    },
+    {
+     "md": 2,
+     "opponent": "Oldmere Athletic",
+     "opp_rank": 18,
+     "venue": "A",
+     "score": "3-1",
+     "result": "W",
+     "xg": 2.0,
+     "xga": 0.6,
+     "possession": 47,
+     "set_piece_xg": 0.7,
+     "note": "Two set-piece goals"
+    },
+    {
+     "md": 1,
+     "opponent": "Saltmarsh FC",
+     "opp_rank": 12,
+     "venue": "H",
+     "score": "1-1",
+     "result": "D",
+     "xg": 1.1,
+     "xga": 1.0,
+     "possession": 45,
+     "set_piece_xg": 0.4,
+     "note": "-"
+    }
+   ],
+   "absences": [
+    {
+     "player": "Stefan Varga",
+     "pos": "CB",
+     "reason": "Knee injury, out for 6 weeks",
+     "impact": "First-choice centre-back and organiser. Okoro is now the only aerial back-up for the 5-4-1."
+    }
+   ],
+   "mental": {
+    "confidence": 0.62,
+    "summary": "Resilient underdog, unbeaten in four away games, good at defending a lead.",
+    "behind_record": "Rarely come back from behind (1 point from losing positions).",
+    "pressure_handling": "Calm under pressure, but they fade late: 5 of their 10 goals conceded came after the 75th minute.",
+    "composure_when_behind": 0.75
+   },
+   "coach_profile": {
+    "name": "Darren Kowalczyk",
+    "approach": "Reactive, transition-focused coach",
+    "avg_first_sub_minute": 66,
+    "subs_per_match": 3.6,
+    "behaviour_when_behind": "Brings on an extra striker but keeps the 4-4-2.",
+    "behaviour_when_ahead": "Goes to a 5-4-1 with an extra centre-back (done 4 times this season).",
+    "flexibility": "medium",
+    "game_plan": "Stay compact in a 4-4-2 mid/low block, jump on passes into Kingsbridge's holding midfielder, then hit Adeyemi-Clarke early in behind the high line. Avoid playing out from the back against the press."
+   },
+   "bench": {
+    "quality_rating": 66,
+    "summary": "Halvorsen (creative midfielder) and Diallo-Kerr (pace) can change a game; Okoro for defending a lead. Little depth at full-back."
+   },
+   "set_pieces": {
+    "corner_delivery": "out-swinging to the far post",
+    "corner_short_share": 0.1,
+    "corner_takers": [
+     "NGR-08"
+    ],
+    "free_kick_direct": "NGR-08",
+    "penalty_taker": "NGR-09",
+    "long_throw_taker": "NGR-03",
+    "defending_corners": "man-marking",
+    "marking": "man",
+    "avg_height_outfield_cm": 184,
+    "set_piece_xg_for_last8": 2.3,
+    "set_piece_xg_against_last8": 1.6,
+    "note": "Strong in the air thanks to Hollander, Petrov and Okoro. Achebe-Ward regularly loses his man at set pieces. Gallagher's long throws are a real weapon."
+   },
+   "structure": {
+    "build_up": "Back four in build-up, mostly long: goal kicks long to Petrov (70%). Saarinen is weak with his feet.",
+    "build_up_players": 4,
+    "goal_kicks_short_share": 0.3,
+    "pressing": "Mid/low block in a 4-4-2. Trigger: a pass into Kingsbridge's holding midfielder → the nearest striker and central midfielder jump.",
+    "counterpress": 0.3,
+    "defensive_line": "mid/low (about 32 m from own goal)",
+    "line_height_label": "mid-low",
+    "compactness_target_m": 25,
+    "marking": "zonal with man-marking in the box",
+    "attacking_patterns": [
+     "Early long ball in behind for Adeyemi-Clarke",
+     "Duarte switches from deep",
+     "Lindgren carries the ball on the counter",
+     "Long throws and set pieces"
+    ],
+    "known_weaknesses": [
+     "Build-up under a high press",
+     "Right-back vulnerable 1v1 against pace",
+     "Fading physically late in games",
+     "Little control when they have to make the game"
+    ]
+   }
+  }
+ },
+ "player_profiles": {
+  "KBA-01": {
+   "age": 29,
+   "height_cm": 188,
+   "foot": "R",
+   "form_last5": 6.9,
+   "confidence": 70,
+   "pressure_handling": 82,
+   "fitness": "fit"
+  },
+  "KBA-02": {
+   "age": 24,
+   "height_cm": 177,
+   "foot": "R",
+   "form_last5": 7.0,
+   "confidence": 74,
+   "pressure_handling": 68,
+   "fitness": "played 120 min midweek"
+  },
+  "KBA-05": {
+   "age": 31,
+   "height_cm": 191,
+   "foot": "R",
+   "form_last5": 7.1,
+   "confidence": 76,
+   "pressure_handling": 86,
+   "fitness": "played 120 min midweek"
+  },
+  "KBA-04": {
+   "age": 26,
+   "height_cm": 186,
+   "foot": "L",
+   "form_last5": 6.9,
+   "confidence": 72,
+   "pressure_handling": 70,
+   "fitness": "fit"
+  },
+  "KBA-03": {
+   "age": 27,
+   "height_cm": 179,
+   "foot": "L",
+   "form_last5": 7.0,
+   "confidence": 72,
+   "pressure_handling": 74,
+   "fitness": "played 120 min midweek"
+  },
+  "KBA-06": {
+   "age": 28,
+   "height_cm": 183,
+   "foot": "R",
+   "form_last5": 7.2,
+   "confidence": 70,
+   "pressure_handling": 52,
+   "fitness": "played 120 min midweek",
+   "note": "One red card this season, 4 yellows in 8 matches"
+  },
+  "KBA-08": {
+   "age": 25,
+   "height_cm": 180,
+   "foot": "R",
+   "form_last5": 7.0,
+   "confidence": 75,
+   "pressure_handling": 76,
+   "fitness": "played 120 min midweek"
+  },
+  "KBA-10": {
+   "age": 27,
+   "height_cm": 174,
+   "foot": "L",
+   "form_last5": 7.6,
+   "confidence": 85,
+   "pressure_handling": 84,
+   "fitness": "fit",
+   "note": "League leader in key passes (2.9 per 90)"
+  },
+  "KBA-07": {
+   "age": 23,
+   "height_cm": 172,
+   "foot": "L",
+   "form_last5": 6.7,
+   "confidence": 66,
+   "pressure_handling": 60,
+   "fitness": "fit"
+  },
+  "KBA-09": {
+   "age": 26,
+   "height_cm": 182,
+   "foot": "R",
+   "form_last5": 7.3,
+   "confidence": 80,
+   "pressure_handling": 80,
+   "fitness": "played 120 min midweek",
+   "note": "6 goals from 4.8 xG this season"
+  },
+  "KBA-11": {
+   "age": 22,
+   "height_cm": 175,
+   "foot": "R",
+   "form_last5": 7.4,
+   "confidence": 82,
+   "pressure_handling": 74,
+   "fitness": "fit"
+  },
+  "KBA-12": {
+   "age": 33,
+   "height_cm": 190,
+   "foot": "R",
+   "form_last5": null,
+   "confidence": 60,
+   "pressure_handling": 70,
+   "fitness": "fit"
+  },
+  "KBA-15": {
+   "age": 30,
+   "height_cm": 192,
+   "foot": "R",
+   "form_last5": 6.5,
+   "confidence": 60,
+   "pressure_handling": 72,
+   "fitness": "fit"
+  },
+  "KBA-14": {
+   "age": 29,
+   "height_cm": 185,
+   "foot": "R",
+   "form_last5": 6.8,
+   "confidence": 68,
+   "pressure_handling": 74,
+   "fitness": "fit"
+  },
+  "KBA-17": {
+   "age": 21,
+   "height_cm": 176,
+   "foot": "R",
+   "form_last5": 6.9,
+   "confidence": 72,
+   "pressure_handling": 70,
+   "fitness": "fit"
+  },
+  "KBA-19": {
+   "age": 30,
+   "height_cm": 195,
+   "foot": "R",
+   "form_last5": 6.8,
+   "confidence": 70,
+   "pressure_handling": 78,
+   "fitness": "fit",
+   "note": "4 headed goals as a substitute this season"
+  },
+  "KBA-16": {
+   "age": 24,
+   "height_cm": 178,
+   "foot": "R",
+   "form_last5": 6.6,
+   "confidence": 64,
+   "pressure_handling": 76,
+   "fitness": "fit"
+  },
+  "KBA-18": {
+   "age": 26,
+   "height_cm": 180,
+   "foot": "L",
+   "form_last5": 6.5,
+   "confidence": 62,
+   "pressure_handling": 70,
+   "fitness": "fit"
+  },
+  "NGR-01": {
+   "age": 32,
+   "height_cm": 192,
+   "foot": "R",
+   "form_last5": 7.5,
+   "confidence": 80,
+   "pressure_handling": 84,
+   "fitness": "fit",
+   "note": "Highest save percentage in the league (78%)"
+  },
+  "NGR-02": {
+   "age": 25,
+   "height_cm": 178,
+   "foot": "R",
+   "form_last5": 6.5,
+   "confidence": 62,
+   "pressure_handling": 60,
+   "fitness": "fit"
+  },
+  "NGR-04": {
+   "age": 30,
+   "height_cm": 193,
+   "foot": "R",
+   "form_last5": 7.1,
+   "confidence": 72,
+   "pressure_handling": 80,
+   "fitness": "fit"
+  },
+  "NGR-05": {
+   "age": 24,
+   "height_cm": 186,
+   "foot": "L",
+   "form_last5": 6.8,
+   "confidence": 70,
+   "pressure_handling": 72,
+   "fitness": "fit"
+  },
+  "NGR-03": {
+   "age": 28,
+   "height_cm": 181,
+   "foot": "L",
+   "form_last5": 6.9,
+   "confidence": 70,
+   "pressure_handling": 74,
+   "fitness": "fit",
+   "note": "Long throw up to 35 m"
+  },
+  "NGR-07": {
+   "age": 27,
+   "height_cm": 177,
+   "foot": "R",
+   "form_last5": 6.8,
+   "confidence": 68,
+   "pressure_handling": 70,
+   "fitness": "fit"
+  },
+  "NGR-06": {
+   "age": 29,
+   "height_cm": 184,
+   "foot": "R",
+   "form_last5": 7.0,
+   "confidence": 72,
+   "pressure_handling": 72,
+   "fitness": "fit",
+   "note": "Most tackles in the league (4.1 per 90)"
+  },
+  "NGR-08": {
+   "age": 31,
+   "height_cm": 179,
+   "foot": "R",
+   "form_last5": 7.2,
+   "confidence": 74,
+   "pressure_handling": 84,
+   "fitness": "fit"
+  },
+  "NGR-11": {
+   "age": 24,
+   "height_cm": 176,
+   "foot": "L",
+   "form_last5": 6.7,
+   "confidence": 66,
+   "pressure_handling": 58,
+   "fitness": "fit"
+  },
+  "NGR-09": {
+   "age": 25,
+   "height_cm": 180,
+   "foot": "R",
+   "form_last5": 7.5,
+   "confidence": 82,
+   "pressure_handling": 80,
+   "fitness": "fit",
+   "note": "5 goals, 4 of them from counter-attacks"
+  },
+  "NGR-10": {
+   "age": 29,
+   "height_cm": 189,
+   "foot": "R",
+   "form_last5": 6.8,
+   "confidence": 68,
+   "pressure_handling": 76,
+   "fitness": "fit"
+  },
+  "NGR-16": {
+   "age": 27,
+   "height_cm": 189,
+   "foot": "L",
+   "form_last5": null,
+   "confidence": 60,
+   "pressure_handling": 70,
+   "fitness": "fit"
+  },
+  "NGR-22": {
+   "age": 30,
+   "height_cm": 183,
+   "foot": "R",
+   "form_last5": 6.7,
+   "confidence": 66,
+   "pressure_handling": 74,
+   "fitness": "fit"
+  },
+  "NGR-15": {
+   "age": 27,
+   "height_cm": 196,
+   "foot": "R",
+   "form_last5": 6.6,
+   "confidence": 64,
+   "pressure_handling": 74,
+   "fitness": "fit"
+  },
+  "NGR-18": {
+   "age": 23,
+   "height_cm": 178,
+   "foot": "R",
+   "form_last5": 7.1,
+   "confidence": 74,
+   "pressure_handling": 78,
+   "fitness": "fit"
+  },
+  "NGR-20": {
+   "age": 21,
+   "height_cm": 179,
+   "foot": "R",
+   "form_last5": 6.9,
+   "confidence": 70,
+   "pressure_handling": 68,
+   "fitness": "fit"
+  },
+  "NGR-14": {
+   "age": 26,
+   "height_cm": 182,
+   "foot": "R",
+   "form_last5": 6.5,
+   "confidence": 62,
+   "pressure_handling": 72,
+   "fitness": "fit"
+  },
+  "NGR-17": {
+   "age": 28,
+   "height_cm": 188,
+   "foot": "R",
+   "form_last5": 6.4,
+   "confidence": 60,
+   "pressure_handling": 70,
+   "fitness": "fit"
+  }
+ },
+ "matchups": [
+  {
+   "id": "M1",
+   "title": "High line vs elite pace",
+   "home_side": "Kingsbridge's high defensive line with slow Dijkhuis",
+   "away_side": "Adeyemi-Clarke (pace 95) running in behind",
+   "expectation": "Northgate's best route to goal. Each ball over the top is a big chance.",
+   "favours": "away",
+   "metrics": [
+    "xg_from_balls_in_behind",
+    "def_line_height"
+   ]
+  },
+  {
+   "id": "M2",
+   "title": "Fast winger vs vulnerable right-back",
+   "home_side": "Nakamura-Brooks (pace 92, dribbling 86)",
+   "away_side": "Quiroga (weak 1v1, rash fouls)",
+   "expectation": "Kingsbridge will target their left flank; card risk for Quiroga.",
+   "favours": "home",
+   "metrics": [
+    "left_flank_share",
+    "take_ons"
+   ]
+  },
+  {
+   "id": "M3",
+   "title": "High press vs weak build-up",
+   "home_side": "Kingsbridge high press and counter-press",
+   "away_side": "Saarinen's poor distribution, Northgate's long build-up",
+   "expectation": "Kingsbridge win the ball high up; Northgate avoid playing out and go long.",
+   "favours": "home",
+   "metrics": [
+    "ppda",
+    "high_turnovers"
+   ]
+  },
+  {
+   "id": "M4",
+   "title": "Creator between the lines vs compact block",
+   "home_side": "Kovač in the pockets",
+   "away_side": "Northgate's compact 4-4-2 (about 25 m between lines)",
+   "expectation": "Little space for Kovač; Kingsbridge depend on width and crosses.",
+   "favours": "away",
+   "metrics": [
+    "between_lines_receptions"
+   ]
+  },
+  {
+   "id": "M5",
+   "title": "Hot-headed anchor vs counter-attacks",
+   "home_side": "Brannigan (discipline 38) stopping counters",
+   "away_side": "Northgate's fast transitions",
+   "expectation": "Brannigan will have to commit fouls to stop counters. Card risk is high with a strict referee.",
+   "favours": "away",
+   "metrics": [
+    "fouls_stopping_counters"
+   ]
+  },
+  {
+   "id": "M6",
+   "title": "Set pieces: zonal Kingsbridge vs aerial Northgate",
+   "home_side": "Kingsbridge zonal defending, keeper weak on crosses",
+   "away_side": "Northgate aerial strength and Gallagher's long throws",
+   "expectation": "Set pieces are Northgate's second route to goal. At the other end Achebe-Ward's marking is a target.",
+   "favours": "even",
+   "metrics": [
+    "set_piece_xg"
+   ]
+  },
+  {
+   "id": "M7",
+   "title": "Late fatigue",
+   "home_side": "Kingsbridge: 120 minutes three days ago, strong bench",
+   "away_side": "Northgate fade late (5/10 goals conceded after 75')",
+   "expectation": "Both sides tire. Whoever's bench brings fresh energy decides the final 20 minutes.",
+   "favours": "even",
+   "metrics": [
+    "distance_per_15",
+    "hi_runs_per_15"
+   ]
+  }
+ ]
+}

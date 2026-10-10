@@ -1,0 +1,140 @@
+[
+ {
+  "clock": "12:40",
+  "period": 1,
+  "player_id": "NGR-02",
+  "change": "yellow_card",
+  "modifiers": {
+   "aggression": 0.55,
+   "foul_rate": 0.5,
+   "depth_offset": -4,
+   "duel_penalty": 0.12,
+   "opponent_target_bias": 2.5
+  },
+  "effect": "Quiroga can no longer risk going into duels. He stands off Nakamura-Brooks (about 4 m deeper) and loses more one-on-ones. Kingsbridge recognise the weak spot and play noticeably more balls down their left flank."
+ },
+ {
+  "clock": "31:05",
+  "period": 1,
+  "player_id": "KBA-06",
+  "change": "yellow_card",
+  "modifiers": {
+   "aggression": 0.85,
+   "foul_rate": 0.85,
+   "depth_offset": -2,
+   "duel_penalty": 0.05
+  },
+  "effect": "Brannigan barely adjusts (low discipline rating): he still goes into duels and still counter-presses. The coaching staff note the risk but keep him on because he is their key passer."
+ },
+ {
+  "clock": "45:00",
+  "period": 2,
+  "player_id": "NGR-22",
+  "change": "substituted_on",
+  "replaces": "NGR-02"
+ },
+ {
+  "clock": "45:00",
+  "period": 2,
+  "player_id": "KBA-11",
+  "change": "effect_from_substitution",
+  "modifiers": {
+   "dribble_success": 0.75
+  },
+  "effect": "No change in system, but a different profile: Whitfield is a pure defender. Northgate's right flank no longer supports attacks (fewer overlaps), and Nakamura-Brooks wins far fewer duels. Kingsbridge stop targeting that side and shift their attacks to the right through El-Haddad."
+ },
+ {
+  "clock": "45:00",
+  "period": 2,
+  "player_id": "NGR-22",
+  "change": "effect_from_substitution",
+  "modifiers": {
+   "opponent_target_bias": 0.55
+  },
+  "effect": "No change in system, but a different profile: Whitfield is a pure defender. Northgate's right flank no longer supports attacks (fewer overlaps), and Nakamura-Brooks wins far fewer duels. Kingsbridge stop targeting that side and shift their attacks to the right through El-Haddad."
+ },
+ {
+  "clock": "52:18",
+  "period": 2,
+  "player_id": "KBA-06",
+  "change": "sent_off",
+  "effect": "Kingsbridge are down to 10 men and lose their tempo-setter and main ball-winner."
+ },
+ {
+  "clock": "58:30",
+  "period": 2,
+  "player_id": "KBA-14",
+  "change": "substituted_on",
+  "replaces": "KBA-10"
+ },
+ {
+  "clock": "63:20",
+  "period": 2,
+  "player_id": "NGR-18",
+  "change": "substituted_on",
+  "replaces": "NGR-07"
+ },
+ {
+  "clock": "63:20",
+  "period": 2,
+  "player_id": "NGR-20",
+  "change": "substituted_on",
+  "replaces": "NGR-10"
+ },
+ {
+  "clock": "72:30",
+  "period": 2,
+  "player_id": "NGR-11",
+  "change": "yellow_card",
+  "modifiers": {
+   "dribble_attempts": 0.7,
+   "aggression": 0.9
+  },
+  "effect": "Lindgren takes fewer dribbles into the box and passes more. With his credibility gone, the referee will be stricter on him."
+ },
+ {
+  "clock": "75:00",
+  "period": 2,
+  "player_id": "KBA-17",
+  "change": "substituted_on",
+  "replaces": "KBA-02"
+ },
+ {
+  "clock": "75:00",
+  "period": 2,
+  "player_id": "KBA-19",
+  "change": "substituted_on",
+  "replaces": "KBA-08"
+ },
+ {
+  "clock": "79:10",
+  "period": 2,
+  "player_id": "NGR-06",
+  "change": "yellow_card",
+  "modifiers": {
+   "aggression": 0.6,
+   "foul_rate": 0.5,
+   "depth_offset": -3,
+   "duel_penalty": 0.08
+  },
+  "effect": "Northgate's ball-winner has to be careful now. Kingsbridge midfielders get more time on the ball in front of the box, so second balls and crosses come in more freely."
+ },
+ {
+  "clock": "86:10",
+  "period": 2,
+  "player_id": "NGR-15",
+  "change": "substituted_on",
+  "replaces": "NGR-09"
+ },
+ {
+  "clock": "88:20",
+  "period": 2,
+  "player_id": "KBA-14",
+  "change": "yellow_card",
+  "modifiers": {
+   "aggression": 0.6,
+   "foul_rate": 0.5
+  },
+  "effect": "A 'professional' yellow: little effect this late in the game, but Achterberg can't afford another tackle."
+ }
+]
