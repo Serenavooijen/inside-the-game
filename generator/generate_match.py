@@ -1350,28 +1350,28 @@ class Match:
     # ------------------------------------------------------------------ outputs
     def write_outputs(self):
         os.makedirs(self.out, exist_ok=True)
-        with open(os.path.join(self.out, "events.json"), "w") as f:
+        with open(os.path.join(self.out, "events.json"), "w", encoding="utf-8") as f:
             json.dump(self.events, f, indent=1, ensure_ascii=False)
         keys = []
         for e in self.events:
             for k in e:
                 if k not in keys:
                     keys.append(k)
-        with open(os.path.join(self.out, "events.csv"), "w", newline="") as f:
+        with open(os.path.join(self.out, "events.csv"), "w", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, fieldnames=keys)
             w.writeheader()
             for e in self.events:
                 w.writerow(e)
-        with open(os.path.join(self.out, "tracking.csv"), "w", newline="") as f:
+        with open(os.path.join(self.out, "tracking.csv"), "w", newline="", encoding="utf-8") as f:
             w = csv.writer(f)
             w.writerow(["frame", "period", "second_in_period", "clock", "object_id", "team", "role_or_state", "x", "y",
                         "speed_ms_or_ball_holder"])
             w.writerows(self.tracking_rows)
-        with open(os.path.join(self.out, "player_status.json"), "w") as f:
+        with open(os.path.join(self.out, "player_status.json"), "w", encoding="utf-8") as f:
             json.dump(self.status_log, f, indent=1, ensure_ascii=False)
-        with open(os.path.join(self.out, "tactical_states.json"), "w") as f:
+        with open(os.path.join(self.out, "tactical_states.json"), "w", encoding="utf-8") as f:
             json.dump(self.tactical_log, f, indent=1, ensure_ascii=False)
-        with open(os.path.join(self.out, "morale_timeline.json"), "w") as f:
+        with open(os.path.join(self.out, "morale_timeline.json"), "w", encoding="utf-8") as f:
             json.dump({"note": "Modelled team confidence (1.0 = neutral). Drives pass accuracy, foul risk and tempo. Model output, not a measurement.",
                        "per_minute": self.morale_log, "events": self.morale_events}, f, indent=1)
         self.write_minute_stats()
@@ -1484,9 +1484,9 @@ class Match:
                 pfx = self.teams[s]["info"]["id"]
                 row[f"{pfx}_possession_pct_cum"] = round(100 * cum[s]["possession_seconds"] / ctot, 1) if ctot else None
             rows.append(row)
-        with open(os.path.join(self.out, "stats_per_minute.json"), "w") as f:
+        with open(os.path.join(self.out, "stats_per_minute.json"), "w", encoding="utf-8") as f:
             json.dump(rows, f, indent=1)
-        with open(os.path.join(self.out, "stats_per_minute.csv"), "w", newline="") as f:
+        with open(os.path.join(self.out, "stats_per_minute.csv"), "w", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
             w.writeheader()
             w.writerows(rows)
@@ -1557,9 +1557,9 @@ class Match:
         rows = [r for r in st.values() if r["minutes"] > 0]
         for r in rows:
             r["pass_accuracy"] = round(100 * r["passes_completed"] / r["passes"], 1) if r["passes"] else None
-        with open(os.path.join(self.out, "player_stats.json"), "w") as f:
+        with open(os.path.join(self.out, "player_stats.json"), "w", encoding="utf-8") as f:
             json.dump(rows, f, indent=1, ensure_ascii=False)
-        with open(os.path.join(self.out, "player_stats.csv"), "w", newline="") as f:
+        with open(os.path.join(self.out, "player_stats.csv"), "w", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
             w.writeheader()
             w.writerows(rows)
@@ -1570,11 +1570,11 @@ if __name__ == "__main__":
     here = os.path.dirname(os.path.abspath(__file__))
     script_path = sys.argv[1] if len(sys.argv) > 1 else os.path.join(here, "..", "script", "match_script.json")
     out_dir = sys.argv[2] if len(sys.argv) > 2 else os.path.join(here, "..", "output")
-    with open(script_path) as f:
+    with open(script_path, encoding="utf-8") as f:
         script = json.load(f)
     ctx_path = os.path.join(os.path.dirname(script_path), "pre_match_context.json")
     if os.path.exists(ctx_path):
-        with open(ctx_path) as f:
+        with open(ctx_path, encoding="utf-8") as f:
             script["_context"] = json.load(f)
     m = Match(script, out_dir)
     m.run()

@@ -1,5 +1,5 @@
 """
-Writes MATCH_ANALYSIS.md from output/analysis.json (run analyze_match.py first).
+Writes docs/MATCH_ANALYSIS.md from output/analysis.json (run analyze_match.py first).
 Structure follows the 12 components of football analysis.
 """
 import json
@@ -7,9 +7,9 @@ import os
 import sys
 
 ROOT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-A = json.load(open(os.path.join(ROOT, "output", "analysis.json")))
-S = json.load(open(os.path.join(ROOT, "script", "match_script.json")))
-CTX = json.load(open(os.path.join(ROOT, "script", "pre_match_context.json")))
+A = json.load(open(os.path.join(ROOT, "output", "analysis.json"), encoding="utf-8"))
+S = json.load(open(os.path.join(ROOT, "script", "match_script.json"), encoding="utf-8"))
+CTX = json.load(open(os.path.join(ROOT, "script", "pre_match_context.json"), encoding="utf-8"))
 H, W_ = S["teams"]["home"], S["teams"]["away"]
 HID, AID = H["id"], W_["id"]
 NAME = {HID: H["short"], AID: W_["short"]}
@@ -93,7 +93,7 @@ table(None, T, [("possession_pct", "Possession"), ("passes", "Passes"), ("pass_a
                 ("progressive_passes", "Progressive passes"), ("progressive_carries", "Progressive carries"),
                 ("receptions_between_lines", "Receptions between the lines (≥3 m space)"),
                 ("halfspace_receptions_final_40pct", "Half-space receptions (final 40%)"), ("switches", "Switches of play (>30 m wide)")])
-w("![Pass networks](output/figures/analysis_pass_networks.png)\n")
+w("![Pass networks](../output/figures/analysis_pass_networks.png)\n")
 w("### Final third\n")
 table(None, T, [("final_third_entries", "Final-third entries"), ("box_entries", "Box entries"), ("deep_completions", "Deep completions"),
                 ("crosses", "Crosses"), ("crosses_completed", "Crosses reaching a team-mate"), ("cutbacks", "Cutbacks"),
@@ -102,7 +102,7 @@ w("### Finishing\n")
 table(None, T, [("shots", "Shots"), ("shots_on_target", "On target"), ("goals", "Goals"), ("xg", "xG"), ("xg_per_shot", "xG per shot"),
                 ("xgot", "xGOT"), ("goals_minus_xg", "Goals − xG"), ("big_chances", "Big chances (xG ≥ 0.3)"),
                 ("big_chances_scored", "Big chances scored"), ("shots_in_box_pct", "Shots from inside the box"), ("headers", "Headed shots")])
-w("![Shot map](output/figures/analysis_shot_map.png)\n")
+w("![Shot map](../output/figures/analysis_shot_map.png)\n")
 fin = sorted([p for p in A["players"] if p["shots"]], key=lambda r: -r["xg"])[:6]
 w("| Player | Team | Shots | On target | xG | Goals |")
 w("|---|---|---|---|---|---|")
@@ -141,7 +141,7 @@ w("### Winning the ball (defence → attack)\n")
 table(None, TR, [("regains_in_play", "Regains in open play"), ("avg_regain_height_m", "Average regain height (m from own goal)"),
                  ("first_pass_forward_after_regain_pct", "First pass forward after regain"), ("regains_to_shot_within_15s", "Regains leading to a shot within 15 s"),
                  ("xg_from_fast_attacks", "xG from fast attacks"), ("median_seconds_regain_to_shot", "Median seconds regain → shot")])
-w("![Regains](output/figures/analysis_regains.png)\n")
+w("![Regains](../output/figures/analysis_regains.png)\n")
 w("Two different transition profiles: Kingsbridge win the ball high and immediately (counter-press), Northgate win it deep and go forward fast. "
   "Northgate's two counter-attack goals came from exactly the weakness the pre-match analysis predicted.\n")
 
@@ -150,7 +150,7 @@ w("## 5. Tactical systems and match-ups\n")
 w("### Formations over time\n")
 w("| Clock | Team | Formation | Players |")
 w("|---|---|---|---|")
-for x in json.load(open(os.path.join(ROOT, "output", "tactical_states.json"))):
+for x in json.load(open(os.path.join(ROOT, "output", "tactical_states.json"), encoding="utf-8")):
     w(f"| {x['clock']} | {x['team']} | {x['formation']} | {x['players_on_pitch']} |")
 w("")
 w("### By match phase\n")
@@ -160,8 +160,8 @@ for p in A["phases"]:
     h, a = p[HID], p[AID]
     w(f"| {p['phase']} | {p['minutes']} | {fmt(h['possession_pct'], '%')} | {fmt(h['field_tilt_pct'], '%')} | {fmt(h['ppda'])} | {fmt(h['xg'])} | {fmt(a['xg'])} | {fmt(a['ppda'])} | {fmt(h['def_line_out_of_possession'])} | {fmt(a['def_line_out_of_possession'])} |")
 w("")
-w("![Kingsbridge shapes](output/figures/shape_kingsbridge.png)\n")
-w("![Northgate shapes](output/figures/shape_northgate.png)\n")
+w("![Kingsbridge shapes](../output/figures/shape_kingsbridge.png)\n")
+w("![Northgate shapes](../output/figures/shape_northgate.png)\n")
 w("### Pressing triggers\n")
 w(f"| Trigger | {NAME[HID]} | {NAME[AID]} |")
 w("|---|---|---|")
@@ -206,7 +206,7 @@ w("|---|---|---|---|---|")
 for a, b in zip(A["physical_per_15"][HID], A["physical_per_15"][AID]):
     w(f"| {a['block']} | {a['m_per_player_min']} | {a['hi_m_per_player_min']} | {b['m_per_player_min']} | {b['hi_m_per_player_min']} |")
 w("")
-w("![Physical](output/figures/analysis_physical.png)\n")
+w("![Physical](../output/figures/analysis_physical.png)\n")
 top = sorted([p for p in A["players"] if p["minutes"] > 60 and p["position"] != "GK"], key=lambda r: -r["distance_km"])[:6]
 w("| Player | Km | HI runs | HI km | Sprints | Accelerations | Top km/h |")
 w("|---|---|---|---|---|---|---|")
@@ -217,7 +217,7 @@ sch = CTX["match_context"]["schedule"]
 w(f"*Context:* {NAME[HID]} – {sch['home']['previous_match']} ({sch['home']['rest_days']} days rest, load: {sch['home']['load']}). "
   f"{NAME[AID]} – {sch['away']['rest_days']} days rest, travel: {sch['away']['travel']}. The model applies a higher fatigue rate to Kingsbridge.\n")
 w("### Mental (partly modelled, use as supporting evidence only)\n")
-w("![Morale](output/figures/analysis_morale.png)\n")
+w("![Morale](../output/figures/analysis_morale.png)\n")
 w("**Measured reaction after each goal (conceding team, 10 min before vs. 10 min after):**\n")
 w("| Goal | Conceding team | Score after | Possession | Pass accuracy | Fouls | xG |")
 w("|---|---|---|---|---|---|---|")
@@ -316,5 +316,5 @@ for k, v in A["definitions"].items():
     w(f"- **{k.replace('_', ' ')}:** {v}")
 w("- **Model limits:** synthetic 1 Hz data; xG, xGOT and xT come from simple location models; confidence/morale is a model state, not a measurement; "
   "penalties are never generated; only scripted shots can become goals.")
-open(os.path.join(ROOT, "MATCH_ANALYSIS.md"), "w").write("\n".join(L))
+open(os.path.join(ROOT, "docs", "MATCH_ANALYSIS.md"), "w", encoding="utf-8").write("\n".join(L))
 print("MATCH_ANALYSIS.md written")

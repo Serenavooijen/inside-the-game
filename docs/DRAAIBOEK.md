@@ -10,7 +10,7 @@
 
 A possession side against a counter-attacking side. Kingsbridge dominate the ball early but their slow centre-back is exposed by Northgate's sprinter. A booked Northgate full-back becomes the target of the equaliser. Kingsbridge's hot-headed holding midfielder collects a second yellow, Northgate use the extra man with a switch to 4-3-3 and go ahead, and Kingsbridge go all-in with a back three and a target man to rescue a point.
 
-![Match flow](output/figures/match_flow.png)
+![Match flow](../output/figures/match_flow.png)
 
 The full analysis of this match along the 12 components of football analysis is in [MATCH_ANALYSIS.md](MATCH_ANALYSIS.md).
 
@@ -240,7 +240,7 @@ Brouwer intercepts Kovač's pass, Duarte plays the ball over the high line in on
 
 **Why it matters:** Textbook use of Kingsbridge's weak spot: a high line with a slow centre-back against the fastest striker on the pitch (see the data check for where the line was when the ball was played).
 
-![Goal 23:14](output/figures/goal_24_NGR-09.png)
+![Goal 23:14](../output/figures/goal_24_NGR-09.png)
 
 *Data check:* when Duarte played the ball (23:08), Dijkhuis stood 35 m from his own goal. At the moment of the shot he was 5 m away from Adeyemi-Clarke.
 
@@ -260,7 +260,7 @@ Kovač switches the play to Nakamura-Brooks, who attacks the booked Quiroga, cut
 
 **Why it matters:** A direct result of the 12th-minute yellow card: Quiroga stood off and gave Nakamura-Brooks room to shoot. A low-xG chance (0.09) finished by individual quality.
 
-![Goal 38:41](output/figures/goal_39_KBA-11.png)
+![Goal 38:41](../output/figures/goal_39_KBA-11.png)
 
 ### 44:30 Chance Northgate – off target (xG 0.07)
 
@@ -296,7 +296,7 @@ Lindgren carries on the counter, Petrov shoots over from the edge of the box. No
 | Defensive line (m from own goal) | 40.0 | 26.3 |
 | Team width (m) | 44.4 | 33.2 |
 
-![Kingsbridge shape](output/figures/shape_kingsbridge.png)
+![Kingsbridge shape](../output/figures/shape_kingsbridge.png)
 
 ### 52:50 📋 Tactical change Kingsbridge: 4-4-1
 
@@ -356,7 +356,7 @@ Lindgren carries on the counter, Petrov shoots over from the edge of the box. No
 | Defensive line (m from own goal) | 38.4 | 37.3 |
 | Team width (m) | 37.8 | 40.7 |
 
-![Northgate shape](output/figures/shape_northgate.png)
+![Northgate shape](../output/figures/shape_northgate.png)
 
 ### 67:05 ⚽ GOAL Northgate: Ismael Diallo-Kerr (assist Viktor Halvorsen)
 
@@ -366,7 +366,7 @@ Duarte finds Halvorsen unmarked between the lines; his through ball sends Diallo
 
 **Why it matters:** The result of the red card and both substitutions combined: Halvorsen receives the ball in exactly the zone a holding midfielder would normally cover. Four minutes after the tactical switch it pays off.
 
-![Goal 67:05](output/figures/goal_68_NGR-20.png)
+![Goal 67:05](../output/figures/goal_68_NGR-20.png)
 
 ### 72:30 🟨 YELLOW: Theo Lindgren (Northgate)
 
@@ -422,7 +422,7 @@ Castellanos gets to the byline and whips in a cross; Moore-Asante beats Hollande
 
 **Why it matters:** Both Kingsbridge substitutes combine for the equaliser. Exactly what the 75th-minute switch was for: wing-back crosses for a target man.
 
-![Goal 81:37](output/figures/goal_82_KBA-19.png)
+![Goal 81:37](../output/figures/goal_82_KBA-19.png)
 
 ### 84:02 Chance Northgate – saved (xG 0.38)
 

@@ -7,7 +7,7 @@ big chances, xT, set-piece xG, transitions, compactness, rest defence, physical
 load, game-state effects, match-ups, coaching) and writes:
 
   output/analysis.json        machine-readable analysis (per team, per phase, per player)
-  MATCH_ANALYSIS.md           human-readable analysis
+  docs/MATCH_ANALYSIS.md      human-readable analysis (via render_analysis.py)
   output/figures/analysis_*.png
 
 Usage: python analyze_match.py [root_dir]
@@ -29,13 +29,13 @@ OUT = os.path.join(ROOT, "output")
 FIG = os.path.join(OUT, "figures")
 os.makedirs(FIG, exist_ok=True)
 
-S = json.load(open(os.path.join(ROOT, "script", "match_script.json")))
-CTX = json.load(open(os.path.join(ROOT, "script", "pre_match_context.json")))
-EV = json.load(open(os.path.join(OUT, "events.json")))
-MIN = json.load(open(os.path.join(OUT, "stats_per_minute.json")))
-PS = {p["player_id"]: p for p in json.load(open(os.path.join(OUT, "player_stats.json")))}
-TACT = json.load(open(os.path.join(OUT, "tactical_states.json")))
-MOR = json.load(open(os.path.join(OUT, "morale_timeline.json")))
+S = json.load(open(os.path.join(ROOT, "script", "match_script.json"), encoding="utf-8"))
+CTX = json.load(open(os.path.join(ROOT, "script", "pre_match_context.json"), encoding="utf-8"))
+EV = json.load(open(os.path.join(OUT, "events.json"), encoding="utf-8"))
+MIN = json.load(open(os.path.join(OUT, "stats_per_minute.json"), encoding="utf-8"))
+PS = {p["player_id"]: p for p in json.load(open(os.path.join(OUT, "player_stats.json"), encoding="utf-8"))}
+TACT = json.load(open(os.path.join(OUT, "tactical_states.json"), encoding="utf-8"))
+MOR = json.load(open(os.path.join(OUT, "morale_timeline.json"), encoding="utf-8"))
 
 H, A = S["teams"]["home"], S["teams"]["away"]
 HID, AID = H["id"], A["id"]
@@ -91,7 +91,7 @@ def ratio(a, b, pct=True, n=1):
 
 # ------------------------------------------------------------------ tracking
 TR = defaultdict(dict)
-with open(os.path.join(OUT, "tracking.csv")) as f:
+with open(os.path.join(OUT, "tracking.csv"), encoding="utf-8") as f:
     for r in csv.DictReader(f):
         g = gsec(int(r["period"]), int(r["second_in_period"]))
         TR[g][r["object_id"]] = (float(r["x"]), float(r["y"]), r["team"], r["role_or_state"], int(r["period"]),
@@ -786,7 +786,7 @@ ANALYSIS = {"teams": T, "form": FORM, "transitions": TRN, "set_pieces": SP, "gam
                 "carry": "Movement with the ball between a reception and the same player's next action (>= 3 m).",
                 "sprint": "1-second sample above 23.8 km/h; high-intensity run: entering > 19.8 km/h.",
             }}
-json.dump(ANALYSIS, open(os.path.join(OUT, "analysis.json"), "w"), indent=1, ensure_ascii=False, default=float)
+json.dump(ANALYSIS, open(os.path.join(OUT, "analysis.json"), "w", encoding="utf-8"), indent=1, ensure_ascii=False, default=float)
 print("analysis.json written")
 
 
@@ -805,7 +805,7 @@ def reaction_after_goals():
 
 
 ANALYSIS["reaction_after_goals"] = reaction_after_goals()
-json.dump(ANALYSIS, open(os.path.join(OUT, "analysis.json"), "w"), indent=1, ensure_ascii=False, default=float)
+json.dump(ANALYSIS, open(os.path.join(OUT, "analysis.json"), "w", encoding="utf-8"), indent=1, ensure_ascii=False, default=float)
 
 
 # ================================================================== figures

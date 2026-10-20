@@ -59,7 +59,7 @@ Kingsbridge build up with a back three (Mbeki inverting) and play short from the
 | Half-space receptions (final 40%) | 88 | 12 |
 | Switches of play (>30 m wide) | 44 | 29 |
 
-![Pass networks](output/figures/analysis_pass_networks.png)
+![Pass networks](../output/figures/analysis_pass_networks.png)
 
 ### Final third
 
@@ -89,7 +89,7 @@ Kingsbridge build up with a back three (Mbeki inverting) and play short from the
 | Shots from inside the box | 73.7% | 45.5% |
 | Headed shots | 8 | 2 |
 
-![Shot map](output/figures/analysis_shot_map.png)
+![Shot map](../output/figures/analysis_shot_map.png)
 
 | Player | Team | Shots | On target | xG | Goals |
 |---|---|---|---|---|---|
@@ -152,7 +152,7 @@ Northgate defended low and compact (length 25.9 m) and conceded many shots, but 
 | xG from fast attacks | 1.25 | 0.51 |
 | Median seconds regain → shot | 7.0 | 11.0 |
 
-![Regains](output/figures/analysis_regains.png)
+![Regains](../output/figures/analysis_regains.png)
 
 Two different transition profiles: Kingsbridge win the ball high and immediately (counter-press), Northgate win it deep and go forward fast. Northgate's two counter-attack goals came from exactly the weakness the pre-match analysis predicted.
 
@@ -183,9 +183,9 @@ Two different transition profiles: Kingsbridge win the ball high and immediately
 | All in | 75-86 | 63.8% | 96.4% | 5.1 | 0.22 | 0.38 | 4.7 | 48.2 | 12.4 |
 | Holding on | 86-96 | 64.1% | 100.0% | 2.0 | 0.91 | 0 | – | 57.2 | 8.1 |
 
-![Kingsbridge shapes](output/figures/shape_kingsbridge.png)
+![Kingsbridge shapes](../output/figures/shape_kingsbridge.png)
 
-![Northgate shapes](output/figures/shape_northgate.png)
+![Northgate shapes](../output/figures/shape_northgate.png)
 
 ### Pressing triggers
 
@@ -265,7 +265,7 @@ Match rating = a transparent formula (6.0 + goals, assists, xG, xA, xT, defensiv
 | 60-75 | 94.0 | 3.07 | 93.7 | 7.28 |
 | 75-90+ | 101.7 | 9.86 | 90.3 | 3.58 |
 
-![Physical](output/figures/analysis_physical.png)
+![Physical](../output/figures/analysis_physical.png)
 
 | Player | Km | HI runs | HI km | Sprints | Accelerations | Top km/h |
 |---|---|---|---|---|---|---|
@@ -280,7 +280,7 @@ Match rating = a transparent formula (6.0 + goals, assists, xG, xA, xT, defensiv
 
 ### Mental (partly modelled, use as supporting evidence only)
 
-![Morale](output/figures/analysis_morale.png)
+![Morale](../output/figures/analysis_morale.png)
 
 **Measured reaction after each goal (conceding team, 10 min before vs. 10 min after):**
 

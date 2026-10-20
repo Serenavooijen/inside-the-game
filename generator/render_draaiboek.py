@@ -1,5 +1,5 @@
 """
-Builds the human-readable match script (DRAAIBOEK.md) and figures from the
+Builds the human-readable match script (docs/DRAAIBOEK.md) and figures from the
 script + generated output. Every number in the document is measured from the
 generated data, so script and data can never drift apart.
 
@@ -21,11 +21,11 @@ OUT = os.path.join(ROOT, "output")
 FIG = os.path.join(OUT, "figures")
 os.makedirs(FIG, exist_ok=True)
 
-S = json.load(open(os.path.join(ROOT, "script", "match_script.json")))
-EV = json.load(open(os.path.join(OUT, "events.json")))
-MIN = json.load(open(os.path.join(OUT, "stats_per_minute.json")))
-PS = json.load(open(os.path.join(OUT, "player_stats.json")))
-TACT = json.load(open(os.path.join(OUT, "tactical_states.json")))
+S = json.load(open(os.path.join(ROOT, "script", "match_script.json"), encoding="utf-8"))
+EV = json.load(open(os.path.join(OUT, "events.json"), encoding="utf-8"))
+MIN = json.load(open(os.path.join(OUT, "stats_per_minute.json"), encoding="utf-8"))
+PS = json.load(open(os.path.join(OUT, "player_stats.json"), encoding="utf-8"))
+TACT = json.load(open(os.path.join(OUT, "tactical_states.json"), encoding="utf-8"))
 
 H, A = S["teams"]["home"], S["teams"]["away"]
 TEAM = {H["id"]: H, A["id"]: A}
@@ -48,7 +48,7 @@ def parse_clock(clock, period):
 
 # ---------------------------------------------------------------- tracking (load once)
 TR = defaultdict(dict)       # gsec -> {object_id: (x, y, team, role)}
-with open(os.path.join(OUT, "tracking.csv")) as f:
+with open(os.path.join(OUT, "tracking.csv"), encoding="utf-8") as f:
     for r in csv.DictReader(f):
         g = gsec(int(r["period"]), int(r["second_in_period"]))
         TR[g][r["object_id"]] = (float(r["x"]), float(r["y"]), r["team"], r["role_or_state"], int(r["period"]))
@@ -306,7 +306,7 @@ def pre_match_section(w):
     cp = os.path.join(ROOT, "script", "pre_match_context.json")
     if not os.path.exists(cp):
         return
-    C = json.load(open(cp))
+    C = json.load(open(cp, encoding="utf-8"))
     mc = C["match_context"]
     w("## Pre-match context\n")
     w(f"- **Venue:** {mc['venue']['name']} ({mc['venue']['surface']}, {mc['venue']['pitch_condition']}), {mc['venue']['attendance']:,} spectators.")
@@ -390,7 +390,7 @@ def main():
       "all data in `output/` is generated from it (`generator/generate_match.py`) and every number below is measured from that data.\n")
     w("## Storyline\n")
     w(m["storyline"] + "\n")
-    w("![Match flow](output/figures/match_flow.png)\n")
+    w("![Match flow](../output/figures/match_flow.png)\n")
     w("The full analysis of this match along the 12 components of football analysis is in [MATCH_ANALYSIS.md](MATCH_ANALYSIS.md).\n")
     pre_match_section(w)
 
@@ -441,7 +441,7 @@ def main():
             w(ev["description"] + "\n")
             w(f"**Why it matters:** {ev['significance']}\n")
             ge = next(e for e in goals if e["player_id"] == ev["scorer"])
-            w(f"![Goal {ev['clock']}](output/figures/goal_{ge['minute'].replace('+', 'plus')}_{ev['scorer']}.png)\n")
+            w(f"![Goal {ev['clock']}](../output/figures/goal_{ge['minute'].replace('+', 'plus')}_{ev['scorer']}.png)\n")
             if ev["scorer"] == "NGR-09":
                 # the race: line height when the ball is played and the gap at the shot
                 lp = next(e for e in EV if e["type"] == "pass" and e["player_id"] == "NGR-08" and g - 15 <= gsec(e["period"], e["second_in_period"]) <= g)
@@ -480,7 +480,7 @@ def main():
             elif ev["card"] == "second_yellow":
                 w("**Impact on the team (measured):**\n")
                 w(impact_table(hid, g) + "\n")
-                w("![Kingsbridge shape](output/figures/shape_kingsbridge.png)\n")
+                w("![Kingsbridge shape](../output/figures/shape_kingsbridge.png)\n")
         elif t == "substitution":
             w(f"### {ev['clock']} 🔁 Substitution {team['short']}: {PL[ev['in']]['name']} on, {PL[ev['out']]['name']} off\n")
             w(f"**Reason:** {ev['reason']}\n")
@@ -496,7 +496,7 @@ def main():
                 w("**Impact (measured, 10 minutes before vs. after):**\n")
                 w(impact_table(tid, g) + "\n")
                 if ev["team"] == "away" and ev["new_formation"] == "4-3-3-deep":
-                    w("![Northgate shape](output/figures/shape_northgate.png)\n")
+                    w("![Northgate shape](../output/figures/shape_northgate.png)\n")
         elif t == "tactical_change":
             w(f"### {ev['clock']} 📋 Tactical change {team['short']}: {ev['new_formation']}\n")
             w(f"**Reason:** {ev['reason']}\n")
@@ -550,8 +550,8 @@ def main():
       "- Only scripted shots can become goals; the generator never adds an extra goal.\n"
       "- Card effects work through parameters (aggression, foul rate, depth, duel win chance, how much opponents target the player). The 'data checks' show how strongly this shows up in the data.\n"
       "- Sprint = a 1-second sample above 23.8 km/h (threshold lowered from the usual 25.2 km/h because 1 Hz averaging flattens peaks). High-intensity run = entering > 19.8 km/h. Top speeds are lower than in real data.\n")
-    open(os.path.join(ROOT, "DRAAIBOEK.md"), "w").write("\n".join(L))
-    print("written", os.path.join(ROOT, "DRAAIBOEK.md"))
+    open(os.path.join(ROOT, "docs", "DRAAIBOEK.md"), "w", encoding="utf-8").write("\n".join(L))
+    print("written", os.path.join(ROOT, "docs", "DRAAIBOEK.md"))
 
 
 if __name__ == "__main__":
