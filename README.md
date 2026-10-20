@@ -20,3 +20,14 @@ python generator/analyze_match.py
 python generator/render_analysis.py
 python generator/render_draaiboek.py
 ```
+
+## Backend
+
+```bash
+cd backend
+uv sync
+uv run uvicorn app.main:app --reload   # http://localhost:8000/health
+uv run pytest
+```
+
+The generator dependencies (numpy, matplotlib) are in the backend's dev group, so from `backend/` you can also run `uv run python ../generator/generate_match.py`.
