@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/modern-design-system-7e240850-8421-4e94-8aa0-19cdc16d01ba/colors_and_type.css">
+<script src="_ds/modern-design-system-7e240850-8421-4e94-8aa0-19cdc16d01ba/_ds_bundle.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&display=swap">
+<style>@keyframes itgSpin{to{transform:rotate(360deg)}}</style>
+</helmet>
+<div style="{{ varsStyle }}">
+<div data-screen-label="Match screen" style="width:1920px; height:1080px; display:flex; flex-direction:column; background:var(--itg-bg,#0C0E0D); color:var(--itg-fg,#F4F2EE); overflow:hidden; font-family:'Geist',sans-serif; font-variant-numeric:tabular-nums;">
+  <dc-import name="Scorebar" home="{{ sc.home }}" away="{{ sc.away }}" clock="{{ sc.clock }}" period="{{ sc.period }}" xg="{{ sc.xg }}" poss="{{ sc.poss }}" events="{{ sc.events }}" mode="{{ mode }}" hint-size="100%,104px"></dc-import>
+
+  <div style="flex:1; min-height:0; display:flex; gap:32px; padding:16px 40px;">
+    <div style="position:relative; width:1248px; height:832px; flex:none; border-radius:16px; overflow:hidden; box-shadow:0 12px 32px rgba(0,0,0,.35);">
+      <svg viewBox="-3 -3 111 74" style="position:absolute; inset:0; width:100%; height:100%; display:block;">
+        <defs>
+          <radialGradient id="itgLamp" cx="50%" cy="45%" r="70%">
+            <stop offset="0" stop-color="#fff" stop-opacity=".10"></stop>
+            <stop offset=".55" stop-color="#fff" stop-opacity="0"></stop>
+            <stop offset="1" stop-color="#000" stop-opacity=".38"></stop>
+          </radialGradient>
+          <pattern id="itgNet" width="0.8" height="0.8" patternUnits="userSpaceOnUse"><path d="M0 0L.8 .8M.8 0L0 .8" stroke="#fff" stroke-width=".08" stroke-opacity=".7"></path></pattern>
+        </defs>
+        <rect x="-3" y="-3" width="111" height="74" fill="var(--itg-grass-a,#2E7A3B)"></rect>
+        <g fill="var(--itg-grass-b,#286E34)">
+          <rect x="4.93" y="-3" width="7.93" height="74"></rect>
+          <rect x="20.79" y="-3" width="7.93" height="74"></rect>
+          <rect x="36.64" y="-3" width="7.93" height="74"></rect>
+          <rect x="52.5" y="-3" width="7.93" height="74"></rect>
+          <rect x="68.36" y="-3" width="7.93" height="74"></rect>
+          <rect x="84.21" y="-3" width="7.93" height="74"></rect>
+          <rect x="100.07" y="-3" width="7.93" height="74"></rect>
+        </g>
+        <g fill="none" stroke="#fff" stroke-opacity=".88" stroke-width=".22">
+          <rect x="0" y="0" width="105" height="68"></rect>
+          <line x1="52.5" y1="0" x2="52.5" y2="68"></line>
+          <circle cx="52.5" cy="34" r="9.15"></circle>
+          <rect x="0" y="13.84" width="16.5" height="40.32"></rect>
+          <rect x="88.5" y="13.84" width="16.5" height="40.32"></rect>
+          <rect x="0" y="24.84" width="5.5" height="18.32"></rect>
+          <rect x="99.5" y="24.84" width="5.5" height="18.32"></rect>
+          <path d="M16.5 26.69A9.15 9.15 0 0 1 16.5 41.31"></path>
+          <path d="M88.5 26.69A9.15 9.15 0 0 0 88.5 41.31"></path>
+          <path d="M0 1A1 1 0 0 0 1 0M104 0A1 1 0 0 0 105 1M105 67A1 1 0 0 0 104 68M1 68A1 1 0 0 0 0 67"></path>
+        </g>
+        <g fill="#fff" fill-opacity=".9">
+          <circle cx="52.5" cy="34" r=".35"></circle>
+          <circle cx="11" cy="34" r=".3"></circle>
+          <circle cx="94" cy="34" r=".3"></circle>
+        </g>
+        <rect x="-2" y="30.34" width="2" height="7.32" fill="url(#itgNet)" stroke="#fff" stroke-width=".25"></rect>
+        <rect x="105" y="30.34" width="2" height="7.32" fill="url(#itgNet)" stroke="#fff" stroke-width=".25"></rect>
+        <rect x="-3" y="-3" width="111" height="74" fill="url(#itgLamp)"></rect>
+      </svg>
+
+      <sc-if value="{{ isLive }}" hint-placeholder-val="{{ true }}">
+        <svg viewBox="-3 -3 111 74" style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none;">
+          <defs>
+            <linearGradient id="itgSprint" gradientUnits="userSpaceOnUse" x1="44" y1="13" x2="57" y2="10"><stop offset="0" stop-color="#6E98FF" stop-opacity="0"></stop><stop offset="1" stop-color="#6E98FF" stop-opacity=".9"></stop></linearGradient>
+          </defs>
+          <line x1="44" y1="13" x2="56" y2="10.3" stroke="url(#itgSprint)" stroke-width="1.6" stroke-linecap="round"></line>
+          <line x1="68" y1="22" x2="84.6" y2="11" stroke="#fff" stroke-width=".35" stroke-dasharray="1 .7" stroke-linecap="round"></line>
+          <path d="M83 10.2 85.4 10.5 84.3 12.6" fill="none" stroke="#fff" stroke-width=".35" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </sc-if>
+      <sc-if value="{{ isKey }}">
+        <svg viewBox="-3 -3 111 74" style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none;">
+          <line x1="92" y1="26" x2="104.4" y2="32.6" stroke="#fff" stroke-width=".4" stroke-dasharray="1 .6" stroke-linecap="round"></line>
+        </svg>
+      </sc-if>
+
+      <sc-for list="{{ players }}" as="pl" hint-placeholder-count="22">
+        <div style="position:absolute; left:{{ pl.left }}; top:{{ pl.top }}; width:38px; height:38px; transform:translate(-50%,-50%); border-radius:9999px; background:{{ pl.bg }}; color:{{ pl.fg }}; border:2px solid {{ pl.ring }}; box-sizing:border-box; display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:20px; line-height:1; box-shadow:0 4px 8px rgba(0,0,0,.45), 0 1px 2px rgba(0,0,0,.4);">{{ pl.n }}</div>
+      </sc-for>
+
+      <div style="position:absolute; left:{{ ball.left }}; top:{{ ball.top }}; width:18px; height:18px; transform:translate(-50%,-50%); filter:drop-shadow(0 3px 3px rgba(0,0,0,.5));">
+        <svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="8.2" fill="#fff" stroke="#121212" stroke-width="1"></circle><path d="M9 5.2 12.1 7.4 10.9 11H7.1L5.9 7.4Z" fill="#121212"></path><path d="M9 5.2V1.2M12.1 7.4l3.8-1.2M10.9 11l2.3 3.3M7.1 11l-2.3 3.3M5.9 7.4 2.1 6.2" stroke="#121212" stroke-width=".9"></path></svg>
+      </div>
+
+      <sc-if value="{{ isLive }}" hint-placeholder-val="{{ true }}">
+        <div style="position:absolute; left:calc(80.18% + 26px); top:17.57%; transform:translateY(-50%); display:flex; height:34px; border-radius:6px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,.35);">
+          <div style="width:34px; background:#2F6BFF; color:#fff; display:flex; align-items:center; justify-content:center; font:800 20px 'Barlow Condensed',sans-serif;">11</div>
+          <div style="background:rgba(12,14,13,.9); color:#F4F2EE; padding:0 12px; display:flex; align-items:center; font:700 20px 'Barlow Condensed',sans-serif; letter-spacing:.04em; text-transform:uppercase;">T. Varga</div>
+        </div>
+        <div style="position:absolute; left:76.58%; top:calc(29.73% + 26px); transform:translateX(-50%); display:flex; height:34px; border-radius:6px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,.35);">
+          <div style="width:34px; background:#FFB400; color:#121212; display:flex; align-items:center; justify-content:center; font:800 20px 'Barlow Condensed',sans-serif;">2</div>
+          <div style="background:rgba(12,14,13,.9); color:#F4F2EE; padding:0 12px; display:flex; align-items:center; gap:8px; font:700 20px 'Barlow Condensed',sans-serif; letter-spacing:.04em; text-transform:uppercase;">
+            <div>Quiroga</div>
+            <div style="width:10px; height:14px; border-radius:2px; background:#FFD21F;"></div>
+          </div>
+        </div>
+        <div style="position:absolute; left:70.27%; top:9.46%; transform:translate(-50%,-50%); display:flex; align-items:center; gap:12px; padding:8px 14px; border-radius:10px; background:rgba(12,14,13,.88); border:1px solid rgba(255,255,255,.12); color:#F4F2EE; white-space:nowrap;">
+          <div style="display:flex; flex-direction:column; gap:2px;">
+            <div style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.12em; color:#B8B4AD;">PASS QUALITY</div>
+            <div style="width:84px; height:4px; border-radius:9999px; background:rgba(255,255,255,.15);"><div style="width:86%; height:100%; border-radius:9999px; background:#F4F2EE;"></div></div>
+          </div>
+          <div style="font:800 28px 'Barlow Condensed',sans-serif; line-height:1;">0.86</div>
+        </div>
+        <div style="position:absolute; left:45.95%; top:9.46%; transform:translate(-50%,-50%); display:flex; align-items:center; gap:10px; padding:8px 14px; border-radius:10px; background:rgba(12,14,13,.88); border:1px solid rgba(255,255,255,.12); color:#F4F2EE; white-space:nowrap;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E98FF" stroke-width="2" stroke-linecap="round"><path d="M13 4 21 12 13 20M3 8h7M5 12h8M3 16h7"></path></svg>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.12em; color:#B8B4AD;">SPRINT · 3</div>
+          <div style="font:800 28px 'Barlow Condensed',sans-serif; line-height:1;">32.1<span style="font-size:16px; font-weight:700; color:#B8B4AD;"> km/h</span></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isKey }}">
+        <div style="position:absolute; inset:0; background:rgba(0,0,0,.24);"></div>
+        <div style="position:absolute; right:calc(14.41% + 26px); top:39.19%; transform:translateY(-50%); display:flex; height:34px; border-radius:6px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,.35);">
+          <div style="width:34px; background:#2F6BFF; color:#fff; display:flex; align-items:center; justify-content:center; font:800 20px 'Barlow Condensed',sans-serif;">19</div>
+          <div style="background:rgba(12,14,13,.9); color:#F4F2EE; padding:0 12px; display:flex; align-items:center; gap:8px; font:700 20px 'Barlow Condensed',sans-serif; letter-spacing:.04em; text-transform:uppercase;">
+            <div>Okafor</div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><path d="M8 3v14m-4-4 4 4 4-4" stroke="#3DD68C"></path></svg>
+          </div>
+        </div>
+        <div style="position:absolute; left:91.89%; top:25.68%; transform:translate(-50%,-50%); display:flex; align-items:center; gap:10px; padding:8px 14px; border-radius:10px; background:rgba(12,14,13,.88); border:1px solid rgba(255,255,255,.12); color:#F4F2EE; white-space:nowrap;">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.12em; color:#B8B4AD;">SHOT</div>
+          <div style="font:800 28px 'Barlow Condensed',sans-serif; line-height:1;">96<span style="font-size:16px; font-weight:700; color:#B8B4AD;"> km/h</span></div>
+        </div>
+        <div style="position:absolute; top:28px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:10px;">
+          <div style="display:flex; height:64px; border-radius:10px; overflow:hidden; box-shadow:0 12px 32px rgba(0,0,0,.45);">
+            <div style="background:#F4F2EE; color:#0C0E0D; padding:0 24px; display:flex; align-items:center; font:800 42px 'Barlow Condensed',sans-serif; letter-spacing:.08em;">GOAL</div>
+            <div style="background:#2F6BFF; color:#fff; padding:0 24px 0 18px; display:flex; align-items:center; gap:12px; font:800 38px 'Barlow Condensed',sans-serif; letter-spacing:.02em;">
+              <svg width="30" height="34" viewBox="0 0 34 38"><path d="M17 1 32 6v12c0 10-7 16-15 19C9 34 2 28 2 18V6Z" fill="#2F6BFF" stroke="#fff" stroke-width="2"></path><path d="M7 25q10-13 20 0" fill="none" stroke="#fff" stroke-width="2.5"></path><path d="M7 25h20M12 25v-5M17 25v-8M22 25v-5" stroke="#fff" stroke-width="1.6"></path></svg>
+              <div>Kingsbridge 2-1</div>
+            </div>
+            <div style="background:#0C0E0D; color:#F4F2EE; padding:0 22px; display:flex; align-items:center; font:800 38px 'Barlow Condensed',sans-serif;">67'</div>
+          </div>
+          <div style="padding:6px 14px; border-radius:9999px; background:rgba(12,14,13,.88); color:#F4F2EE; font-size:15px;">Okafor (19) · assist Lindqvist (21) · both came on at 62'</div>
+        </div>
+        <div style="position:absolute; top:28px; left:28px; display:flex; align-items:center; gap:8px; padding:8px 14px 8px 10px; border-radius:9999px; background:#F4F2EE; color:#0C0E0D; font-size:15px; font-weight:600;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 2h4M12 14l3-3"></path><circle cx="12" cy="14" r="8"></circle></svg>
+          <div>Key moment · slowed to 1×</div>
+        </div>
+        <div style="position:absolute; top:28px; right:28px; display:flex; align-items:center; gap:8px; padding:8px 14px; border-radius:9999px; background:rgba(12,14,13,.88); color:#F4F2EE; font-family:'JetBrains Mono',monospace; font-size:13px; letter-spacing:.12em;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M11 19 2 12l9-7v14ZM22 19l-9-7 9-7v14Z"></path></svg>
+          <div>REPLAY</div>
+        </div>
+        <div style="position:absolute; left:28px; bottom:28px; width:700px;">
+          <dc-import name="InsightCard" type="goal" minute="67" team="kba" size="hero" phase="streaming" animate="{{ animateHero }}" zone="left" mode="{{ feedMode }}" text="Two substitutes made the goal. Lindqvist crossed from the left, where Kingsbridge have sent 48% of their attacks since Quiroga's booking." evidence="{{ heroEvidence }}" hint-size="700px,300px"></dc-import>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isOverturned }}">
+        <div style="position:absolute; left:62.16%; top:calc(63.51% - 26px); transform:translate(-50%,-100%); display:flex; height:34px; border-radius:6px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,.35);">
+          <div style="width:34px; background:#2F6BFF; color:#fff; display:flex; align-items:center; justify-content:center; font:800 20px 'Barlow Condensed',sans-serif;">8</div>
+          <div style="background:rgba(12,14,13,.9); color:#F4F2EE; padding:0 12px; display:flex; align-items:center; font:700 20px 'Barlow Condensed',sans-serif; letter-spacing:.04em; text-transform:uppercase;">R. Holm</div>
+        </div>
+        <div style="position:absolute; top:28px; right:28px; display:flex; align-items:center; gap:10px; padding:10px 16px 10px 12px; border-radius:9999px; background:rgba(12,14,13,.9); border:1px solid #FF5A4F; color:#F4F2EE; font-size:15px; font-weight:600; white-space:nowrap;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF5A4F" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8M12 17v4"></path></svg>
+          <div>VAR check · 1 claim overturned</div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isFulltime }}">
+        <div style="position:absolute; top:28px; left:28px; display:flex; align-items:center; gap:8px; padding:8px 14px 8px 10px; border-radius:9999px; background:rgba(12,14,13,.88); color:#F4F2EE; font-size:15px; font-weight:600;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11a5 5 0 0 0 9.6 2H21V8H8.2A5 5 0 0 0 3 11Z"></path><path d="M15 8V5"></path></svg>
+          <div>Full time · Kingsbridge 2-2 Northgate</div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ reconnecting }}">
+        <div style="position:absolute; bottom:28px; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:12px; padding:10px 18px 10px 14px; border-radius:9999px; background:rgba(12,14,13,.9); color:#F4F2EE; font-size:15px; box-shadow:0 12px 32px rgba(0,0,0,.35);">
+          {{ spinner }}
+          <div style="font-weight:600;">Stream dropped. Reconnecting…</div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:12px; color:#B8B4AD;">Retry in 3 s</div>
+        </div>
+      </sc-if>
+    </div>
+
+    <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:16px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+        <div style="display:flex; flex-direction:column; gap:2px;">
+          <div style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:28px; letter-spacing:.04em; text-transform:uppercase; line-height:1;">Producer feed</div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.12em; color:var(--itg-fg-3,#8A867F);">NEWEST FIRST</div>
+        </div>
+        <div style="display:flex; gap:2px; padding:3px; border-radius:10px; background:var(--itg-surface-2,#1F2320);">
+          <button onClick="{{ setCasual }}" style="height:34px; padding:0 12px; border:none; border-radius:6px; background:{{ casualBg }}; color:{{ casualFg }}; font:600 14px 'Geist',sans-serif; cursor:pointer;">Casual fan</button>
+          <button onClick="{{ setAnalyst }}" style="height:34px; padding:0 12px; border:none; border-radius:6px; background:{{ analystBg }}; color:{{ analystFg }}; font:600 14px 'Geist',sans-serif; cursor:pointer;">Analyst</button>
+        </div>
+      </div>
+      <div style="position:relative; flex:1; min-height:0; overflow:hidden;">
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <sc-for list="{{ feed }}" as="c" hint-placeholder-count="3">
+            <dc-import name="InsightCard" type="{{ c.type }}" minute="{{ c.minute }}" team="{{ c.team }}" text="{{ c.text }}" status="{{ c.status }}" phase="{{ c.phase }}" expanded="{{ c.expanded }}" zone="{{ c.zone }}" evidence="{{ c.evidence }}" analyst-stats="{{ c.analystStats }}" mode="{{ feedMode }}" claim="{{ c.claim }}" stat-a="{{ c.statA }}" stat-b="{{ c.statB }}" stat-a-label="{{ c.statALabel }}" stat-b-label="{{ c.statBLabel }}" stat-a-team="{{ c.statATeam }}" stat-b-team="{{ c.statBTeam }}" fallback-reason="{{ c.fallbackReason }}" hint-size="100%,180px"></dc-import>
+          </sc-for>
+        </div>
+        <div style="position:absolute; left:0; right:0; bottom:0; height:64px; background:linear-gradient(to bottom, transparent, var(--itg-bg,#0C0E0D)); pointer-events:none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <dc-import name="Controls" minute="{{ sc.minute }}" minute-label="{{ sc.minuteLabel }}" speed="{{ speed }}" playing="{{ playing }}" mode="{{ mode }}" key-moment="{{ isKey }}" on-toggle="{{ togglePlay }}" on-speed="{{ setSpeed }}" on-seek="{{ seek }}" hint-size="100%,112px"></dc-import>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1920,&quot;height&quot;:1080},&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;live&quot;,&quot;key&quot;,&quot;overturned&quot;,&quot;fulltime&quot;],&quot;default&quot;:&quot;live&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;night&quot;,&quot;day&quot;],&quot;default&quot;:&quot;night&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;live&quot;,&quot;replay&quot;],&quot;default&quot;:&quot;live&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;reconnecting&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;feedMode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;casual&quot;,&quot;analyst&quot;],&quot;default&quot;:&quot;casual&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;animate&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const THEMES = {
+  night: { '--itg-bg': '#0C0E0D', '--itg-surface': '#161917', '--itg-surface-2': '#1F2320', '--itg-line': '#2A2E2B', '--itg-line-strong': '#3A3F3B', '--itg-fg': '#F4F2EE', '--itg-fg-2': '#B8B4AD', '--itg-fg-3': '#8A867F', '--itg-accent': '#D4FF3F', '--itg-accent-text': '#D4FF3F', '--itg-ok': '#3DD68C', '--itg-ok-soft': 'rgba(61,214,140,.14)', '--itg-bad': '#FF5A4F', '--itg-bad-soft': 'rgba(255,90,79,.14)', '--itg-fallback': '#A39F98', '--itg-grass-a': '#2E7A3B', '--itg-grass-b': '#286E34', '--itg-kba': '#2F6BFF', '--itg-kba-text': '#6E98FF', '--itg-ngr': '#FFB400', '--itg-ngr-text': '#FFB400' },
+  day: { '--itg-bg': '#FAF8F5', '--itg-surface': '#FFFFFF', '--itg-surface-2': '#F0EDE8', '--itg-line': '#E8E4DD', '--itg-line-strong': '#D6D0C5', '--itg-fg': '#121212', '--itg-fg-2': '#4A4A4A', '--itg-fg-3': '#6B6B6B', '--itg-accent': '#D4FF3F', '--itg-accent-text': '#4F6B00', '--itg-ok': '#1F7A4C', '--itg-ok-soft': '#E3F3EB', '--itg-bad': '#B83232', '--itg-bad-soft': '#F8E4E1', '--itg-fallback': '#6B6B6B', '--itg-grass-a': '#3C9447', '--itg-grass-b': '#358840', '--itg-kba': '#2F6BFF', '--itg-kba-text': '#2152D6', '--itg-ngr': '#FFB400', '--itg-ngr-text': '#9A6A00' },
+};
+const KBA = { 1: [10, 34], 2: [55, 58], 4: [46, 42], 5: [46, 26], 3: [57, 10], 6: [58, 34], 8: [68, 44], 10: [68, 22], 7: [84, 58], 9: [88, 32], 11: [86, 10] };
+const NGR = { 1: [99, 34], 2: [82, 19], 5: [88, 28], 6: [88, 40], 3: [85, 54], 7: [74, 26], 4: [77, 35], 8: [76, 44], 11: [75, 53], 9: [60, 30], 10: [58, 46] };
+const KEY_KBA = { 1: [14, 34], 2: [66, 58], 4: [52, 42], 5: [52, 26], 3: [70, 8], 6: [66, 34], 8: [76, 40], 10: [78, 18], 7: [90, 50], 19: [92, 26], 11: [95, 12] };
+const KEY_NGR = { 1: [101.5, 31], 2: [90, 18], 5: [97, 29], 6: [96, 38], 3: [93, 50], 7: [86, 20], 4: [86, 36], 8: [84, 44], 11: [85, 56], 9: [72, 30], 10: [70, 44] };
+const LATE_KBA = { ...KBA, 19: KBA[9], 21: KBA[7] }; delete LATE_KBA[9]; delete LATE_KBA[7];
+const LATE_NGR = { ...NGR, 18: NGR[9], 20: NGR[10] }; delete LATE_NGR[9]; delete LATE_NGR[10];
+
+const G = (team, text) => ({ kind: 'goal', team, text });
+const EV = {
+  varga: G('kba', "Varga 23'"), bakker: G('ngr', "Bakker 38'"), quiroga: { kind: 'yellow', team: 'ngr', text: "Quiroga 52'" },
+  subK: { kind: 'sub', team: 'kba', text: "Okafor, Lindqvist 62'" }, okafor: G('kba', "Okafor 67'"), subN: { kind: 'sub', team: 'ngr', text: "Mensah 75'" }, mensah: G('ngr', "Mensah 84'"),
+};
+const C = {
+  card52: { type: 'card', minute: 52, team: 'ngr', text: "After Quiroga's yellow card, Kingsbridge shifted their attacks to the left: 48% of attacks, up from 24%.", status: 'checked', phase: 'done', zone: 'left', evidence: ["Attacks via left since 52': 48%", 'Attacks via left before: 24%', "Yellow card: Quiroga (NGR 2), 52'"], analystStats: [{ k: 'Left attacks', v: '48%' }, { k: 'Before card', v: '24%' }, { k: 'Field tilt', v: '79%' }] },
+  upd: (m) => ({ type: 'update', minute: m, text: 'Kingsbridge are pinning Northgate back: 79% field tilt and a PPDA of 5.1 against 11.1.', status: 'checked', phase: 'done', evidence: ['Field tilt 79% – 21%', 'PPDA 5.1 vs 11.1'], analystStats: [{ k: 'Field tilt', v: '79%' }, { k: 'PPDA KBA', v: '5.1' }, { k: 'PPDA NGR', v: '11.1' }] }),
+  goal38: { type: 'goal', minute: 38, team: 'ngr', text: "Northgate's equaliser came from one ball in behind. Kingsbridge held their line at 48 m.", status: 'checked', phase: 'done', zone: 'behind', evidence: ['Kingsbridge defensive line: 48 m', 'Shot xG 0.41'] },
+  goal23: { type: 'goal', minute: 23, team: 'kba', text: 'Varga finished a move that started with a regain in the Northgate half.', status: 'checked', phase: 'done', evidence: ['Regain at 41 m from goal', 'Shot xG 0.28'] },
+  goal67: { type: 'goal', minute: 67, team: 'kba', text: "Two substitutes made the goal. Lindqvist crossed from the left, where Kingsbridge have sent 48% of their attacks since Quiroga's booking.", status: 'checked', phase: 'done', zone: 'left', evidence: ["Assist: Lindqvist (sub 62')", "Goal: Okafor (sub 62')", 'Attacks via left: 48%'] },
+  over86: { type: 'momentum', minute: 86, status: 'overturned', phase: 'done', claim: 'Northgate created more chances after half-time', text: 'Northgate did not create more chances after half-time, 3 shots vs 7.', statA: '3', statALabel: "Northgate shots 46–86'", statATeam: 'ngr', statB: '7', statBLabel: "Kingsbridge shots 46–86'", statBTeam: 'kba', evidence: ["Shots 46–86': NGR 3, KBA 7", 'Source: momentum agent', 'Checked against event data'] },
+  goal84: { type: 'goal', minute: 84, team: 'ngr', text: "Northgate scored with 2 of their 3 big chances. Kingsbridge's high line (48 m) was beaten by balls in behind, worth 1.33 xG.", status: 'checked', phase: 'done', zone: 'behind', evidence: ['Big chances Northgate: 3, scored 2', 'xG from balls in behind: 1.33', 'Kingsbridge defensive line: 48 m'], analystStats: [{ k: 'Big chances', v: '2/3' }, { k: 'xG in behind', v: '1.33' }, { k: 'Line height', v: '48 m' }] },
+  fb80: { type: 'update', minute: 80, text: 'Kingsbridge 2, Northgate 1 after 80 minutes. Kingsbridge lead on xG, 2.21 to 1.18.', status: 'fallback', phase: 'done', fallbackReason: 'Model timed out after 6 s' },
+  ft: { type: 'fulltime', minute: 90, text: 'All goals after the 60th minute were scored and assisted by substitutes.', status: 'checked', phase: 'done', evidence: ["67' Okafor (sub 62'), assist Lindqvist (sub 62')", "84' Mensah (sub 75'), assist Achterberg (sub 70')"] },
+};
+const SCEN = {
+  live: { minute: 57, clock: '57:40', period: '2ND HALF', home: 1, away: 1, xg: ['1.64', '0.88'], poss: [59, 41], events: [EV.varga, EV.bakker, EV.quiroga], speed: 10, kba: KBA, ngr: NGR, ball: [78, 15.5], feed: [{ ...C.card52, expanded: true }, C.upd(50), C.goal38, C.goal23] },
+  key: { minute: 67, clock: '67:08', period: '2ND HALF', home: 2, away: 1, xg: ['2.02', '1.05'], poss: [58, 42], events: [EV.bakker, EV.quiroga, EV.subK, EV.okafor], speed: 1, kba: KEY_KBA, ngr: KEY_NGR, ball: [104, 32.8], feed: [C.upd(60), C.card52, C.goal38, C.goal23] },
+  overturned: { minute: 86, clock: '86:20', period: '2ND HALF', home: 2, away: 2, xg: ['2.31', '1.48'], poss: [58, 42], events: [EV.okafor, EV.subN, EV.mensah], speed: 10, kba: LATE_KBA, ngr: LATE_NGR, ball: [67.5, 45.5], feed: [{ ...C.over86, expanded: true }, C.fb80, C.goal84, C.goal67] },
+  fulltime: { minute: 90, minuteLabel: 'FT', clock: '90:00', period: 'FULL TIME', home: 2, away: 2, xg: ['2.48', '1.52'], poss: [58, 42], events: [EV.varga, EV.bakker, EV.okafor, EV.mensah], speed: 10, kba: LATE_KBA, ngr: LATE_NGR, ball: [52.5, 34], feed: [{ ...C.ft, expanded: true }, C.over86, C.goal84, C.fb80] },
+};
+const pct = (x, y) => ({ left: ((x + 3) / 111 * 100).toFixed(2) + '%', top: ((y + 3) / 74 * 100).toFixed(2) + '%' });
+
+class Component extends DCLogic {
+  state = { view: null, playing: null, speed: null, feedMode: null };
+  componentDidUpdate(pp) {
+    if (pp.state !== this.props.state) this.setState({ view: null, speed: null, playing: null });
+    if (pp.feedMode !== this.props.feedMode) this.setState({ feedMode: null });
+  }
+  renderVals() {
+    const p = this.props;
+    const view = this.state.view ?? p.state ?? 'live';
+    const s = SCEN[view] || SCEN.live;
+    const theme = THEMES[p.theme] || THEMES.night;
+    const players = [];
+    const add = (pos, team) => Object.entries(pos).forEach(([n, [x, y]]) => {
+      const gk = n === '1';
+      const c = team === 'kba' ? (gk ? ['#F06EB4', '#121212'] : ['#2F6BFF', '#FFFFFF']) : (gk ? ['#202020', '#FFFFFF'] : ['#FFB400', '#121212']);
+      players.push({ n, ...pct(x, y), bg: c[0], fg: c[1], ring: team === 'ngr' && !gk ? '#121212' : '#FFFFFF' });
+    });
+    add(s.kba, 'kba'); add(s.ngr, 'ngr');
+    const feedMode = this.state.feedMode ?? p.feedMode ?? 'casual';
+    const on = 'var(--itg-fg,#F4F2EE)';
+    const pickView = m => m < 60 ? 'live' : m < 80 ? 'key' : m < 90 ? 'overturned' : 'fulltime';
+    return {
+      varsStyle: theme,
+      mode: p.mode ?? 'live',
+      sc: s,
+      isLive: view === 'live', isKey: view === 'key', isOverturned: view === 'overturned', isFulltime: view === 'fulltime',
+      players, ball: pct(s.ball[0], s.ball[1]),
+      feed: s.feed,
+      feedMode,
+      animateHero: p.animate ?? true,
+      heroEvidence: C.goal67.evidence,
+      reconnecting: !!p.reconnecting,
+      spinner: React.createElement('span', { style: { width: 16, height: 16, borderRadius: 9999, border: '2px solid rgba(255,255,255,.25)', borderTopColor: '#F4F2EE', display: 'inline-block', animation: 'itgSpin 1s linear infinite' } }),
+      speed: this.state.speed ?? s.speed,
+      playing: this.state.playing ?? true,
+      togglePlay: () => this.setState(st => ({ playing: !(st.playing ?? true) })),
+      setSpeed: n => this.setState({ speed: n }),
+      seek: m => this.setState({ view: pickView(m), speed: null }),
+      setCasual: () => this.setState({ feedMode: 'casual' }), setAnalyst: () => this.setState({ feedMode: 'analyst' }),
+      casualBg: feedMode === 'casual' ? on : 'transparent', casualFg: feedMode === 'casual' ? 'var(--itg-bg,#0C0E0D)' : 'var(--itg-fg-2,#B8B4AD)',
+      analystBg: feedMode === 'analyst' ? on : 'transparent', analystFg: feedMode === 'analyst' ? 'var(--itg-bg,#0C0E0D)' : 'var(--itg-fg-2,#B8B4AD)',
+    };
+  }
+}
+</script>
+</body>
+</html>

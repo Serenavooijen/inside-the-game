@@ -1,0 +1,107 @@
+import type { MatchEvent, MatchStats, Mode } from '@/lib/contracts';
+import { KbaCrest, Logo, NgrCrest, SmallBall, SubIcon } from './icons';
+import { ThemeToggle } from './ThemeToggle';
+
+type Props = {
+  stats: MatchStats;
+  clock: string;
+  period: string;
+  mode: Mode;
+  /** Most recent first is not required; the bar shows the last four */
+  events: MatchEvent[];
+};
+
+const teamColor = (t: string) => (t === 'kba' ? 'var(--itg-kba)' : 'var(--itg-ngr)');
+
+export function Scorebar({ stats, clock, period, mode, events }: Props) {
+  const recent = events.filter((e) => e.kind !== 'bigchance').slice(-4);
+  const [possH, possA] = stats.possession;
+  const [xgH, xgA] = stats.xg;
+  return (
+    <header className="grid h-[104px] flex-none grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-8 border-b border-line bg-bg px-10">
+      <div className="flex min-w-0 items-center gap-5">
+        <a href="/" className="flex items-center gap-[10px]" aria-label="Inside the Game, back to the match list">
+          <Logo />
+          <span className="font-display text-[28px] font-extrabold uppercase leading-none tracking-[.04em]">Inside the Game</span>
+        </a>
+        {mode === 'live' ? (
+          <div className="flex items-center gap-2 rounded-full bg-surface-2 px-3 py-[6px] text-[14px] font-semibold">
+            <span className="itg-live inline-block h-[9px] w-[9px] rounded-full bg-corrected" />
+            Live
+          </div>
+        ) : (
+          <div className="flex flex-none items-center gap-[10px] whitespace-nowrap rounded-full border border-line-strong py-[6px] pl-[10px] pr-[14px] text-[14px] font-semibold">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+              <path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" />
+            </svg>
+            Recorded replay
+            <span className="font-mono text-[12px] font-medium text-fg-3">No live AI</span>
+          </div>
+        )}
+        <ThemeToggle />
+      </div>
+
+      <div className="flex flex-col items-center gap-[6px]">
+        <div className="flex h-[60px] items-stretch overflow-hidden rounded-md bg-surface-2 shadow-[0_4px_12px_rgba(0,0,0,.25)]">
+          <div className="flex items-center gap-3 border-b-[5px] border-kba pl-[14px] pr-[18px]">
+            <KbaCrest />
+            <span className="font-display text-[32px] font-extrabold tracking-[.04em]">KBA</span>
+          </div>
+          <div
+            className="flex items-center gap-[14px] bg-fg px-[22px] font-display text-score font-extrabold leading-none text-bg"
+            aria-label={`Score ${stats.score[0]} – ${stats.score[1]}`}
+          >
+            <span>{stats.score[0]}</span>
+            <span className="text-[28px] opacity-50">–</span>
+            <span>{stats.score[1]}</span>
+          </div>
+          <div className="flex items-center gap-3 border-b-[5px] border-ngr pl-[18px] pr-[14px]">
+            <span className="font-display text-[32px] font-extrabold tracking-[.04em]">NGR</span>
+            <NgrCrest />
+          </div>
+          <div className="flex min-w-[96px] flex-col items-center justify-center border-l border-line px-[18px]">
+            <span className="font-mono text-[24px] font-medium leading-none">{clock}</span>
+            <span className="mt-1 font-mono text-[11px] tracking-[.12em] text-fg-3">{period}</span>
+          </div>
+        </div>
+        <div className="flex h-[18px] items-center gap-[18px] text-[13px] text-fg-2">
+          {recent.map((e) => (
+            <div key={e.id} className="flex items-center gap-[6px]">
+              {e.kind === 'goal' && <SmallBall />}
+              {e.kind === 'yellow' && <span className="inline-block h-[11px] w-2 rounded-[2px] bg-card-yellow" />}
+              {e.kind === 'red' && <span className="inline-block h-[11px] w-2 rounded-[2px] bg-card-red" />}
+              {e.kind === 'sub' && <SubIcon />}
+              <span className="inline-block h-[6px] w-[6px] rounded-[2px]" style={{ background: teamColor(e.team) }} />
+              <span>{e.text}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex items-center justify-end gap-10">
+        <div className="flex w-[200px] flex-col gap-[6px]">
+          <div className="flex items-baseline justify-between">
+            <span className="font-display text-[26px] font-bold leading-none">{possH}%</span>
+            <span className="font-mono text-label tracking-[.12em] text-fg-3">POSSESSION</span>
+            <span className="font-display text-[26px] font-bold leading-none">{possA}%</span>
+          </div>
+          <div className="flex h-[6px] gap-[3px]">
+            <div className="rounded-full bg-kba" style={{ flex: possH }} />
+            <div className="rounded-full bg-ngr" style={{ flex: possA }} />
+          </div>
+        </div>
+        <div className="flex flex-col items-center gap-[6px]">
+          <div className="flex items-baseline gap-[14px] font-display text-[26px] font-bold leading-none">
+            <span>{xgH.toFixed(2)}</span>
+            <span className="font-mono text-label font-medium tracking-[.12em] text-fg-3">XG</span>
+            <span>{xgA.toFixed(2)}</span>
+          </div>
+          <div className="flex h-[6px] w-[120px] gap-[3px]">
+            <div className="rounded-full bg-kba" style={{ flex: Math.max(xgH, 0.01) }} />
+            <div className="rounded-full bg-ngr" style={{ flex: Math.max(xgA, 0.01) }} />
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}

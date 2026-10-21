@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/modern-design-system-7e240850-8421-4e94-8aa0-19cdc16d01ba/colors_and_type.css">
+<script src="_ds/modern-design-system-7e240850-8421-4e94-8aa0-19cdc16d01ba/_ds_bundle.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&display=swap">
+<style>@keyframes itgPulse{0%,100%{opacity:1}50%{opacity:.3}}@keyframes itgBlink{0%,49%{opacity:1}50%,100%{opacity:0}}</style>
+</helmet>
+<div style="box-sizing:border-box; width:100%; background:var(--itg-surface,#161917); color:var(--itg-fg,#F4F2EE); border:{{ border }}; border-radius:16px; padding:{{ pad }}; display:flex; flex-direction:column; gap:14px; box-shadow:{{ shadow }}; font-family:'Geist',sans-serif; font-variant-numeric:tabular-nums;">
+  <div style="display:flex; align-items:center; gap:12px;">
+    <div style="width:36px; height:36px; flex:none; border-radius:10px; background:var(--itg-surface-2,#1F2320); display:flex; align-items:center; justify-content:center; color:var(--itg-fg,#F4F2EE);">
+      <sc-if value="{{ isGoal }}" hint-placeholder-val="{{ true }}">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 20V5h20v15"></path><path d="M2 9h20M2 13h20M7 5v15M12 5v15M17 5v15" stroke-opacity=".35"></path><circle cx="15" cy="16" r="4" fill="#fff" stroke="#121212"></circle></svg>
+      </sc-if>
+      <sc-if value="{{ isBig }}">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="4"></circle><path d="M12 1v4M12 19v4M1 12h4M19 12h4"></path></svg>
+      </sc-if>
+      <sc-if value="{{ isCard }}">
+        <div style="width:14px; height:19px; border-radius:3px; background:{{ cardColor }}; transform:rotate(8deg);"></div>
+      </sc-if>
+      <sc-if value="{{ isMomentum }}">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 7 13.5 15.5 8.5 10.5 2 17"></path><path d="M16 7h6v6"></path></svg>
+      </sc-if>
+      <sc-if value="{{ isUpdate }}">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M10 2h4M12 14l3-3"></path><circle cx="12" cy="14" r="8"></circle></svg>
+      </sc-if>
+    </div>
+    <div style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:{{ typeSize }}; line-height:1; letter-spacing:.05em; text-transform:uppercase;">{{ typeLabel }}</div>
+    <sc-if value="{{ hasTeam }}">
+      <div style="display:flex; align-items:center; gap:6px; font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--itg-fg-2,#B8B4AD);">
+        <div style="width:12px; height:12px; border-radius:3px; background:{{ teamColor }};"></div>
+        <div>{{ teamAbbr }}</div>
+      </div>
+    </sc-if>
+    <div style="margin-left:auto; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:{{ minuteSize }}; line-height:1;">{{ minuteLabel }}</div>
+  </div>
+
+  <div style="display:flex; align-items:center; gap:8px; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:500; letter-spacing:.12em; text-transform:uppercase; color:{{ eyebrowColor }};">
+    <div style="width:8px; height:8px; border-radius:2px; background:{{ eyebrowDot }};"></div>
+    <div>{{ eyebrowLabel }}</div>
+  </div>
+
+  <sc-if value="{{ isAnalysing }}">
+    <div style="display:flex; flex-direction:column; gap:12px;">
+      <div style="display:flex; align-items:center; gap:10px; font-family:'JetBrains Mono',monospace; font-size:15px; color:var(--itg-accent-text,#D4FF3F);">{{ pulseDot }}<div>Analysing…</div></div>
+      <div style="height:14px; width:92%; border-radius:6px; background:var(--itg-surface-2,#1F2320);"></div>
+      <div style="height:14px; width:64%; border-radius:6px; background:var(--itg-surface-2,#1F2320);"></div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isOverturned }}">
+    <div style="display:flex; flex-direction:column; gap:14px;">
+      <div style="display:flex; align-items:center; gap:10px; background:var(--itg-bad-soft,rgba(255,90,79,.14)); color:var(--itg-bad,#FF5A4F); padding:10px 14px; border-radius:10px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8M12 17v4M8 8l8 4M16 8l-8 4"></path></svg>
+        <div style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:22px; letter-spacing:.08em; text-transform:uppercase; line-height:1;">VAR · Overturned</div>
+        <div style="margin-left:auto; font-family:'JetBrains Mono',monospace; font-size:12px;">Checked against event data</div>
+      </div>
+      <div style="font-size:15px; color:var(--itg-fg-3,#8A867F); text-decoration:line-through;">Claim: {{ claim }}</div>
+      <div style="font-family:'Instrument Serif',serif; font-size:{{ textSize }}; line-height:1.2; text-wrap:pretty;">{{ overturnedText }}</div>
+      <div style="display:flex; align-items:flex-end; gap:20px;">
+        <div style="display:flex; flex-direction:column; gap:4px;">
+          <div style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:64px; line-height:.9; color:{{ statAColor }};">{{ statA }}</div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--itg-fg-2,#B8B4AD);">{{ statALabel }}</div>
+        </div>
+        <div style="font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:28px; color:var(--itg-fg-3,#8A867F); padding-bottom:22px;">vs</div>
+        <div style="display:flex; flex-direction:column; gap:4px;">
+          <div style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:64px; line-height:.9; color:{{ statBColor }};">{{ statB }}</div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--itg-fg-2,#B8B4AD);">{{ statBLabel }}</div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showText }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex; gap:20px; align-items:flex-start;">
+      <div style="flex:1; min-width:0; font-family:'Instrument Serif',serif; font-size:{{ textSize }}; line-height:1.2; text-wrap:pretty; color:{{ textColor }};">{{ shownText }}{{ caret }}</div>
+      <sc-if value="{{ showPitch }}">
+        <div style="width:{{ pitchW }}; flex:none; display:flex; flex-direction:column; gap:6px;">
+          <svg viewBox="-3 -3 111 74" style="width:100%; display:block; border-radius:10px; background:var(--itg-grass-a,#2E7A3B);">
+            <rect x="{{ zone.x }}" y="{{ zone.y }}" width="{{ zone.w }}" height="{{ zone.h }}" fill="#D4FF3F" fill-opacity=".42" stroke="#D4FF3F" stroke-width=".8"></rect>
+            <g fill="none" stroke="#fff" stroke-opacity=".75" stroke-width=".7">
+              <rect x="0" y="0" width="105" height="68"></rect>
+              <line x1="52.5" y1="0" x2="52.5" y2="68"></line>
+              <circle cx="52.5" cy="34" r="9.15"></circle>
+              <rect x="0" y="13.84" width="16.5" height="40.32"></rect>
+              <rect x="88.5" y="13.84" width="16.5" height="40.32"></rect>
+            </g>
+            <line x1="{{ zone.line }}" y1="-2" x2="{{ zone.line }}" y2="70" stroke="#fff" stroke-width="1" stroke-dasharray="2 1.5" opacity="{{ zone.lineOpacity }}"></line>
+            <path d="M40 60 L100 60 M94 55 L100 60 L94 65" fill="none" stroke="#fff" stroke-width="1.2" stroke-opacity=".6"></path>
+          </svg>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--itg-fg-3,#8A867F);">{{ zone.label }}</div>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showAnalyst }}">
+    <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1px; background:var(--itg-line,#2A2E2B); border:1px solid var(--itg-line,#2A2E2B); border-radius:10px; overflow:hidden;">
+      <sc-for list="{{ analystStats }}" as="s" hint-placeholder-count="3">
+        <div style="background:var(--itg-surface,#161917); padding:10px 12px; display:flex; flex-direction:column; gap:2px;">
+          <div style="font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:26px; line-height:1;">{{ s.v }}</div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--itg-fg-3,#8A867F);">{{ s.k }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showFooter }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+      <sc-if value="{{ isChecked }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex; align-items:center; gap:6px; padding:5px 10px 5px 8px; border-radius:9999px; background:var(--itg-ok-soft,rgba(61,214,140,.14)); color:var(--itg-ok,#3DD68C); font-size:14px; font-weight:600;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+          <div>Checked</div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ isOverturned }}">
+        <div style="display:flex; align-items:center; gap:6px; padding:5px 10px 5px 8px; border-radius:9999px; background:var(--itg-bad-soft,rgba(255,90,79,.14)); color:var(--itg-bad,#FF5A4F); font-size:14px; font-weight:600;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+          <div>Overturned</div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ isFallback }}">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div style="padding:5px 10px; border-radius:9999px; border:1px dashed var(--itg-fallback,#A39F98); color:var(--itg-fallback,#A39F98); font-size:14px; font-weight:600;">Fallback</div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--itg-fg-3,#8A867F);">{{ fallbackReason }}</div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ hasEvidence }}">
+        <button onClick="{{ toggle }}" style="margin-left:auto; display:flex; align-items:center; gap:6px; background:transparent; border:1px solid var(--itg-line,#2A2E2B); color:var(--itg-fg-2,#B8B4AD); border-radius:9999px; padding:5px 12px; font:500 14px 'Geist',sans-serif; cursor:pointer; white-space:nowrap; flex:none;" style-hover="color:var(--itg-fg,#F4F2EE)">
+          <div>Evidence · {{ evidenceCount }}</div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="transform:{{ chevron }};"><path d="m6 9 6 6 6-6"></path></svg>
+        </button>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showEvidence }}">
+    <div style="display:flex; flex-direction:column; border-top:1px solid var(--itg-line,#2A2E2B);">
+      <sc-for list="{{ evidence }}" as="e" hint-placeholder-count="2">
+        <div style="display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--itg-line,#2A2E2B); font-family:'JetBrains Mono',monospace; font-size:14px; color:var(--itg-fg,#F4F2EE);">
+          <div style="width:6px; height:6px; border-radius:9999px; background:var(--itg-fg-3,#8A867F); flex:none;"></div>
+          <div>{{ e }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:560,&quot;height&quot;:420},&quot;type&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;goal&quot;,&quot;bigchance&quot;,&quot;card&quot;,&quot;momentum&quot;,&quot;update&quot;],&quot;default&quot;:&quot;card&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;minute&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:52,&quot;tsType&quot;:&quot;number&quot;},&quot;team&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;kba&quot;,&quot;ngr&quot;],&quot;default&quot;:&quot;ngr&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;text&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;After Quiroga's yellow card, Kingsbridge shifted their attacks to the left: 48% of attacks, up from 24%.&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;status&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;checked&quot;,&quot;overturned&quot;,&quot;fallback&quot;],&quot;default&quot;:&quot;checked&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;phase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;analysing&quot;,&quot;streaming&quot;,&quot;done&quot;],&quot;default&quot;:&quot;done&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;size&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;feed&quot;,&quot;hero&quot;],&quot;default&quot;:&quot;feed&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;zone&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;left&quot;,&quot;behind&quot;],&quot;default&quot;:&quot;left&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;expanded&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;casual&quot;,&quot;analyst&quot;],&quot;default&quot;:&quot;casual&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;animate&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;evidence&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string[]&quot;},&quot;analystStats&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{k:string,v:string}[]&quot;},&quot;claim&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;statA&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;statB&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;statALabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;statBLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;statATeam&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;statBTeam&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;cardColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#FFD21F&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;fallbackReason&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Model timed out · template used&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = { n: null, open: null };
+  componentDidMount() { this.setupAnim(); }
+  componentDidUpdate(pp) { if (pp.animate !== this.props.animate || pp.phase !== this.props.phase) this.setupAnim(); }
+  componentWillUnmount() { clearInterval(this.t); }
+  setupAnim() {
+    clearInterval(this.t);
+    if (this.props.animate && this.props.phase === 'streaming') {
+      this.setState({ n: -10 });
+      this.t = setInterval(() => {
+        const w = (this.props.text || '').split(' ').length;
+        this.setState(s => ({ n: (s.n ?? 0) >= w + 22 ? -10 : (s.n ?? 0) + 1 }));
+      }, 150);
+    } else if (this.state.n !== null) this.setState({ n: null });
+  }
+  renderVals() {
+    const p = this.props;
+    const type = p.type ?? 'goal', status = p.status ?? 'checked';
+    const hero = p.size === 'hero';
+    const text = p.text ?? 'Kingsbridge shifted their attacks to the left after the yellow card.';
+    const words = text.split(' ');
+    let n = this.state.n;
+    let ph = p.phase ?? 'done';
+    if (n == null) n = ph === 'streaming' ? Math.ceil(words.length * 0.55) : words.length;
+    if (p.animate && p.phase === 'streaming') ph = n < 0 ? 'analysing' : n < words.length ? 'streaming' : 'done';
+    const done = ph === 'done';
+    const over = status === 'overturned' && done;
+    const fallback = status === 'fallback';
+    const open = this.state.open ?? !!p.expanded;
+    const labels = { goal: 'Goal', bigchance: 'Big chance', card: 'Card', momentum: 'Momentum', update: '5-min update', fulltime: 'Full time' };
+    const teamColor = p.team === 'kba' ? 'var(--itg-kba,#2F6BFF)' : p.team === 'ngr' ? 'var(--itg-ngr,#FFB400)' : 'transparent';
+    const tc = t => t === 'kba' ? 'var(--itg-kba-text,#6E98FF)' : t === 'ngr' ? 'var(--itg-ngr-text,#FFB400)' : 'var(--itg-fg,#F4F2EE)';
+    const zones = {
+      left: { x: 52.5, y: -1, w: 53.5, h: 20, line: -10, lineOpacity: 0, label: 'Kingsbridge attack zone · left flank' },
+      behind: { x: 12, y: 0, w: 36, h: 68, line: 48, lineOpacity: 1, label: 'Space behind the high line · 48 m' },
+    };
+    const zone = zones[p.zone] || null;
+    const evidence = p.evidence || [];
+    const analystStats = p.analystStats || [];
+    return {
+      border: over ? '1px solid var(--itg-bad,#FF5A4F)' : fallback ? '1px dashed var(--itg-fallback,#A39F98)' : '1px solid var(--itg-line,#2A2E2B)',
+      pad: hero ? '28px 32px' : '20px 22px',
+      shadow: hero ? '0 24px 64px rgba(0,0,0,.45), 0 8px 16px rgba(0,0,0,.25)' : 'none',
+      typeSize: hero ? '28px' : '22px',
+      minuteSize: hero ? '40px' : '30px',
+      textSize: hero ? '38px' : '25px',
+      pitchW: hero ? '220px' : '150px',
+      isGoal: type === 'goal', isBig: type === 'bigchance', isCard: type === 'card', isMomentum: type === 'momentum', isUpdate: type === 'update' || type === 'fulltime',
+      cardColor: p.cardColor ?? '#FFD21F',
+      typeLabel: labels[type] || type,
+      hasTeam: !!p.team, teamColor, teamAbbr: p.team === 'kba' ? 'KBA' : p.team === 'ngr' ? 'NGR' : '',
+      minuteLabel: (p.minute ?? 52) + "'",
+      eyebrowLabel: fallback ? 'Template text' : 'AI analysis',
+      eyebrowColor: fallback ? 'var(--itg-fallback,#A39F98)' : 'var(--itg-accent-text,#D4FF3F)',
+      eyebrowDot: fallback ? 'var(--itg-fallback,#A39F98)' : 'var(--itg-accent,#D4FF3F)',
+      isAnalysing: ph === 'analysing',
+      isOverturned: over,
+      claim: p.claim ?? '',
+      overturnedText: text,
+      statA: p.statA ?? '', statB: p.statB ?? '', statALabel: p.statALabel ?? '', statBLabel: p.statBLabel ?? '',
+      statAColor: tc(p.statATeam), statBColor: tc(p.statBTeam),
+      showText: !over && ph !== 'analysing',
+      shownText: ph === 'streaming' ? words.slice(0, Math.max(n, 1)).join(' ') : text,
+      textColor: 'var(--itg-fg,#F4F2EE)',
+      caret: ph === 'streaming' ? React.createElement('span', { style: { display: 'inline-block', width: '0.45em', height: '0.85em', marginLeft: '4px', verticalAlign: '-0.08em', background: 'var(--itg-accent,#D4FF3F)', animation: 'itgBlink 0.9s steps(1) infinite' } }) : null,
+      pulseDot: React.createElement('span', { style: { width: 10, height: 10, borderRadius: 9999, background: 'var(--itg-accent,#D4FF3F)', display: 'inline-block', animation: 'itgPulse 1.1s ease-in-out infinite' } }),
+      showPitch: !!zone && done && (hero || open),
+      zone: zone || zones.left,
+      showAnalyst: p.mode === 'analyst' && analystStats.length > 0 && done && !over,
+      analystStats,
+      showFooter: done,
+      isChecked: status === 'checked' && done,
+      isFallback: fallback && done,
+      fallbackReason: p.fallbackReason ?? 'Model timed out · template used',
+      hasEvidence: evidence.length > 0,
+      evidenceCount: evidence.length,
+      evidence,
+      showEvidence: open && done && evidence.length > 0,
+      chevron: open ? 'rotate(180deg)' : 'none',
+      toggle: () => this.setState({ open: !open }),
+    };
+  }
+}
+</script>
+</body>
+</html>

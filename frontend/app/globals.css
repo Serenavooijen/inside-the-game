@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root,
+.theme-night {
+  --itg-bg: #0c0e0d;
+  --itg-surface: #161917;
+  --itg-surface-2: #1f2320;
+  --itg-line: #2a2e2b;
+  --itg-line-strong: #3a3f3b;
+  --itg-fg: #f4f2ee;
+  --itg-fg-2: #b8b4ad;
+  --itg-fg-3: #8a867f;
+  --itg-accent: #d4ff3f;
+  --itg-accent-text: #d4ff3f;
+  --itg-ok: #3dd68c;
+  --itg-ok-soft: rgba(61, 214, 140, 0.14);
+  --itg-bad: #ff5a4f;
+  --itg-bad-soft: rgba(255, 90, 79, 0.14);
+  --itg-fallback: #a39f98;
+  --itg-grass-a: #2e7a3b;
+  --itg-grass-b: #286e34;
+  --itg-kba: #2f6bff;
+  --itg-kba-text: #6e98ff;
+  --itg-ngr: #ffb400;
+  --itg-ngr-text: #ffb400;
+  color-scheme: dark;
+}
+
+.theme-day {
+  --itg-bg: #faf8f5;
+  --itg-surface: #ffffff;
+  --itg-surface-2: #f0ede8;
+  --itg-line: #e8e4dd;
+  --itg-line-strong: #d6d0c5;
+  --itg-fg: #121212;
+  --itg-fg-2: #4a4a4a;
+  --itg-fg-3: #6b6b6b;
+  --itg-accent: #d4ff3f;
+  --itg-accent-text: #4f6b00;
+  --itg-ok: #1f7a4c;
+  --itg-ok-soft: #e3f3eb;
+  --itg-bad: #b83232;
+  --itg-bad-soft: #f8e4e1;
+  --itg-fallback: #6b6b6b;
+  --itg-grass-a: #3c9447;
+  --itg-grass-b: #358840;
+  --itg-kba: #2f6bff;
+  --itg-kba-text: #2152d6;
+  --itg-ngr: #ffb400;
+  --itg-ngr-text: #9a6a00;
+  color-scheme: light;
+}
+
+html,
+body {
+  background: var(--itg-bg);
+  color: var(--itg-fg);
+}
+
+body {
+  font-family: 'Geist', sans-serif;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--itg-accent);
+  outline-offset: 2px;
+}
+
+@keyframes itgPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+@keyframes itgBlink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes itgLive { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+@keyframes itgSpin { to { transform: rotate(360deg); } }
+/* Uses the separate `translate` property so it never overrides an element's own transform. */
+@keyframes itgIn { from { opacity: 0; translate: 0 4px; } to { opacity: 1; translate: 0 0; } }
+@keyframes itgFade { from { opacity: 0; } to { opacity: 1; } }
+
+.itg-pulse { animation: itgPulse 1.1s ease-in-out infinite; }
+.itg-blink { animation: itgBlink 0.9s steps(1) infinite; }
+.itg-live { animation: itgLive 1.6s ease-in-out infinite; }
+.itg-spin { animation: itgSpin 1s linear infinite; }
+.itg-in { animation: itgIn 200ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.itg-fade { animation: itgFade 240ms ease-out both; }
+
+/* The feed card that arrives from the hero */
+.itg-arrive { animation: itgIn 480ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .itg-pulse,
+  .itg-blink,
+  .itg-live,
+  .itg-spin { animation: none; }
+  .itg-blink { display: none; }
+  .itg-in,
+  .itg-arrive { animation: itgFade 200ms ease-out both; }
+  * { transition-property: opacity !important; }
+}
