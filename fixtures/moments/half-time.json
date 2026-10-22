@@ -1,0 +1,69 @@
+{
+ "moment": {
+  "momentId": "half-time",
+  "t": 2820,
+  "minute": "45+3",
+  "kind": "update",
+  "headline": "Half time: Kingsbridge 1-1 Northgate"
+ },
+ "matchState": {
+  "score": [
+   1,
+   1
+  ],
+  "playersOnPitch": [
+   11,
+   11
+  ],
+  "possession": [
+   60.8,
+   39.2
+  ],
+  "xg": [
+   1.24,
+   0.51
+  ],
+  "shots": [
+   11,
+   3
+  ]
+ },
+ "facts": [
+  {
+   "factId": "F1",
+   "text": "Possession: Kingsbridge 61%, Northgate 39%",
+   "metric": "possession",
+   "value": 61,
+   "unit": "%",
+   "window": null,
+   "sourceEventIds": []
+  },
+  {
+   "factId": "F2",
+   "text": "Shots: Kingsbridge 11, Northgate 3",
+   "metric": "shots",
+   "value": 11,
+   "unit": null,
+   "window": null,
+   "sourceEventIds": []
+  },
+  {
+   "factId": "F3",
+   "text": "xG: Kingsbridge 1.24, Northgate 0.51",
+   "metric": "xg",
+   "value": 1.24,
+   "unit": null,
+   "window": null,
+   "sourceEventIds": []
+  },
+  {
+   "factId": "F4",
+   "text": "Big chances: Kingsbridge 0, Northgate 1",
+   "metric": "big_chances",
+   "value": 1,
+   "unit": null,
+   "window": null,
+   "sourceEventIds": []
+  }
+ ]
+}

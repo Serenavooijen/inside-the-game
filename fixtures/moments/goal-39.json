@@ -1,0 +1,91 @@
+{
+ "moment": {
+  "momentId": "goal-39",
+  "t": 2321,
+  "minute": "39",
+  "kind": "goal",
+  "team": "kba",
+  "playerId": "KBA-11",
+  "headline": "Goal Kingsbridge: Nakamura-Brooks (11), assist Kovač (10). Kingsbridge 1-1 Northgate"
+ },
+ "matchState": {
+  "score": [
+   1,
+   1
+  ],
+  "playersOnPitch": [
+   11,
+   11
+  ],
+  "possession": [
+   62.7,
+   37.3
+  ],
+  "xg": [
+   1.13,
+   0.44
+  ],
+  "shots": [
+   10,
+   2
+  ]
+ },
+ "facts": [
+  {
+   "factId": "F1",
+   "text": "Shot xG 0.09, xGOT 0.14",
+   "metric": "shot_xg",
+   "value": 0.09,
+   "unit": null,
+   "window": null,
+   "sourceEventIds": [
+    1114
+   ]
+  },
+  {
+   "factId": "F2",
+   "text": "Shot from 18.2 m with the right foot",
+   "metric": "shot_distance",
+   "value": 18.2,
+   "unit": "m",
+   "window": null,
+   "sourceEventIds": [
+    1114
+   ]
+  },
+  {
+   "factId": "F3",
+   "text": "The move (3 players, 4 actions): Visser (8) through ball → El-Haddad (7) long pass → Visser (8) pass → Kovač (10) pass",
+   "metric": "move",
+   "value": 4,
+   "unit": null,
+   "window": null,
+   "sourceEventIds": [
+    1106,
+    1108,
+    1110,
+    1112
+   ]
+  },
+  {
+   "factId": "F4",
+   "text": "Northgate's deepest defender was 11 m from goal when the last pass was played",
+   "metric": "defensive_line",
+   "value": 11,
+   "unit": "m",
+   "window": null,
+   "sourceEventIds": [
+    1112
+   ]
+  },
+  {
+   "factId": "F5",
+   "text": "xG so far: Kingsbridge 1.13, Northgate 0.44",
+   "metric": "xg_cum",
+   "value": 1.13,
+   "unit": null,
+   "window": null,
+   "sourceEventIds": []
+  }
+ ]
+}

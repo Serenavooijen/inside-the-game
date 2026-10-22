@@ -1,0 +1,90 @@
+{
+ "moment": {
+  "momentId": "goal-24",
+  "t": 1394,
+  "minute": "24",
+  "kind": "goal",
+  "team": "ngr",
+  "playerId": "NGR-09",
+  "headline": "Goal Northgate: Adeyemi-Clarke (9), assist Duarte (8). Kingsbridge 0-1 Northgate"
+ },
+ "matchState": {
+  "score": [
+   0,
+   1
+  ],
+  "playersOnPitch": [
+   11,
+   11
+  ],
+  "possession": [
+   64.7,
+   35.3
+  ],
+  "xg": [
+   0.87,
+   0.44
+  ],
+  "shots": [
+   7,
+   2
+  ]
+ },
+ "facts": [
+  {
+   "factId": "F1",
+   "text": "Shot xG 0.41, xGOT 0.50",
+   "metric": "shot_xg",
+   "value": 0.41,
+   "unit": null,
+   "window": null,
+   "sourceEventIds": [
+    687
+   ]
+  },
+  {
+   "factId": "F2",
+   "text": "Shot from 10.9 m with the right foot",
+   "metric": "shot_distance",
+   "value": 10.9,
+   "unit": "m",
+   "window": null,
+   "sourceEventIds": [
+    687
+   ]
+  },
+  {
+   "factId": "F3",
+   "text": "The move (2 players, 3 actions): Brouwer (6) ball recovery → Brouwer (6) pass → Duarte (8) long pass",
+   "metric": "move",
+   "value": 3,
+   "unit": null,
+   "window": null,
+   "sourceEventIds": [
+    682,
+    683,
+    685
+   ]
+  },
+  {
+   "factId": "F4",
+   "text": "Kingsbridge's deepest defender was 35 m from goal when the last pass was played",
+   "metric": "defensive_line",
+   "value": 35,
+   "unit": "m",
+   "window": null,
+   "sourceEventIds": [
+    685
+   ]
+  },
+  {
+   "factId": "F5",
+   "text": "xG so far: Kingsbridge 0.87, Northgate 0.44",
+   "metric": "xg_cum",
+   "value": 0.44,
+   "unit": null,
+   "window": null,
+   "sourceEventIds": []
+  }
+ ]
+}

@@ -1,0 +1,61 @@
+{
+ "moment": {
+  "momentId": "update-63",
+  "t": 3841,
+  "minute": "63",
+  "kind": "update",
+  "team": "kba",
+  "headline": "Ten minutes after the red card"
+ },
+ "matchState": {
+  "score": [
+   1,
+   1
+  ],
+  "playersOnPitch": [
+   10,
+   11
+  ],
+  "possession": [
+   58.9,
+   41.1
+  ],
+  "xg": [
+   1.35,
+   0.61
+  ],
+  "shots": [
+   13,
+   7
+  ]
+ },
+ "facts": [
+  {
+   "factId": "F1",
+   "text": "Kingsbridge possession since the red card: 34%",
+   "metric": "possession_window",
+   "value": 34,
+   "unit": "%",
+   "window": "53'–62'",
+   "sourceEventIds": []
+  },
+  {
+   "factId": "F2",
+   "text": "Kingsbridge possession before it, in the second half: 57%",
+   "metric": "possession_window",
+   "value": 57,
+   "unit": "%",
+   "window": "46'–52'",
+   "sourceEventIds": []
+  },
+  {
+   "factId": "F3",
+   "text": "Shots since the red card: Kingsbridge 1, Northgate 3",
+   "metric": "shots_window",
+   "value": 3,
+   "unit": null,
+   "window": "53'–62'",
+   "sourceEventIds": []
+  }
+ ]
+}
