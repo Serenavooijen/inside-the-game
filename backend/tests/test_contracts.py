@@ -23,12 +23,12 @@ from app.contracts import (
     SourcePlayer,
     Tick,
 )
+from app.fixture import to_source_event
 
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT = ROOT / "output"
 MOMENTS = sorted((ROOT / "fixtures" / "moments").glob("*.json"))
 RECORDING = ROOT / "frontend" / "data" / "matches" / "kba-ngr.json"
-COMMON = set(SourceEvent.model_fields) - {"t", "details"}
 
 
 def load(path: Path):
@@ -36,12 +36,6 @@ def load(path: Path):
 
 
 # ------------------------------------------------------------------ source layer
-
-def to_source_event(row: dict) -> SourceEvent:
-    details = {k: v for k, v in row.items() if k not in COMMON and k != "frame" and v is not None}
-    common = {k: v for k, v in row.items() if k in COMMON}
-    return SourceEvent(t=row["frame"], details=details, **common)
-
 
 def test_every_generated_event_fits_source_event():
     rows = load(OUTPUT / "events.json")

@@ -9,13 +9,26 @@ types, ids and time to the conventions in contracts.py.
 from collections.abc import AsyncIterator
 from typing import Protocol
 
+from pydantic import BaseModel
+
 from app.contracts import MatchInfo, Mode, SourceEvent, SourceFrame
 
 MatchItem = SourceEvent | SourceFrame
 
 
+class PlayerInfo(BaseModel):
+    """Squad data a source knows about each player."""
+    id: str
+    team: str                       # source team code, e.g. "KBA"
+    n: int                          # shirt number
+    name: str                       # display name, e.g. "T. Ferreira-Lind"
+    surname: str
+    gk: bool = False
+
+
 class MatchSource(Protocol):
     info: MatchInfo
+    roster: dict[str, PlayerInfo]
 
     @property
     def mode(self) -> Mode: ...

@@ -31,3 +31,13 @@ uv run pytest
 ```
 
 The generator dependencies (numpy, matplotlib) are in the backend's dev group, so from `backend/` you can also run `uv run python ../generator/generate_match.py`.
+
+The backend replays the reference match from `output/` and streams it over SSE in the shapes of `frontend/lib/contracts.ts`. To run the frontend against it instead of its mock, set `NEXT_PUBLIC_API_URL=http://localhost:8000` in `frontend/.env.local`.
+
+| Module | Role |
+|---|---|
+| `app/fixture.py` | `MatchSource` for the generator output |
+| `app/simulator.py` | play, pause, speed, seek, key moments; one `tick` per match second |
+| `app/stats.py` | Stats Engine: score, xG, possession, updated per event and frame |
+| `app/wire.py` | source data → frontend contract (events, frames, markers) |
+| `app/bus.py` | EventBus: a bounded queue per SSE connection; drops the oldest when full |
