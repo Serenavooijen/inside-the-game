@@ -3,6 +3,7 @@
 Behaves like the frontend's mock (frontend/lib/mock/engine.ts):
 - one `tick` per new match second; the frontend interpolates in between;
 - `event` for goals, cards and substitutions at the moment they happen;
+- `overlay` for the fast lane (shot, pass, sprint, tag) from the Overlay Composer;
 - a key event (goal, red card) slows the match to 1x and sets keyMomentId until
   its insight has been on screen for HOLD_AFTER_INSIGHT_S, or KEY_MOMENT_MAX_S has passed;
 - every moment the Statistician recognises goes to the smart lane; its insights are
@@ -15,8 +16,9 @@ import time
 from collections.abc import Callable
 
 from app.bus import EventBus
-from app.contracts import Insight, MatchEvent, MatchState, Mode, SourceEvent, SourceFrame, Speed, Tick
+from app.contracts import Insight, MatchEvent, MatchState, Mode, Overlay, SourceEvent, SourceFrame, Speed, Tick
 from app.moments import FrameIndex, MatchContext, Statistician
+from app.overlays import OverlayComposer
 from app.smart_lane import SmartLane
 from app.sources import MatchItem, MatchSource
 from app.stats import StatsEngine
@@ -49,6 +51,7 @@ class Simulator:
         self._frame_at = FrameIndex([])
         self._all_events: list[MatchEvent] = []   # whole match, for replay markers
         self._stats: StatsEngine | None = None
+        self._overlays: OverlayComposer | None = None
         self._cursor = 0
         self._frame: SourceFrame | None = None
         self._last_second = 0
@@ -69,6 +72,7 @@ class Simulator:
         self._items = [item async for item in source.items(0)]
         self.source, self.mode = source, mode
         self._stats = StatsEngine(source.info.home, source.info.away)
+        self._overlays = OverlayComposer(source.info, source.roster)
         self._frame_at = FrameIndex([i for i in self._items if isinstance(i, SourceFrame)])
         self.duration = source.info.duration_s or self._items[-1].t
         self.halftime = next((i.t for i in self._items if isinstance(i, SourceFrame) and i.period == 2), self.duration)
@@ -142,6 +146,7 @@ class Simulator:
         self.key_moment_id = None
         self.generation += 1
         self._stats.reset()
+        self._overlays.reset()
         self._cursor, self._frame, self.events, self.insights, self._history = 0, None, [], {}, []
         self.t = t
         self._advance(t, publish=False)
@@ -155,8 +160,10 @@ class Simulator:
             self._stats.apply(item)
             if isinstance(item, SourceFrame):
                 self._frame = item
+                self._publish_overlays(self._overlays.on_frame(item), publish)
                 continue
             self._history.append(item)
+            overlays = self._overlays.on_event(item)
             event = to_match_event(item, self.source.roster)
             if event:
                 self.events.append(event)
@@ -166,7 +173,15 @@ class Simulator:
                 self.bus.publish("event", event.to_json())
                 if event.key:
                     self._start_key_moment(event.id)
+            self._publish_overlays(overlays, publish)
             self._detect_moment(item)
+
+    def _publish_overlays(self, overlays: list[Overlay], publish: bool) -> None:
+        if not publish:
+            return                                  # replaying silently after a seek: only the state matters
+        for o in overlays:
+            o.generation = self.generation
+            self.bus.publish("overlay", o.to_json())
 
     def _detect_moment(self, item: SourceEvent) -> None:
         if not self.smart_lane:

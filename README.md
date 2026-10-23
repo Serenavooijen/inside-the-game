@@ -41,5 +41,6 @@ The backend replays the reference match from `output/` and streams it over SSE i
 | `app/stats.py` | Stats Engine: score, xG, possession, updated per event and frame |
 | `app/wire.py` | source data → frontend contract (events, frames, markers) |
 | `app/bus.py` | EventBus: a bounded queue per SSE connection; drops the oldest when full |
+| `app/overlays.py` | Overlay Composer (fast lane): shot, pass, sprint and tag overlays, per event and frame |
 | `app/moments.py` | Statistician: recognises moments (goals, cards, half and full time) and builds their FactSheet |
 | `app/smart_lane.py` | Runs the agent workflow per moment: at most 2 at once, 8 s safety net, cancelled on seek |
