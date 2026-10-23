@@ -12,7 +12,7 @@ ARG UV_IMAGE=ghcr.io/astral-sh/uv:0.13.1
 FROM ${UV_IMAGE} AS uv
 
 # ---------------------------------------------------------------- 1. the match
-# Generated from its seed at build time instead of stored in git (deterministic, ~10 s).
+# Generated from its seed at build time, so the image never depends on output/ in git (deterministic, ~10 s).
 FROM ${PYTHON_IMAGE} AS match
 COPY --from=uv /uv /bin/uv
 ENV UV_LINK_MODE=copy
