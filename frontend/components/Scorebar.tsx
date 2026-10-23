@@ -1,5 +1,6 @@
 import type { MatchEvent, MatchStats, Mode } from '@/lib/contracts';
-import { KbaCrest, Logo, NgrCrest, SmallBall, SubIcon } from './icons';
+import { useTeams } from '@/lib/teams';
+import { AwayCrest, HomeCrest, Logo, SmallBall, SubIcon } from './icons';
 import { ThemeToggle } from './ThemeToggle';
 
 type Props = {
@@ -11,9 +12,8 @@ type Props = {
   events: MatchEvent[];
 };
 
-const teamColor = (t: string) => (t === 'kba' ? 'var(--itg-kba)' : 'var(--itg-ngr)');
-
 export function Scorebar({ stats, clock, period, mode, events }: Props) {
+  const teams = useTeams();
   const recent = events.filter((e) => e.kind !== 'bigchance').slice(-4);
   const [possH, possA] = stats.possession;
   const [xgH, xgA] = stats.xg;
@@ -43,9 +43,9 @@ export function Scorebar({ stats, clock, period, mode, events }: Props) {
 
       <div className="flex flex-col items-center gap-[6px]">
         <div className="flex h-[60px] items-stretch overflow-hidden rounded-md bg-surface-2 shadow-[0_4px_12px_rgba(0,0,0,.25)]">
-          <div className="flex items-center gap-3 border-b-[5px] border-kba pl-[14px] pr-[18px]">
-            <KbaCrest />
-            <span className="font-display text-[32px] font-extrabold tracking-[.04em]">KBA</span>
+          <div className="flex items-center gap-3 border-b-[5px] border-home pl-[14px] pr-[18px]">
+            <HomeCrest color={teams.home.color} fg={teams.home.fg} />
+            <span className="font-display text-[32px] font-extrabold tracking-[.04em]">{teams.home.short}</span>
           </div>
           <div
             className="flex items-center gap-[14px] bg-fg px-[22px] font-display text-score font-extrabold leading-none text-bg"
@@ -55,9 +55,9 @@ export function Scorebar({ stats, clock, period, mode, events }: Props) {
             <span className="text-[28px] opacity-50">–</span>
             <span>{stats.score[1]}</span>
           </div>
-          <div className="flex items-center gap-3 border-b-[5px] border-ngr pl-[18px] pr-[14px]">
-            <span className="font-display text-[32px] font-extrabold tracking-[.04em]">NGR</span>
-            <NgrCrest />
+          <div className="flex items-center gap-3 border-b-[5px] border-away pl-[18px] pr-[14px]">
+            <span className="font-display text-[32px] font-extrabold tracking-[.04em]">{teams.away.short}</span>
+            <AwayCrest color={teams.away.color} fg={teams.away.fg} />
           </div>
           <div className="flex min-w-[96px] flex-col items-center justify-center border-l border-line px-[18px]">
             <span className="font-mono text-[24px] font-medium leading-none">{clock}</span>
@@ -71,7 +71,7 @@ export function Scorebar({ stats, clock, period, mode, events }: Props) {
               {e.kind === 'yellow' && <span className="inline-block h-[11px] w-2 rounded-[2px] bg-card-yellow" />}
               {e.kind === 'red' && <span className="inline-block h-[11px] w-2 rounded-[2px] bg-card-red" />}
               {e.kind === 'sub' && <SubIcon />}
-              <span className="inline-block h-[6px] w-[6px] rounded-[2px]" style={{ background: teamColor(e.team) }} />
+              <span className="inline-block h-[6px] w-[6px] rounded-[2px]" style={{ background: teams.color(e.team) }} />
               <span>{e.text}</span>
             </div>
           ))}
@@ -86,8 +86,8 @@ export function Scorebar({ stats, clock, period, mode, events }: Props) {
             <span className="font-display text-[26px] font-bold leading-none">{possA}%</span>
           </div>
           <div className="flex h-[6px] gap-[3px]">
-            <div className="rounded-full bg-kba" style={{ flex: possH }} />
-            <div className="rounded-full bg-ngr" style={{ flex: possA }} />
+            <div className="rounded-full bg-home" style={{ flex: possH }} />
+            <div className="rounded-full bg-away" style={{ flex: possA }} />
           </div>
         </div>
         <div className="flex flex-col items-center gap-[6px]">
@@ -97,8 +97,8 @@ export function Scorebar({ stats, clock, period, mode, events }: Props) {
             <span>{xgA.toFixed(2)}</span>
           </div>
           <div className="flex h-[6px] w-[120px] gap-[3px]">
-            <div className="rounded-full bg-kba" style={{ flex: Math.max(xgH, 0.01) }} />
-            <div className="rounded-full bg-ngr" style={{ flex: Math.max(xgA, 0.01) }} />
+            <div className="rounded-full bg-home" style={{ flex: Math.max(xgH, 0.01) }} />
+            <div className="rounded-full bg-away" style={{ flex: Math.max(xgA, 0.01) }} />
           </div>
         </div>
       </div>

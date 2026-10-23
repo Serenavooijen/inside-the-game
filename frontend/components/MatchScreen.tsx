@@ -12,6 +12,9 @@ import { ProducerFeed } from './ProducerFeed';
 import { KeyMoment } from './KeyMoment';
 import { Controls } from './Controls';
 import { FactCheck, Whistle } from './icons';
+import { TeamsProvider, teamColorVars, teamsFor } from '@/lib/teams';
+
+const PERIOD: Record<number, string> = { 1: '1ST HALF', 2: '2ND HALF', 3: 'EXTRA TIME 1', 4: 'EXTRA TIME 2', 5: 'PENALTIES' };
 
 
 // The pitch keeps its 111:74 ratio and leaves at least 400 px for the feed.
@@ -19,6 +22,7 @@ const PITCH_WIDTH = 'min(1248px, calc(100vw - 80px - 32px - 400px), calc((100vh 
 
 export function MatchScreen({ matchId, mode }: { matchId: string; mode: Mode }) {
   const s = useMatchStream(matchId, mode);
+  const teams = useMemo(() => teamsFor(matchId), [matchId]);
   const [feedMode, setFeedMode] = useState<'casual' | 'analyst'>('casual');
   const [focusId, setFocusId] = useState<string | null>(null);
 
@@ -58,14 +62,15 @@ export function MatchScreen({ matchId, mode }: { matchId: string; mode: Mode }) 
     () => s.markers ?? markersFrom(s.events, s.insights.filter((i) => i.phase === 'done')),
     [s.markers, s.events, s.insights],
   );
-  const period = !tick ? '' : tick.finished ? 'FULL TIME' : tick.period === 1 ? '1ST HALF' : '2ND HALF';
+  const period = !tick ? '' : tick.finished ? 'FULL TIME' : PERIOD[tick.period] ?? '';
 
   const recentCorrection = s.insights.find((i) => i.status === 'corrected' && i.phase === 'done' && t - i.t < 240 && t >= i.t);
   const overlays = Object.values(s.overlays).filter((o): o is NonNullable<typeof o> => !!o);
   const stats = tick?.stats ?? { score: [0, 0] as [number, number], xg: [0, 0] as [number, number], possession: [50, 50] as [number, number] };
 
   return (
-    <div className="flex h-screen min-h-[720px] flex-col overflow-hidden bg-bg text-fg">
+    <TeamsProvider teams={teams}>
+    <div className="flex h-screen min-h-[720px] flex-col overflow-hidden bg-bg text-fg" style={teamColorVars(teams) as React.CSSProperties}>
       <Scorebar stats={stats} clock={tick?.clock ?? '00:00'} period={period} mode={s.mode} events={s.events} />
 
       <main className="flex min-h-0 flex-1 gap-8 px-10 py-4">
@@ -144,5 +149,6 @@ export function MatchScreen({ matchId, mode }: { matchId: string; mode: Mode }) 
         onSeek={s.seek}
       />
     </div>
+    </TeamsProvider>
   );
 }

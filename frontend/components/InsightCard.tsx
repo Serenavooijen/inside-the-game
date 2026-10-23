@@ -1,4 +1,5 @@
-import type { Insight, TeamId, Zone } from '@/lib/contracts';
+import type { Insight, Zone } from '@/lib/contracts';
+import { useTeams } from '@/lib/teams';
 import { FactCheck, Stopwatch } from './icons';
 
 type Props = {
@@ -14,7 +15,6 @@ const LABELS: Record<Insight['type'], string> = {
 };
 
 
-const teamText = (t?: TeamId) => (t === 'kba' ? 'var(--itg-kba-text)' : t === 'ngr' ? 'var(--itg-ngr-text)' : 'var(--itg-fg)');
 
 function TypeIcon({ type, card }: { type: Insight['type']; card?: Insight['card'] }) {
   const common = { width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round' as const, 'aria-hidden': true };
@@ -56,6 +56,7 @@ function MiniPitch({ zone: z, width }: { zone: Zone; width: number }) {
 }
 
 export function InsightCard({ insight: i, size = 'feed', mode = 'casual', expanded = false, onToggle }: Props) {
+  const teams = useTeams();
   const hero = size === 'hero';
   const done = i.phase === 'done';
   const corrected = i.status === 'corrected' && done;
@@ -76,8 +77,8 @@ export function InsightCard({ insight: i, size = 'feed', mode = 'casual', expand
         <div className={`font-display font-extrabold uppercase leading-none tracking-[.05em] ${hero ? 'text-[28px]' : 'text-card-type'}`}>{i.type === 'card' && i.card === 'red' ? 'Red card' : LABELS[i.type]}</div>
         {i.team && (
           <div className="flex items-center gap-[6px] font-mono text-[13px] text-fg-2">
-            <span className="inline-block h-3 w-3 rounded-[3px]" style={{ background: i.team === 'kba' ? 'var(--itg-kba)' : 'var(--itg-ngr)' }} />
-            {i.team.toUpperCase()}
+            <span className="inline-block h-3 w-3 rounded-[3px]" style={{ background: teams.color(i.team) }} />
+            {teams.info(i.team)?.short ?? i.team.toUpperCase()}
           </div>
         )}
         <div className={`ml-auto font-display font-extrabold leading-none ${hero ? 'text-[40px]' : 'text-[30px]'}`}>{i.minute}&apos;</div>
@@ -106,17 +107,22 @@ export function InsightCard({ insight: i, size = 'feed', mode = 'casual', expand
             <div className="font-display text-[22px] font-extrabold uppercase leading-none tracking-[.08em]">Corrected</div>
             <div className="ml-auto whitespace-nowrap font-mono text-[12px]">Checked against event data</div>
           </div>
-          <div className="text-[15px] text-fg-3 line-through">AI draft: {i.claim}</div>
+          <div className="flex flex-col gap-1">
+            <div className="text-[15px] text-fg-3 line-through">Removed: {i.claim}</div>
+            <div className="font-mono text-[12px] text-fg-3">
+              {i.rejectedClaims?.[0]?.reason ?? 'Not backed by the event data'}
+            </div>
+          </div>
           <div className={`font-serif ${textSize} [text-wrap:pretty]`}>{i.text}</div>
           {i.stats && (
             <div className="flex items-end gap-5">
               <div className="flex flex-col gap-1">
-                <div className="font-display text-[64px] font-extrabold leading-[.9]" style={{ color: teamText(i.stats.aTeam) }}>{i.stats.a}</div>
+                <div className="font-display text-[64px] font-extrabold leading-[.9]" style={{ color: teams.text(i.stats.aTeam) }}>{i.stats.a}</div>
                 <div className="whitespace-nowrap font-mono text-[12px] text-fg-2">{i.stats.aLabel}</div>
               </div>
               <div className="pb-[22px] font-display text-[28px] font-bold text-fg-3">vs</div>
               <div className="flex flex-col gap-1">
-                <div className="font-display text-[64px] font-extrabold leading-[.9]" style={{ color: teamText(i.stats.bTeam) }}>{i.stats.b}</div>
+                <div className="font-display text-[64px] font-extrabold leading-[.9]" style={{ color: teams.text(i.stats.bTeam) }}>{i.stats.b}</div>
                 <div className="whitespace-nowrap font-mono text-[12px] text-fg-2">{i.stats.bLabel}</div>
               </div>
             </div>

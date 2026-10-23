@@ -89,10 +89,10 @@ def test_test_moments_round_trip_as_fact_sheet(path):
 
 
 def _same_ignoring_nulls(a, b) -> bool:
-    """Equal after dropping nulls (to_json omits them) and the defaulted teamNames."""
+    """Equal after dropping nulls (to_json omits them)."""
     def strip(x):
         if isinstance(x, dict):
-            return {k: strip(v) for k, v in x.items() if v is not None and k != "teamNames"}
+            return {k: strip(v) for k, v in x.items() if v is not None}
         if isinstance(x, list):
             return [strip(v) for v in x]
         return x
@@ -143,5 +143,14 @@ def test_overlay_from_field_uses_reserved_word():
 def test_snapshot_serialises_as_match_state_key():
     snap = MatchSnapshot(score=(1, 2), possession=(56.6, 43.4), xg=(1.35, 0.99), shots=(13, 9))
     sheet = FactSheet(moment=Moment(moment_id="m", t=1, minute="1", kind="update", headline="h"),
-                      match_state=snap, facts=[])
+                      match_state=snap, facts=[], home="hv", away="su",
+                      team_names={"hv": "Harlow Vale", "su": "Saltmarsh United"})
     assert "matchState" in sheet.to_json()
+    assert sheet.home_away == ("Harlow Vale", "Saltmarsh United")
+
+
+def test_fact_sheet_needs_a_name_for_both_teams():
+    with pytest.raises(ValueError, match="no name for"):
+        FactSheet(moment=Moment(moment_id="m", t=1, minute="1", kind="update", headline="h"),
+                  match_state=MatchSnapshot(score=(0, 0), possession=(50, 50), xg=(0, 0), shots=(0, 0)),
+                  facts=[], home="hv", away="su", team_names={"hv": "Harlow Vale"})

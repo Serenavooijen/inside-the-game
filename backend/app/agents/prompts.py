@@ -27,10 +27,10 @@ Write numbers as digits. No greeting, no hashtags, no emoji. Start with the poin
 
 def analyst_prompt(sheet: FactSheet) -> str:
     s = sheet.match_state
-    names = sheet.team_names
+    home, away = sheet.home_away
     lines = [
         f"Moment ({sheet.moment.minute}'): {sheet.moment.headline}",
-        f"Score: {names['kba']} {s.score[0]}-{s.score[1]} {names['ngr']} · players on the pitch {s.players_on_pitch[0]} v {s.players_on_pitch[1]}",
+        f"Score: {home} {s.score[0]}-{s.score[1]} {away} · players on the pitch {s.players_on_pitch[0]} v {s.players_on_pitch[1]}",
         "Facts:",
     ]
     for f in sheet.facts:

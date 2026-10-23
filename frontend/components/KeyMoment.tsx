@@ -1,5 +1,6 @@
 import type { Insight, MatchEvent, MatchStats } from '@/lib/contracts';
 import { InsightCard } from './InsightCard';
+import { useTeams } from '@/lib/teams';
 import { Crest, Stopwatch } from './icons';
 
 type Props = {
@@ -11,12 +12,14 @@ type Props = {
   exiting: boolean;
 };
 
-const NAME = { kba: 'Kingsbridge', ngr: 'Northgate' } as const;
 const BAR_LABEL: Record<MatchEvent['kind'], string> = { goal: 'GOAL', bigchance: 'BIG CHANCE', yellow: 'CARD', red: 'RED CARD', sub: 'SUB' };
 
 /** TV-director layer over the pitch while the backend has slowed to 1×. */
 export function KeyMoment({ event, insight, stats, mode, exiting }: Props) {
+  const teams = useTeams();
   const team = event.team;
+  const info = teams.info(team) ?? teams.home;
+  const side = teams.side(team) ?? 'home';
   return (
     <>
       <div className={`pointer-events-none absolute inset-0 bg-black/[.24] transition-opacity duration-[480ms] ${exiting ? 'opacity-0' : 'itg-fade'}`} />
@@ -26,10 +29,10 @@ export function KeyMoment({ event, insight, stats, mode, exiting }: Props) {
           <div className="flex items-center whitespace-nowrap bg-chalk px-6 font-display text-tv-bar font-extrabold tracking-[.08em] text-ink">{BAR_LABEL[event.kind]}</div>
           <div
             className="flex items-center gap-3 whitespace-nowrap pl-[18px] pr-6 font-display text-[38px] font-extrabold tracking-[.02em]"
-            style={{ background: team === 'kba' ? '#2F6BFF' : '#FFB400', color: team === 'kba' ? '#FFFFFF' : '#121212' }}
+            style={{ background: info.color, color: info.fg }}
           >
-            <Crest team={team} small />
-            {NAME[team]} {stats.score[0]}-{stats.score[1]}
+            <Crest team={info} side={side} small />
+            {teams.label(team)} {stats.score[0]}-{stats.score[1]}
           </div>
           <div className="flex items-center whitespace-nowrap bg-ink px-[22px] font-display text-[38px] font-extrabold text-chalk">{event.minute}&apos;</div>
         </div>

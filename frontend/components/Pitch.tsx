@@ -1,5 +1,6 @@
 import { memo } from 'react';
-import type { Player, Point } from '@/lib/contracts';
+import type { Player, Point, TeamInfo } from '@/lib/contracts';
+import { useTeams } from '@/lib/teams';
 import { Ball } from './icons';
 
 /** Metres (x 0–105, y 0–68) to CSS percentages inside the pitch box (viewBox -3 -3 111 74). */
@@ -49,17 +50,22 @@ export const PitchSurface = memo(function PitchSurface() {
   );
 });
 
-const chipColors = (p: Player) => {
-  if (p.team === 'kba') return p.gk ? { bg: '#F06EB4', fg: '#121212', ring: '#FFFFFF' } : { bg: '#2F6BFF', fg: '#FFFFFF', ring: '#FFFFFF' };
-  return p.gk ? { bg: '#202020', fg: '#FFFFFF', ring: '#FFFFFF' } : { bg: '#FFB400', fg: '#121212', ring: '#121212' };
+// Goalkeepers wear a fixed contrasting kit; outfield players the team colours from the match data.
+const GK = { home: { bg: '#F06EB4', fg: '#121212', ring: '#FFFFFF' }, away: { bg: '#202020', fg: '#FFFFFF', ring: '#FFFFFF' } };
+const chipColors = (p: Player, side: 'home' | 'away', team?: TeamInfo) => {
+  if (p.gk) return GK[side];
+  const bg = team?.color ?? '#888888';
+  const fg = team?.fg ?? '#FFFFFF';
+  return { bg, fg, ring: fg };
 };
 
 export function PlayerChips({ players, positions }: { players: Player[]; positions: Record<string, Point> }) {
+  const teams = useTeams();
   return (
     <>
       {players.map((p) => {
         const pos = positions[p.id] ?? p;
-        const c = chipColors(p);
+        const c = chipColors(p, teams.side(p.team) ?? 'home', teams.info(p.team));
         return (
           <div
             key={p.id}

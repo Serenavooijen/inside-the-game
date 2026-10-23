@@ -21,10 +21,11 @@
   --itg-fallback: #a39f98;
   --itg-grass-a: #2e7a3b;
   --itg-grass-b: #286e34;
-  --itg-kba: #2f6bff;
-  --itg-kba-text: #6e98ff;
-  --itg-ngr: #ffb400;
-  --itg-ngr-text: #ffb400;
+  /* home / away team colours; MatchScreen overrides --itg-home and --itg-away per match */
+  --itg-home: #2f6bff;
+  --itg-home-text: #6e98ff;
+  --itg-away: #ffb400;
+  --itg-away-text: #ffb400;
   color-scheme: dark;
 }
 
@@ -46,10 +47,10 @@
   --itg-fallback: #6b6b6b;
   --itg-grass-a: #3c9447;
   --itg-grass-b: #358840;
-  --itg-kba: #2f6bff;
-  --itg-kba-text: #2152d6;
-  --itg-ngr: #ffb400;
-  --itg-ngr-text: #9a6a00;
+  --itg-home: #2f6bff;
+  --itg-home-text: #2152d6;
+  --itg-away: #ffb400;
+  --itg-away-text: #9a6a00;
   color-scheme: light;
 }
 

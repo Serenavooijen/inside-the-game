@@ -16,6 +16,8 @@ import { markersFrom } from '@/lib/markers';
 type RosterEntry = { id: string; team: TeamId; n: number; name: string; gk: boolean; on: [number, number][] };
 type Fixture = {
   id: string;
+  home: { id: TeamId; name: string; short: string };
+  away: { id: TeamId; name: string; short: string };
   duration: number;
   halftime: number;
   roster: RosterEntry[];
@@ -221,7 +223,7 @@ class MockMatch {
     const l = (x: number, y: number) => x + (y - x) * k;
     const goals = fixture.events.filter((e) => e.kind === 'goal' && e.t <= t);
     return {
-      score: [goals.filter((g) => g.team === 'kba').length, goals.filter((g) => g.team === 'ngr').length],
+      score: [goals.filter((g) => g.team === fixture.home.id).length, goals.filter((g) => g.team === fixture.away.id).length],
       xg: [Math.round(l(a.xg[0], b.xg[0]) * 100) / 100, Math.round(l(a.xg[1], b.xg[1]) * 100) / 100],
       possession: [Math.round(l(a.possession[0], b.possession[0])), Math.round(l(a.possession[1], b.possession[1]))],
     };

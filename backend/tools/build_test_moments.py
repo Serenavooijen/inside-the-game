@@ -108,7 +108,9 @@ class Sheet:
                            "unit": unit, "window": window, "sourceEventIds": list(src)})
 
     def write(self, match_state):
-        sheet = {"moment": self.moment, "matchState": match_state, "facts": self.facts}
+        home, away = (TEAM[script["teams"][side]["id"]] for side in ("home", "away"))
+        sheet = {"moment": self.moment, "matchState": match_state, "facts": self.facts,
+                 "home": home, "away": away, "teamNames": {TEAM[k]: v for k, v in NAME.items()}}
         os.makedirs(OUT, exist_ok=True)
         path = os.path.join(OUT, f"{self.moment['momentId']}.json")
         json.dump(sheet, open(path, "w"), indent=1, ensure_ascii=False)
@@ -140,8 +142,8 @@ for g in [e for e in events if e["type"] == "goal"]:
             steps.append(f"{who(e['player_id'])} {label}")
             ids.append(e["event_id"])
         shown = steps[-4:]
-        players = len({st.split(")")[0] for st in shown})  # "Visser (8" identifies a player
-        sh.add(f"The move ({players} players, {len(shown)} actions): " + " → ".join(shown), "move", len(steps), src=ids[-4:])
+        n_players = len({st.split(")")[0] for st in shown})  # "Visser (8" identifies a player
+        sh.add(f"The move ({n_players} players, {len(shown)} actions): " + " → ".join(shown), "move", len(steps), src=ids[-4:])
         last_pass = next((e for e in reversed(move) if e["type"] in ("pass", "cross")), None)
         if last_pass:
             d = last_defender_m(OTHER[team], last_pass["frame"], per)
