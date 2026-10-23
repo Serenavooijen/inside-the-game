@@ -21,7 +21,10 @@ class CamelModel(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
 
-TeamId = Literal["kba", "ngr"]
+# Team id from the match data, e.g. "kba". Not a fixed list: every match brings its own teams.
+TeamId = str
+# 1–2 halves, 3–4 extra time, 5 penalty shoot-out
+Period = Literal[1, 2, 3, 4, 5]
 
 # ---------------------------------------------------------------- input: FactSheet
 
@@ -60,7 +63,13 @@ class FactSheet(CamelModel):
     moment: Moment
     match_state: MatchState
     facts: list[Fact]
-    team_names: dict[str, str] = {"kba": "Kingsbridge", "ngr": "Northgate"}
+    # Display names per team id, home team first (the score and players_on_pitch use the same order).
+    team_names: dict[TeamId, str] = {"kba": "Kingsbridge", "ngr": "Northgate"}
+
+    @property
+    def home_away(self) -> tuple[str, str]:
+        names = list(self.team_names.values())
+        return (names[0] if names else "Home", names[1] if len(names) > 1 else "Away")
 
     def fact(self, fact_id: str) -> Fact | None:
         return next((f for f in self.facts if f.fact_id == fact_id), None)

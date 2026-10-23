@@ -10,7 +10,10 @@
  * including added time (0 … duration). Display labels (clock, minute) come with it.
  */
 
-export type TeamId = 'kba' | 'ngr';
+/** Team id from the match data, e.g. "kba". Not a fixed list: every match brings its own teams. */
+export type TeamId = string;
+/** 1–2 halves, 3–4 extra time, 5 penalty shoot-out */
+export type Period = 1 | 2 | 3 | 4 | 5;
 export type Mode = 'live' | 'replay';
 export type Speed = 1 | 10;
 
@@ -119,6 +122,11 @@ export type Insight = {
   /** status 'fallback': why the template text was used */
   fallbackReason?: string;
   generation: number;
+  /** Traceability from the agents (optional) */
+  rejectedClaims?: { text: string; reason: string; factIds?: string[] }[];
+  citedFactIds?: string[];
+  latencyMs?: number;
+  tokens?: number;
 };
 
 export type MatchStats = {
@@ -130,7 +138,7 @@ export type MatchStats = {
 /** Sent for every new match second. */
 export type Tick = {
   t: number;
-  period: 1 | 2;
+  period: Period;
   /** Match clock, e.g. "57:40" or "45+1:30" */
   clock: string;
   /** Football minute label, e.g. "58" or "45+2" */

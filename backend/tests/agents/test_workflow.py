@@ -225,3 +225,19 @@ def test_stream_that_repeats_its_full_text_is_not_doubled():
     s = sheet()
     insight = asyncio.run(run_workflow(s.moment, s, None, model=model))
     assert insight.text == "The shot was worth 0.41 xG."
+
+
+# ---------------------------------------------------------------- any teams, not only kba/ngr
+
+
+def test_other_teams_work_end_to_end():
+    from app.agents.prompts import analyst_prompt
+
+    s = sheet()
+    raw = s.model_dump(by_alias=True)
+    raw["teamNames"] = {"hv": "Harlow Vale", "su": "Saltmarsh United"}
+    raw["moment"]["team"] = "su"
+    other = FactSheet.model_validate(raw)
+    assert "Score: Harlow Vale 0-1 Saltmarsh United" in analyst_prompt(other)
+    insight = asyncio.run(run_workflow(other.moment, other, None, model=OfflineModel()))
+    assert insight.team == "su" and insight.to_json()["team"] == "su"
