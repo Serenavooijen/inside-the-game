@@ -1,0 +1,113 @@
+{
+ "moment": {
+  "momentId": "goal-68",
+  "t": 4146,
+  "minute": "68",
+  "kind": "goal",
+  "team": "ngr",
+  "playerId": "NGR-20",
+  "headline": "Goal Northgate: Diallo-Kerr (20), assist Halvorsen (18). Kingsbridge 1-2 Northgate"
+ },
+ "matchState": {
+  "score": [
+   1,
+   2
+  ],
+  "playersOnPitch": [
+   10,
+   11
+  ],
+  "possession": [
+   56.6,
+   43.4
+  ],
+  "xg": [
+   1.35,
+   0.99
+  ],
+  "shots": [
+   13,
+   9
+  ]
+ },
+ "facts": [
+  {
+   "factId": "F1",
+   "text": "Shot xG 0.33, xGOT 0.60",
+   "metric": "shot_xg",
+   "value": 0.33,
+   "unit": null,
+   "window": null,
+   "sourceEventIds": [
+    1906
+   ]
+  },
+  {
+   "factId": "F2",
+   "text": "Shot from 11.1 m with the right foot",
+   "metric": "shot_distance",
+   "value": 11.1,
+   "unit": "m",
+   "window": null,
+   "sourceEventIds": [
+    1906
+   ]
+  },
+  {
+   "factId": "F3",
+   "text": "The move (3 players, 4 actions): Adeyemi-Clarke (9) interception → Adeyemi-Clarke (9) pass → Duarte (8) pass → Halvorsen (18) through ball",
+   "metric": "move",
+   "value": 4,
+   "unit": null,
+   "window": null,
+   "sourceEventIds": [
+    1899,
+    1900,
+    1902,
+    1904
+   ]
+  },
+  {
+   "factId": "F4",
+   "text": "Kingsbridge's deepest defender was 19 m from goal when the last pass was played",
+   "metric": "defensive_line",
+   "value": 19,
+   "unit": "m",
+   "window": null,
+   "sourceEventIds": [
+    1904
+   ]
+  },
+  {
+   "factId": "F5",
+   "text": "Diallo-Kerr (20) came on at 64', 4 minutes before this goal",
+   "metric": "scorer_sub_minute",
+   "value": "64",
+   "unit": null,
+   "window": null,
+   "sourceEventIds": [
+    1784
+   ]
+  },
+  {
+   "factId": "F6",
+   "text": "Halvorsen (18) came on at 64', 4 minutes before this goal",
+   "metric": "assist_sub_minute",
+   "value": "64",
+   "unit": null,
+   "window": null,
+   "sourceEventIds": [
+    1783
+   ]
+  },
+  {
+   "factId": "F7",
+   "text": "xG so far: Kingsbridge 1.35, Northgate 0.99",
+   "metric": "xg_cum",
+   "value": 0.99,
+   "unit": null,
+   "window": null,
+   "sourceEventIds": []
+  }
+ ]
+}

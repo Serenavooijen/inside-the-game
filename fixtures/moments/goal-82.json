@@ -1,0 +1,113 @@
+{
+ "moment": {
+  "momentId": "goal-82",
+  "t": 5018,
+  "minute": "82",
+  "kind": "goal",
+  "team": "kba",
+  "playerId": "KBA-19",
+  "headline": "Goal Kingsbridge: Moore-Asante (19), assist Castellanos (17). Kingsbridge 2-2 Northgate"
+ },
+ "matchState": {
+  "score": [
+   2,
+   2
+  ],
+  "playersOnPitch": [
+   10,
+   11
+  ],
+  "possession": [
+   56.3,
+   43.7
+  ],
+  "xg": [
+   1.57,
+   1.14
+  ],
+  "shots": [
+   14,
+   10
+  ]
+ },
+ "facts": [
+  {
+   "factId": "F1",
+   "text": "Shot xG 0.22, xGOT 0.35",
+   "metric": "shot_xg",
+   "value": 0.22,
+   "unit": null,
+   "window": null,
+   "sourceEventIds": [
+    2301
+   ]
+  },
+  {
+   "factId": "F2",
+   "text": "Shot from 8.2 m with the head",
+   "metric": "shot_distance",
+   "value": 8.2,
+   "unit": "m",
+   "window": null,
+   "sourceEventIds": [
+    2301
+   ]
+  },
+  {
+   "factId": "F3",
+   "text": "The move (4 players, 4 actions): Dijkhuis (5) pass → El-Haddad (7) pass → Achterberg (14) long pass → Castellanos (17) cross",
+   "metric": "move",
+   "value": 5,
+   "unit": null,
+   "window": null,
+   "sourceEventIds": [
+    2293,
+    2295,
+    2297,
+    2299
+   ]
+  },
+  {
+   "factId": "F4",
+   "text": "Northgate's deepest defender was 7 m from goal when the last pass was played",
+   "metric": "defensive_line",
+   "value": 7,
+   "unit": "m",
+   "window": null,
+   "sourceEventIds": [
+    2299
+   ]
+  },
+  {
+   "factId": "F5",
+   "text": "Moore-Asante (19) came on at 76', 6 minutes before this goal",
+   "metric": "scorer_sub_minute",
+   "value": "76",
+   "unit": null,
+   "window": null,
+   "sourceEventIds": [
+    2120
+   ]
+  },
+  {
+   "factId": "F6",
+   "text": "Castellanos (17) came on at 76', 6 minutes before this goal",
+   "metric": "assist_sub_minute",
+   "value": "76",
+   "unit": null,
+   "window": null,
+   "sourceEventIds": [
+    2119
+   ]
+  },
+  {
+   "factId": "F7",
+   "text": "xG so far: Kingsbridge 1.57, Northgate 1.14",
+   "metric": "xg_cum",
+   "value": 1.57,
+   "unit": null,
+   "window": null,
+   "sourceEventIds": []
+  }
+ ]
+}

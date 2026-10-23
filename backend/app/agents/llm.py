@@ -1,0 +1,247 @@
+"""
+Model adapter. One switch, MODEL_PROVIDER, picks where the agents run:
+
+    github          Agents in code, models on GitHub Models (free, for development).
+                    Needs GITHUB_TOKEN (PAT with models:read).
+    foundry         Agents in code, models in Microsoft Foundry (FoundryChatClient).
+                    Needs FOUNDRY_PROJECT_ENDPOINT and a login (az login / managed identity).
+    foundry-agents  Agents hosted in Foundry Agent Service (prompt agents, visible in the portal).
+                    Create them first with tools/create_foundry_agents.py, then set
+                    FOUNDRY_ANALYST_AGENT(_VERSION) and FOUNDRY_NARRATOR_AGENT(_VERSION).
+    offline         No model at all: deterministic text from the facts. For tests, CI and demos.
+
+Model names for the code agents: MODEL_ANALYST, MODEL_NARRATOR (deployment names on Foundry).
+In every case the workflow, the fact-check and the fallback stay the same, so the
+providers can be compared like for like (run_fixtures --compare).
+"""
+
+from __future__ import annotations
+
+import json
+import os
+from dataclasses import dataclass, field
+from typing import Any, AsyncIterator, Protocol
+
+from .models import AnalystDraft, Claim, FactSheet
+from .prompts import ANALYST_INSTRUCTIONS, NARRATOR_INSTRUCTIONS
+
+GITHUB_MODELS_URL = "https://models.github.ai/inference"
+
+
+class ModelClient(Protocol):
+    name: str
+
+    async def draft(self, sheet: FactSheet, prompt: str) -> tuple[AnalystDraft, int | None]: ...
+
+    def narrate(self, sheet: FactSheet, claims: list[Claim], prompt: str) -> AsyncIterator[str]: ...
+
+
+# ---------------------------------------------------------------- shared: two Agent Framework agents
+
+
+def _tokens(resp: Any) -> int | None:
+    usage = getattr(resp, "usage_details", None)
+    if usage is None:
+        try:
+            usage = resp.to_dict().get("usage_details")
+        except Exception:
+            usage = None
+    if not usage:
+        return None
+    get = usage.get if isinstance(usage, dict) else lambda k, d=None: getattr(usage, k, d)
+    total = get("total_token_count") or get("total_tokens")
+    if total:
+        return int(total)
+    parts = [get("input_token_count"), get("output_token_count")]
+    return int(sum(p for p in parts if p)) or None
+
+
+def _parse_draft(resp: Any) -> AnalystDraft:
+    value = resp.value
+    if isinstance(value, AnalystDraft):
+        return value
+    if isinstance(value, dict):
+        return AnalystDraft.model_validate(value)
+    # Some models / hosted agents return the JSON as plain text.
+    text = resp.text.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+    return AnalystDraft.model_validate(json.loads(text))
+
+
+@dataclass
+class AgentPairModel:
+    """An Analyst agent and a Narrator agent, wherever they run."""
+
+    name: str
+    analyst: Any
+    narrator: Any
+    # Code agents get the output schema per call; hosted agents have it in their Foundry definition.
+    pass_response_format: bool = True
+    credential: Any = None
+    _closers: list = field(default_factory=list)
+
+    async def warmup(self) -> None:
+        """Fetch the login token before the first moment, so it does not eat into the 6 s deadline.
+
+        Call this once at start-up (run_fixtures does; the FastAPI app should do it in its lifespan)."""
+        if self.credential is not None:
+            for scope in TOKEN_SCOPES:
+                await self.credential.get_token(scope)
+        # One tiny call per agent opens the HTTPS connections, so the first real moment is not slower.
+        import asyncio
+
+        async def ping(agent):
+            try:
+                await agent.run("Warm-up call. Reply with: ok")
+            except Exception:
+                pass
+
+        await asyncio.gather(ping(self.analyst), ping(self.narrator))
+
+    async def draft(self, sheet: FactSheet, prompt: str) -> tuple[AnalystDraft, int | None]:
+        options = {"response_format": AnalystDraft} if self.pass_response_format else None
+        resp = await self.analyst.run(prompt, options=options)
+        return _parse_draft(resp), _tokens(resp)
+
+    async def narrate(self, sheet: FactSheet, claims: list[Claim], prompt: str) -> AsyncIterator[str]:
+        # Some clients (Foundry's Responses API) send the deltas and then the full text once more
+        # at the end. Only pass on what is new, so the text is never doubled.
+        seen = ""
+        async for update in self.narrator.run(prompt, stream=True):
+            chunk = update.text or ""
+            if not chunk:
+                continue
+            if seen and chunk.startswith(seen):
+                chunk = chunk[len(seen):]
+            elif seen and len(chunk) > 20 and seen.endswith(chunk):
+                continue
+            if chunk:
+                seen += chunk
+                yield chunk
+
+
+# ---------------------------------------------------------------- builders
+
+
+def openai_compatible(name: str, base_url: str, api_key: str, analyst_model: str, narrator_model: str) -> AgentPairModel:
+    """Agents in code on any OpenAI-compatible chat-completions endpoint (GitHub Models)."""
+    from agent_framework import Agent
+    from agent_framework.openai import OpenAIChatCompletionClient
+
+    def client(model: str):
+        return OpenAIChatCompletionClient(model=model, api_key=api_key, base_url=base_url)
+
+    return AgentPairModel(
+        name=name,
+        analyst=Agent(client=client(analyst_model), name="Analyst", instructions=ANALYST_INSTRUCTIONS),
+        narrator=Agent(client=client(narrator_model), name="Narrator", instructions=NARRATOR_INSTRUCTIONS),
+    )
+
+
+# kept for the tests and for anyone calling it directly
+def AgentFrameworkModel(name: str, base_url: str, api_key: str, analyst_model: str, narrator_model: str) -> AgentPairModel:  # noqa: N802
+    return openai_compatible(name, base_url, api_key, analyst_model, narrator_model)
+
+
+TOKEN_SCOPES = ("https://ai.azure.com/.default", "https://cognitiveservices.azure.com/.default")
+
+
+def _credential():
+    """az login on a laptop, managed identity in Azure Container Apps.
+
+    DefaultAzureCredential first tries environment variables and managed identity, which on a laptop
+    can take seconds before it falls back to the Azure CLI. So outside Azure we go to the CLI directly.
+    Set AZURE_CREDENTIAL=default to force DefaultAzureCredential anyway."""
+    from azure.identity.aio import AzureCliCredential, DefaultAzureCredential
+
+    in_azure = bool(os.getenv("IDENTITY_ENDPOINT") or os.getenv("MSI_ENDPOINT"))  # set by Container Apps
+    if in_azure or os.getenv("AZURE_CREDENTIAL") == "default":
+        return DefaultAzureCredential()
+    return AzureCliCredential(process_timeout=30)
+
+
+def foundry_code_agents(endpoint: str, analyst_model: str, narrator_model: str, credential=None) -> AgentPairModel:
+    """Agents defined in this code, running on model deployments in a Foundry project."""
+    from agent_framework import Agent
+    from agent_framework.foundry import FoundryChatClient
+
+    cred = credential or _credential()
+
+    def client(model: str):
+        return FoundryChatClient(project_endpoint=endpoint, model=model, credential=cred)
+
+    return AgentPairModel(
+        name="foundry",
+        analyst=Agent(client=client(analyst_model), name="Analyst", instructions=ANALYST_INSTRUCTIONS),
+        narrator=Agent(client=client(narrator_model), name="Narrator", instructions=NARRATOR_INSTRUCTIONS),
+        credential=cred,
+    )
+
+
+def foundry_hosted_agents(endpoint: str, analyst: tuple[str, str], narrator: tuple[str, str], credential=None) -> AgentPairModel:
+    """Agents that live in Foundry Agent Service. Instructions, model and output schema come from Foundry."""
+    from agent_framework.foundry import FoundryAgent
+
+    cred = credential or _credential()
+    return AgentPairModel(
+        name="foundry-agents",
+        analyst=FoundryAgent(project_endpoint=endpoint, agent_name=analyst[0], agent_version=analyst[1], credential=cred),
+        narrator=FoundryAgent(project_endpoint=endpoint, agent_name=narrator[0], agent_version=narrator[1], credential=cred),
+        pass_response_format=False,
+        credential=cred,
+    )
+
+
+# ---------------------------------------------------------------- offline (no model)
+
+
+class OfflineModel:
+    """Deterministic stand-in: the first facts become the claims, the claims become the text."""
+
+    name = "offline"
+
+    async def draft(self, sheet: FactSheet, prompt: str) -> tuple[AnalystDraft, int | None]:
+        facts = sheet.facts[:2]
+        return AnalystDraft(claims=[Claim(text=f.text.rstrip(".") + ".", fact_ids=[f.fact_id]) for f in facts]), None
+
+    async def narrate(self, sheet: FactSheet, claims: list[Claim], prompt: str) -> AsyncIterator[str]:
+        text = f"{sheet.moment.headline}. " + " ".join(c.text for c in claims)
+        for word in text.split(" "):
+            yield word + " "
+
+
+# ---------------------------------------------------------------- factory
+
+
+def _need(var: str, why: str) -> str:
+    v = os.getenv(var)
+    if not v:
+        raise RuntimeError(f"{why} needs {var}.")
+    return v
+
+
+def model_from_env(provider: str | None = None) -> ModelClient:
+    provider = (provider or os.getenv("MODEL_PROVIDER") or ("github" if os.getenv("GITHUB_TOKEN") else "offline")).lower()
+    if provider == "offline":
+        return OfflineModel()
+    if provider == "github":
+        return openai_compatible(
+            "github",
+            base_url=os.getenv("GITHUB_MODELS_URL", GITHUB_MODELS_URL),
+            api_key=_need("GITHUB_TOKEN", "MODEL_PROVIDER=github (a GitHub PAT with models:read)"),
+            analyst_model=os.getenv("MODEL_ANALYST", "openai/gpt-4.1-mini"),
+            narrator_model=os.getenv("MODEL_NARRATOR", "openai/gpt-4.1-nano"),
+        )
+    if provider == "foundry":
+        return foundry_code_agents(
+            endpoint=_need("FOUNDRY_PROJECT_ENDPOINT", "MODEL_PROVIDER=foundry"),
+            analyst_model=os.getenv("MODEL_ANALYST", "gpt-4.1-mini"),
+            narrator_model=os.getenv("MODEL_NARRATOR", "gpt-4.1-mini"),
+        )
+    if provider == "foundry-agents":
+        why = "MODEL_PROVIDER=foundry-agents"
+        return foundry_hosted_agents(
+            endpoint=_need("FOUNDRY_PROJECT_ENDPOINT", why),
+            analyst=(os.getenv("FOUNDRY_ANALYST_AGENT", "itg-analyst"), _need("FOUNDRY_ANALYST_AGENT_VERSION", why)),
+            narrator=(os.getenv("FOUNDRY_NARRATOR_AGENT", "itg-narrator"), _need("FOUNDRY_NARRATOR_AGENT_VERSION", why)),
+        )
+    raise RuntimeError(f"Unknown MODEL_PROVIDER: {provider} (use github, foundry, foundry-agents or offline)")

@@ -1,0 +1,62 @@
+{
+ "moment": {
+  "momentId": "yellow-13",
+  "t": 760,
+  "minute": "13",
+  "kind": "yellow_card",
+  "team": "ngr",
+  "playerId": "NGR-02",
+  "headline": "Yellow card for Quiroga (2), Northgate"
+ },
+ "matchState": {
+  "score": [
+   0,
+   0
+  ],
+  "playersOnPitch": [
+   11,
+   11
+  ],
+  "possession": [
+   68.2,
+   31.8
+  ],
+  "xg": [
+   0.54,
+   0.0
+  ],
+  "shots": [
+   5,
+   0
+  ]
+ },
+ "facts": [
+  {
+   "factId": "F1",
+   "text": "Nakamura-Brooks (11) won 1 of 1 dribbles before the card",
+   "metric": "dribbles_won",
+   "value": 1,
+   "unit": null,
+   "window": null,
+   "sourceEventIds": []
+  },
+  {
+   "factId": "F2",
+   "text": "Quiroga (2) committed 2 foul(s) before the booking",
+   "metric": "fouls",
+   "value": 2,
+   "unit": null,
+   "window": null,
+   "sourceEventIds": []
+  },
+  {
+   "factId": "F3",
+   "text": "Quiroga is Northgate's right-back, directly up against Nakamura-Brooks on Kingsbridge's left",
+   "metric": "matchup",
+   "value": "Quiroga v Nakamura-Brooks",
+   "unit": null,
+   "window": null,
+   "sourceEventIds": []
+  }
+ ]
+}

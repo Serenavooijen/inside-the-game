@@ -1,0 +1,73 @@
+{
+ "moment": {
+  "momentId": "red-53",
+  "t": 3259,
+  "minute": "53",
+  "kind": "red_card",
+  "team": "kba",
+  "playerId": "KBA-06",
+  "headline": "Red card (second yellow) for Brannigan (6), Kingsbridge"
+ },
+ "matchState": {
+  "score": [
+   1,
+   1
+  ],
+  "playersOnPitch": [
+   10,
+   11
+  ],
+  "possession": [
+   60.2,
+   39.8
+  ],
+  "xg": [
+   1.27,
+   0.53
+  ],
+  "shots": [
+   12,
+   4
+  ]
+ },
+ "facts": [
+  {
+   "factId": "F1",
+   "text": "Brannigan (6) was booked earlier, at 32'",
+   "metric": "first_yellow_minute",
+   "value": "32",
+   "unit": null,
+   "window": null,
+   "sourceEventIds": [
+    883
+   ]
+  },
+  {
+   "factId": "F2",
+   "text": "Brannigan committed 2 fouls before the red card",
+   "metric": "fouls",
+   "value": 2,
+   "unit": null,
+   "window": null,
+   "sourceEventIds": []
+  },
+  {
+   "factId": "F3",
+   "text": "Brannigan made 38 of Kingsbridge's 304 passes so far (12%)",
+   "metric": "pass_share",
+   "value": 12,
+   "unit": "%",
+   "window": null,
+   "sourceEventIds": []
+  },
+  {
+   "factId": "F4",
+   "text": "Kingsbridge possession in the second half before the red card: 57%",
+   "metric": "possession_window",
+   "value": 57,
+   "unit": "%",
+   "window": "46'–52'",
+   "sourceEventIds": []
+  }
+ ]
+}

@@ -1,0 +1,262 @@
+/* ============================================================
+   MODERN DESIGN SYSTEM — Tokens
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* ---------- Colors: Base palette ---------- */
+  --ink:          #121212;   /* near-black text */
+  --ink-2:        #2A2A2A;
+  --ink-3:        #4A4A4A;
+  --ink-4:        #6B6B6B;
+  --ink-5:        #9A9894;
+
+  --bone:         #FAF8F5;   /* off-white page bg */
+  --paper:        #FFFFFF;   /* card / panel bg */
+  --mist:         #F0EDE8;   /* subtle surface */
+  --sand:         #E8E4DD;   /* hairline borders */
+  --dust:         #D6D0C5;   /* stronger borders */
+
+  /* ---------- Colors: Accent ---------- */
+  --lime:         #D4FF3F;   /* PRIMARY ACCENT */
+  --lime-hover:   #C5F02A;
+  --lime-press:   #B3DC1D;
+  --lime-soft:    #EEFFBE;
+
+  /* ---------- Colors: Semantic ---------- */
+  --success:      #1F7A4C;
+  --success-soft: #E3F3EB;
+  --warning:      #B8791A;
+  --warning-soft: #FBEFD9;
+  --danger:       #B83232;
+  --danger-soft:  #F8E4E1;
+  --info:         #2E5AAC;
+  --info-soft:    #E3ECFB;
+
+  /* ---------- Semantic aliases ---------- */
+  --fg-1:         var(--ink);
+  --fg-2:         var(--ink-3);
+  --fg-3:         var(--ink-4);
+  --fg-muted:     var(--ink-5);
+  --fg-inverse:   var(--bone);
+
+  --bg-page:      var(--bone);
+  --bg-surface:   var(--paper);
+  --bg-subtle:    var(--mist);
+  --bg-inverse:   var(--ink);
+
+  --border-hairline: var(--sand);
+  --border-strong:   var(--dust);
+
+  --accent:        var(--lime);
+  --accent-hover:  var(--lime-hover);
+  --accent-press:  var(--lime-press);
+  --accent-soft:   var(--lime-soft);
+
+  /* ---------- Typography: Families ---------- */
+  --font-display: 'Instrument Serif', 'GT Sectra', 'Canela', Georgia, serif;
+  --font-body:    'Geist', 'Söhne', 'Inter', -apple-system, 'Helvetica Neue', sans-serif;
+  --font-mono:    'JetBrains Mono', 'Berkeley Mono', 'SF Mono', ui-monospace, monospace;
+
+  /* ---------- Typography: Scale ---------- */
+  --fs-display-xl: clamp(72px, 10vw, 128px);
+  --fs-display-lg: clamp(56px, 7vw, 96px);
+  --fs-display-md: clamp(40px, 5vw, 72px);
+  --fs-h1:         48px;
+  --fs-h2:         36px;
+  --fs-h3:         24px;
+  --fs-h4:         20px;
+  --fs-body-lg:    18px;
+  --fs-body:       16px;
+  --fs-body-sm:    14px;
+  --fs-caption:    13px;
+  --fs-micro:      11px;
+
+  /* ---------- Typography: Line heights ---------- */
+  --lh-tight:   1.05;
+  --lh-snug:    1.2;
+  --lh-normal:  1.5;
+  --lh-relaxed: 1.65;
+
+  /* ---------- Typography: Tracking ---------- */
+  --tr-tight:   -0.02em;
+  --tr-normal:  0;
+  --tr-wide:    0.04em;
+  --tr-eyebrow: 0.12em;
+
+  /* ---------- Spacing (4px grid) ---------- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+  --sp-8: 64px;
+  --sp-9: 96px;
+  --sp-10: 128px;
+
+  /* ---------- Radii ---------- */
+  --r-sm:  6px;
+  --r-md:  10px;
+  --r-lg:  16px;
+  --r-xl:  24px;
+  --r-full: 9999px;
+
+  /* ---------- Shadows (warm) ---------- */
+  --shadow-sm: 0 1px 2px rgba(18,18,18,0.04), 0 1px 1px rgba(18,18,18,0.03);
+  --shadow-md: 0 4px 12px rgba(18,18,18,0.06), 0 2px 4px rgba(18,18,18,0.04);
+  --shadow-lg: 0 12px 32px rgba(18,18,18,0.08), 0 4px 8px rgba(18,18,18,0.04);
+  --shadow-xl: 0 24px 64px rgba(18,18,18,0.12), 0 8px 16px rgba(18,18,18,0.06);
+
+  /* ---------- Motion ---------- */
+  --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast:    140ms;
+  --dur-base:    220ms;
+  --dur-slow:    420ms;
+
+  /* ---------- Layout ---------- */
+  --container-marketing: 1200px;
+  --container-app: 1440px;
+  --container-prose: 680px;
+}
+
+/* ============================================================
+   Base reset + defaults
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-page);
+  color: var(--fg-1);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-normal);
+  font-feature-settings: 'ss01', 'cv11';
+}
+
+/* ============================================================
+   Semantic type styles
+   ============================================================ */
+.display-xl, h1.display, .hero-headline {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--fs-display-xl);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tr-tight);
+  color: var(--fg-1);
+}
+.display-lg {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--fs-display-lg);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tr-tight);
+}
+.display-md {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--fs-display-md);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tr-tight);
+}
+
+h1, .h1 {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: var(--fs-h1);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tr-tight);
+  margin: 0;
+}
+h2, .h2 {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: var(--fs-h2);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tr-tight);
+  margin: 0;
+}
+h3, .h3 {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: var(--fs-h3);
+  line-height: var(--lh-snug);
+  margin: 0;
+}
+h4, .h4 {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: var(--fs-h4);
+  line-height: var(--lh-snug);
+  margin: 0;
+}
+
+p, .body {
+  font-size: var(--fs-body);
+  line-height: var(--lh-relaxed);
+  color: var(--fg-2);
+  margin: 0;
+}
+.body-lg { font-size: var(--fs-body-lg); line-height: var(--lh-relaxed); }
+.body-sm { font-size: var(--fs-body-sm); line-height: var(--lh-normal); }
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--tr-eyebrow);
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.caption {
+  font-size: var(--fs-caption);
+  color: var(--fg-3);
+  line-height: var(--lh-normal);
+}
+
+code, .code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  background: var(--mist);
+  padding: 2px 6px;
+  border-radius: var(--r-sm);
+}
+
+em, .italic-display {
+  font-family: var(--font-display);
+  font-style: italic;
+}
+
+a {
+  color: var(--fg-1);
+  text-decoration: none;
+  text-underline-offset: 3px;
+  transition: text-decoration var(--dur-fast) var(--ease-out);
+}
+a:hover { text-decoration: underline; }
+
+::selection { background: var(--lime); color: var(--ink); }
+
+:focus-visible {
+  outline: 2px solid var(--lime);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

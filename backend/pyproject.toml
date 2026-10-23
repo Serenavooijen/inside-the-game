@@ -3,6 +3,11 @@ name = "inside-the-game-backend"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
+    "agent-framework-core>=1.22.0",
+    "agent-framework-foundry>=1.15.0",
+    "agent-framework-openai>=1.17.0",
+    "azure-ai-projects>=2.7.0",
+    "azure-identity>=1.26.0",
     "fastapi>=0.156.0",
     "pydantic>=2.14.1",
     "sse-starlette>=3.5.0",
