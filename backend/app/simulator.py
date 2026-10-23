@@ -4,27 +4,35 @@ Behaves like the frontend's mock (frontend/lib/mock/engine.ts):
 - one `tick` per new match second; the frontend interpolates in between;
 - `event` for goals, cards and substitutions at the moment they happen;
 - a key event (goal, red card) slows the match to 1x and sets keyMomentId until
-  the insight is done (end_key_moment) or KEY_MOMENT_MAX_S has passed;
-- seek raises `generation`, recomputes everything from kick-off and sends `state`.
+  its insight has been on screen for HOLD_AFTER_INSIGHT_S, or KEY_MOMENT_MAX_S has passed;
+- every moment the Statistician recognises goes to the smart lane; its insights are
+  sent as `insight` (analysing -> streaming -> done), only for the current generation;
+- seek raises `generation`, cancels running agents, recomputes everything from
+  kick-off and sends `state`.
 """
 import asyncio
 import time
 from collections.abc import Callable
 
 from app.bus import EventBus
-from app.contracts import MatchEvent, MatchState, Mode, SourceFrame, Speed, Tick
+from app.contracts import Insight, MatchEvent, MatchState, Mode, SourceEvent, SourceFrame, Speed, Tick
+from app.moments import FrameIndex, MatchContext, Statistician
+from app.smart_lane import SmartLane
 from app.sources import MatchItem, MatchSource
 from app.stats import StatsEngine
 from app.wire import markers, minute_from_clock, to_frame, to_match_event
 
 STEP_S = 0.05               # real seconds between simulation steps
 KEY_MOMENT_MAX_S = 25.0     # safety net: never stay slowed down longer than this
+HOLD_AFTER_INSIGHT_S = 7.0  # keep the finished insight of a key moment on screen this long
 
 
 class Simulator:
-    def __init__(self, bus: EventBus, sources: dict[str, Callable[[], MatchSource]]) -> None:
+    def __init__(self, bus: EventBus, sources: dict[str, Callable[[], MatchSource]],
+                 smart_lane: SmartLane | None = None) -> None:
         self.bus = bus
         self.sources = sources
+        self.smart_lane = smart_lane
         self.source: MatchSource | None = None
         self.mode: Mode = "replay"
         self.t = 0.0
@@ -35,7 +43,10 @@ class Simulator:
         self.duration = 0.0
         self.halftime = 0.0
         self.events: list[MatchEvent] = []        # key events up to now
+        self.insights: dict[str, Insight] = {}    # latest version per insight id, current generation
         self._items: list[MatchItem] = []
+        self._history: list[SourceEvent] = []     # every source event up to now, for the Statistician
+        self._frame_at = FrameIndex([])
         self._all_events: list[MatchEvent] = []   # whole match, for replay markers
         self._stats: StatsEngine | None = None
         self._cursor = 0
@@ -58,6 +69,7 @@ class Simulator:
         self._items = [item async for item in source.items(0)]
         self.source, self.mode = source, mode
         self._stats = StatsEngine(source.info.home, source.info.away)
+        self._frame_at = FrameIndex([i for i in self._items if isinstance(i, SourceFrame)])
         self.duration = source.info.duration_s or self._items[-1].t
         self.halftime = next((i.t for i in self._items if isinstance(i, SourceFrame) and i.period == 2), self.duration)
         self._all_events = [e for i in self._items if not isinstance(i, SourceFrame)
@@ -123,12 +135,14 @@ class Simulator:
             self._publish_tick()
 
     def _reset(self, t: float) -> None:
+        if self.smart_lane:
+            self.smart_lane.cancel_all()
         if self.key_moment_id:
             self.speed = self._speed_before_key
         self.key_moment_id = None
         self.generation += 1
         self._stats.reset()
-        self._cursor, self._frame, self.events = 0, None, []
+        self._cursor, self._frame, self.events, self.insights, self._history = 0, None, [], {}, []
         self.t = t
         self._advance(t, publish=False)
         self._last_second = int(t)
@@ -142,14 +156,35 @@ class Simulator:
             if isinstance(item, SourceFrame):
                 self._frame = item
                 continue
+            self._history.append(item)
             event = to_match_event(item, self.source.roster)
-            if event is None:
+            if event:
+                self.events.append(event)
+            if not publish:
                 continue
-            self.events.append(event)
-            if publish:
+            if event:
                 self.bus.publish("event", event.to_json())
                 if event.key:
                     self._start_key_moment(event.id)
+            self._detect_moment(item)
+
+    def _detect_moment(self, item: SourceEvent) -> None:
+        if not self.smart_lane:
+            return
+        ctx = MatchContext(info=self.source.info, roster=self.source.roster, events=self._history,
+                           frame_at=self._frame_at, snapshot=self._stats.agent_snapshot())
+        sheet = Statistician(ctx).build(item)
+        if sheet:
+            self.smart_lane.submit(sheet.moment, sheet, self.generation, self._on_insight)
+
+    def _on_insight(self, insight: Insight) -> None:
+        """Called by the smart lane for every update of an insight."""
+        if insight.generation != self.generation:
+            return                                  # from before a seek: drop it
+        self.insights[insight.id] = insight
+        self.bus.publish("insight", insight.to_json())
+        if insight.phase == "done" and insight.moment_id and insight.moment_id == self.key_moment_id:
+            self._key_deadline = min(self._key_deadline, self._clock + HOLD_AFTER_INSIGHT_S)
 
     def _start_key_moment(self, event_id: str) -> None:
         if self.key_moment_id:
@@ -175,7 +210,7 @@ class Simulator:
             **self.tick().model_dump(),
             match_id=self.source.info.match_id, mode=self.mode,
             duration=self.duration, halftime=self.halftime,
-            events=list(self.events), insights=[],
+            events=list(self.events), insights=sorted(self.insights.values(), key=lambda i: i.t),
             markers=markers(self._all_events) if self.mode == "replay" else None,
         )
 

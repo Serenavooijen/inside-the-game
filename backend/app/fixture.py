@@ -82,6 +82,7 @@ def _load() -> tuple[MatchInfo, dict[str, PlayerInfo], list[MatchItem]]:
                 surname=" ".join(rest) or p["name"],
             )
     info = MatchInfo(match_id=MATCH_ID, title=script["meta"]["title"], home=home["id"], away=away["id"],
+                     team_names={t["id"]: t["short"] for t in (home, away)},
                      mode="replay", duration_s=frames[-1].t)
     # Frame before the events of the same second: events then see the positions they happened in.
     items: list[MatchItem] = sorted([*frames, *(to_source_event(r) for r in rows)],

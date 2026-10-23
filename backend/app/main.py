@@ -12,22 +12,27 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sse_starlette.sse import EventSourceResponse
 
+from app.agents.llm import model_from_env
 from app.bus import EventBus
 from app.contracts import LoadRequest, SeekRequest, SpeedRequest
 from app.fixture import MATCH_ID, SUMMARY, GeneratorSource
 from app.simulator import Simulator
+from app.smart_lane import SmartLane
 
 CORS_ORIGINS = os.environ.get("ITG_CORS_ORIGINS", "http://localhost:3000").split(",")
 
 bus = EventBus()
-simulator = Simulator(bus, {MATCH_ID: GeneratorSource})
+smart_lane = SmartLane(model_from_env())    # MODEL_PROVIDER: offline (default), github, foundry, foundry-agents
+simulator = Simulator(bus, {MATCH_ID: GeneratorSource}, smart_lane)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    await smart_lane.warmup()
     task = asyncio.create_task(simulator.run())
     yield
     task.cancel()
+    smart_lane.cancel_all()
 
 
 app = FastAPI(title="Inside the Game", lifespan=lifespan)

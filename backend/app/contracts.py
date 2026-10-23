@@ -356,8 +356,9 @@ class MatchInfo(BaseModel):
     """What a MatchSource knows about its match."""
     match_id: str
     title: str
-    home: str
+    home: str                       # source team codes, e.g. "KBA"
     away: str
+    team_names: dict[str, str] = {} # display name per source team code, e.g. {"KBA": "Kingsbridge"}
     mode: Mode = "replay"
     duration_s: float | None = None # None while a live match is still running
 

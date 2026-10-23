@@ -32,7 +32,7 @@ uv run pytest
 
 The generator dependencies (numpy, matplotlib) are in the backend's dev group, so from `backend/` you can also run `uv run python ../generator/generate_match.py`.
 
-The backend replays the reference match from `output/` and streams it over SSE in the shapes of `frontend/lib/contracts.ts`. To run the frontend against it instead of its mock, set `NEXT_PUBLIC_API_URL=http://localhost:8000` in `frontend/.env.local`.
+The backend replays the reference match from `output/` and streams it over SSE in the shapes of `frontend/lib/contracts.ts`. To run the frontend against it instead of its mock, set `NEXT_PUBLIC_API_URL=http://localhost:8000` in `frontend/.env.local`. The agents use `MODEL_PROVIDER` (default `offline`, no model calls); see `docs/overdracht-agents.md` for Foundry.
 
 | Module | Role |
 |---|---|
@@ -41,3 +41,5 @@ The backend replays the reference match from `output/` and streams it over SSE i
 | `app/stats.py` | Stats Engine: score, xG, possession, updated per event and frame |
 | `app/wire.py` | source data → frontend contract (events, frames, markers) |
 | `app/bus.py` | EventBus: a bounded queue per SSE connection; drops the oldest when full |
+| `app/moments.py` | Statistician: recognises moments (goals, cards, half and full time) and builds their FactSheet |
+| `app/smart_lane.py` | Runs the agent workflow per moment: at most 2 at once, 8 s safety net, cancelled on seek |
