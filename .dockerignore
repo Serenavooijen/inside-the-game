@@ -1,0 +1,15 @@
+# Build context for backend/Dockerfile (built from the repo root).
+# The Dockerfile copies only what it needs; this keeps the upload small and secrets out.
+.git
+**/.env
+**/.env.*
+**/.venv
+**/__pycache__
+**/.pytest_cache
+*.zip
+frontend
+output
+docs
+fixtures
+backend/tests
+backend/tools

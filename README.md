@@ -44,3 +44,23 @@ The backend replays the reference match from `output/` and streams it over SSE i
 | `app/overlays.py` | Overlay Composer (fast lane): shot, pass, sprint and tag overlays, per event and frame |
 | `app/moments.py` | Statistician: recognises moments (goals, cards, half and full time) and builds their FactSheet |
 | `app/smart_lane.py` | Runs the agent workflow per moment: at most 2 at once, 8 s safety net, cancelled on seek |
+
+### Docker and Azure Container Apps
+
+`backend/Dockerfile` builds the backend image from the repo root. The reference match is generated from its seed during the build, so the image does not depend on `output/` in git.
+
+```bash
+docker build -f backend/Dockerfile -t itg-backend .                       # with Docker
+az acr build -r <registry> -t itg-backend:<tag> -f backend/Dockerfile .   # in Azure, no local Docker needed
+```
+
+Container App settings:
+
+| Setting | Value |
+|---|---|
+| Replicas | min 1, max 1 (match state lives in memory) |
+| Ingress | external, target port 8000 |
+| Health probe | `GET /health` |
+| `ITG_CORS_ORIGINS` | the frontend URL(s), comma-separated |
+| `MODEL_PROVIDER` and Foundry variables | see `docs/overdracht-agents.md`, section 5 |
+| Identity | system-assigned managed identity with *Cognitive Services User* on the Foundry resource |
