@@ -2,6 +2,7 @@
 
 import { useRef } from 'react';
 import type { Marker, Speed } from '@/lib/contracts';
+import { useTeams } from '@/lib/teams';
 import { PauseIcon, PlayIcon, Stopwatch, Whistle } from './icons';
 
 type Props = {
@@ -22,6 +23,7 @@ type Props = {
 };
 
 export function Controls({ t, minute, duration, halftime, speed, playing, keyMoment, finished, markers, onToggle, onSpeed, onSeek }: Props) {
+  const teams = useTeams();
   const track = useRef<HTMLDivElement>(null);
   const at = (s: number) => Math.min(100, (s / duration) * 100);
   const progress = at(t);
@@ -86,7 +88,7 @@ export function Controls({ t, minute, duration, halftime, speed, playing, keyMom
           >
             <div className="flex h-[18px] items-center">
               {m.kind === 'goal' && (
-                <span className="box-border inline-block h-4 w-4 rounded-full border-2 border-fg" style={{ background: m.team === 'kba' ? 'var(--itg-kba)' : 'var(--itg-ngr)' }} />
+                <span className="box-border inline-block h-4 w-4 rounded-full border-2 border-fg" style={{ background: teams.color(m.team) }} />
               )}
               {m.kind === 'card' && <span className="inline-block h-[15px] w-[11px] rounded-[2px] bg-card-yellow" />}
               {m.kind === 'red' && <span className="inline-block h-[15px] w-[11px] rounded-[2px] bg-card-red" />}

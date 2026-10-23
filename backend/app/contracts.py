@@ -21,10 +21,10 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pydantic.alias_generators import to_camel
 
-TeamId = str
+TeamId = str                        # from the match data, e.g. "kba"; every match brings its own teams
 Mode = Literal["live", "replay"]
 Speed = Literal[1, 10]
 Period = Literal[1, 2, 3, 4, 5]     # 3, 4 = extra time, 5 = penalty shoot-out
@@ -267,7 +267,21 @@ class FactSheet(CamelModel):
     moment: Moment
     match_state: MatchSnapshot
     facts: list[Fact]
-    team_names: dict[str, str] = {"kba": "Kingsbridge", "ngr": "Northgate"}
+    home: TeamId                    # match_state tuples are (home, away)
+    away: TeamId
+    team_names: dict[TeamId, str]   # display name per team id, e.g. {"kba": "Kingsbridge"}
+
+    @model_validator(mode="after")
+    def _teams_have_names(self) -> FactSheet:
+        missing = {self.home, self.away} - self.team_names.keys()
+        if missing:
+            raise ValueError(f"team_names has no name for {sorted(missing)}")
+        return self
+
+    @property
+    def home_away(self) -> tuple[str, str]:
+        """Display names (home, away), in the order of the match_state tuples."""
+        return self.team_names[self.home], self.team_names[self.away]
 
     def fact(self, fact_id: str) -> Fact | None:
         return next((f for f in self.facts if f.fact_id == fact_id), None)

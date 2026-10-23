@@ -1,4 +1,4 @@
-import type { TeamId } from '@/lib/contracts';
+import type { TeamInfo } from '@/lib/contracts';
 
 export function Logo({ size = 30 }: { size?: number }) {
   return (
@@ -11,29 +11,33 @@ export function Logo({ size = 30 }: { size?: number }) {
   );
 }
 
-export function KbaCrest({ w = 32, h = 36 }: { w?: number; h?: number }) {
+/** Generic shield crest, used for the home team. */
+export function HomeCrest({ w = 32, h = 36, color = '#2F6BFF', fg = '#FFFFFF' }: { w?: number; h?: number; color?: string; fg?: string }) {
   return (
     <svg width={w} height={h} viewBox="0 0 34 38" aria-hidden>
-      <path d="M17 1 32 6v12c0 10-7 16-15 19C9 34 2 28 2 18V6Z" fill="#2F6BFF" stroke="#fff" strokeWidth="2" />
-      <path d="M7 25q10-13 20 0" fill="none" stroke="#fff" strokeWidth="2.5" />
-      <path d="M7 25h20M12 25v-5M17 25v-8M22 25v-5" stroke="#fff" strokeWidth="1.6" />
+      <path d="M17 1 32 6v12c0 10-7 16-15 19C9 34 2 28 2 18V6Z" fill={color} stroke={fg} strokeWidth="2" />
+      <path d="M7 25q10-13 20 0" fill="none" stroke={fg} strokeWidth="2.5" />
+      <path d="M7 25h20M12 25v-5M17 25v-8M22 25v-5" stroke={fg} strokeWidth="1.6" />
     </svg>
   );
 }
 
-export function NgrCrest({ size = 34 }: { size?: number }) {
+/** Generic round crest, used for the away team. */
+export function AwayCrest({ size = 34, color = '#FFB400', fg = '#121212' }: { size?: number; color?: string; fg?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 36 36" aria-hidden>
-      <circle cx="18" cy="18" r="16" fill="#FFB400" stroke="#121212" strokeWidth="2" />
-      <circle cx="18" cy="18" r="11" fill="none" stroke="#121212" strokeWidth="1.4" />
-      <path d="M18 6l3 12-3-3-3 3Z" fill="#121212" />
-      <path d="M18 30l-3-12 3 3 3-3Z" fill="none" stroke="#121212" strokeWidth="1.2" />
+      <circle cx="18" cy="18" r="16" fill={color} stroke={fg} strokeWidth="2" />
+      <circle cx="18" cy="18" r="11" fill="none" stroke={fg} strokeWidth="1.4" />
+      <path d="M18 6l3 12-3-3-3 3Z" fill={fg} />
+      <path d="M18 30l-3-12 3 3 3-3Z" fill="none" stroke={fg} strokeWidth="1.2" />
     </svg>
   );
 }
 
-export function Crest({ team, small }: { team: TeamId; small?: boolean }) {
-  return team === 'kba' ? <KbaCrest w={small ? 30 : 32} h={small ? 34 : 36} /> : <NgrCrest size={small ? 32 : 34} />;
+export function Crest({ team, side, small }: { team: TeamInfo; side: 'home' | 'away'; small?: boolean }) {
+  return side === 'home'
+    ? <HomeCrest w={small ? 30 : 32} h={small ? 34 : 36} color={team.color} fg={team.fg} />
+    : <AwayCrest size={small ? 32 : 34} color={team.color} fg={team.fg} />;
 }
 
 export function Ball({ size = 18 }: { size?: number }) {

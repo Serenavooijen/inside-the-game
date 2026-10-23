@@ -87,5 +87,11 @@
    "window": null,
    "sourceEventIds": []
   }
- ]
+ ],
+ "home": "kba",
+ "away": "ngr",
+ "teamNames": {
+  "kba": "Kingsbridge",
+  "ngr": "Northgate"
+ }
 }

@@ -57,5 +57,11 @@
    "window": "53'–62'",
    "sourceEventIds": []
   }
- ]
+ ],
+ "home": "kba",
+ "away": "ngr",
+ "teamNames": {
+  "kba": "Kingsbridge",
+  "ngr": "Northgate"
+ }
 }
