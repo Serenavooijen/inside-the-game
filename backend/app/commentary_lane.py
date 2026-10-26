@@ -61,8 +61,13 @@ def minute_sheet(info: MatchInfo, roster: dict[str, PlayerInfo], frame: SourceFr
                 text += f", xG {shot.details['xg']:.2f}"
         facts.append((text, "key_action", e.type, [e.event_id]))
 
-    holders = [p.team for f in minute_frames if f.ball.live and f.ball.holder_id
-               for p in f.players if p.id == f.ball.holder_id]
+    # Possession like the Stats Engine: the team of the last player on the ball, while the ball is live.
+    holders, last = [], None
+    for f in minute_frames:
+        holder = next((p.team for p in f.players if p.id == f.ball.holder_id), None) if f.ball.holder_id else None
+        last = holder or last
+        if f.ball.live and last:
+            holders.append(last)
     if len(holders) >= MIN_POSSESSION_S:        # a minute of stoppages says nothing about possession
         share = round(100 * holders.count(info.home) / len(holders))
         facts.append((f"Possession in this minute: {home} {share}%, {away} {100 - share}%", "minute_possession", share, []))

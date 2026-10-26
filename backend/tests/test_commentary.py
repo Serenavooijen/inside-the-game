@@ -37,8 +37,10 @@ def test_minute_sheet_of_the_first_goal():
     sheet = sheet_at("24:00", 1)
     texts = [f.text for f in sheet.facts]
     assert texts[0] == "Goal by Adeyemi-Clarke (9) of Northgate, xG 0.41"
-    assert any(t.startswith("Possession in this minute: Kingsbridge ") for t in texts)
     assert texts[-1] == "Score: Kingsbridge 0-1 Northgate" and sheet.moment.minute == "25"
+    # 13 live seconds around the goal say nothing about possession; a normal minute does
+    assert not any(t.startswith("Possession in this minute") for t in texts)
+    assert any(t.startswith("Possession in this minute: Kingsbridge ") for t in (f.text for f in sheet_at("11:00", 1).facts))
 
 
 def test_a_line_must_be_short_backed_and_without_new_names():
