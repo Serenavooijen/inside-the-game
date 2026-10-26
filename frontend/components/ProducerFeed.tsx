@@ -41,7 +41,7 @@ export function ProducerFeed({ insights, mode, onMode, arrivingId, focusId, scou
       type="button"
       onClick={() => onMode(m)}
       aria-pressed={mode === m}
-      className={`h-[34px] rounded-sm px-3 text-[14px] font-semibold ${mode === m ? 'bg-fg text-bg' : 'bg-transparent text-fg-2 hover:text-fg'}`}
+      className={`h-[34px] whitespace-nowrap rounded-sm px-3 text-[14px] font-semibold ${mode === m ? 'bg-fg text-bg' : 'bg-transparent text-fg-2 hover:text-fg'}`}
     >
       {label}
     </button>
@@ -50,19 +50,20 @@ export function ProducerFeed({ insights, mode, onMode, arrivingId, focusId, scou
   const reportOpen = showReport && !!scouting;
 
   return (
-    <section className="flex min-w-[400px] flex-1 flex-col gap-4" aria-label="Producer feed">
-      <div className="flex items-center justify-between gap-3">
+    <section className="flex min-w-[400px] flex-1 basis-0 flex-col gap-4" aria-label="Producer feed">
+      {/* Never cut or break the titles: when the column is narrow the mode switch moves to its own line. */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-col gap-[2px]">
-          <h2 className="font-display text-[28px] font-extrabold uppercase leading-none tracking-[.04em]">{reportOpen ? 'Scouting' : 'Producer feed'}</h2>
-          <div className="font-mono text-label tracking-[.12em] text-fg-3">{reportOpen ? 'THE CUP MATCH, BEFORE KICK-OFF' : 'NEWEST FIRST'}</div>
+          <h2 className="whitespace-nowrap font-display text-[28px] font-extrabold uppercase leading-none tracking-[.04em]">{reportOpen ? 'Scouting' : 'Producer feed'}</h2>
+          <div className="whitespace-nowrap font-mono text-label tracking-[.12em] text-fg-3">{reportOpen ? 'THE CUP MATCH, BEFORE KICK-OFF' : 'NEWEST FIRST'}</div>
         </div>
-        <div className="flex gap-[2px] rounded-md bg-surface-2 p-[3px]" role="group" aria-label="Explanation style">
+        <div className="flex flex-none gap-[2px] rounded-md bg-surface-2 p-[3px]" role="group" aria-label="Explanation style">
           {seg('casual', 'Casual fan')}
           {seg('analyst', 'Analyst')}
         </div>
       </div>
       {scouting && (
-        <div className="flex gap-2" role="tablist" aria-label="Feed or scouting report">
+        <div className="flex flex-wrap gap-2" role="tablist" aria-label="Feed or scouting report">
           {([[false, 'Feed'], [true, 'Scouting report (cup)']] as const).map(([report, label]) => (
             <button
               key={label}
@@ -70,7 +71,7 @@ export function ProducerFeed({ insights, mode, onMode, arrivingId, focusId, scou
               role="tab"
               aria-selected={showReport === report}
               onClick={() => setShowReport(report)}
-              className={`rounded-full border px-3 py-[5px] text-[14px] font-medium ${showReport === report ? 'border-fg text-fg' : 'border-line text-fg-2 hover:text-fg'}`}
+              className={`whitespace-nowrap rounded-full border px-3 py-[5px] text-[14px] font-medium ${showReport === report ? 'border-fg text-fg' : 'border-line text-fg-2 hover:text-fg'}`}
             >
               {label}
             </button>
