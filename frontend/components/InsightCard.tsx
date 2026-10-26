@@ -11,7 +11,7 @@ type Props = {
 };
 
 const LABELS: Record<Insight['type'], string> = {
-  goal: 'Goal', bigchance: 'Big chance', card: 'Card', momentum: 'Momentum', update: '5-min update', fulltime: 'Full time',
+  goal: 'Goal', bigchance: 'Big chance', card: 'Card', momentum: 'Momentum', update: '5-min update', fulltime: 'Full time', tactics: 'Tactics',
 };
 
 
