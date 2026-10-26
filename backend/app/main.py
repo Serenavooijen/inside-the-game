@@ -14,6 +14,7 @@ from sse_starlette.sse import EventSourceResponse
 
 from app.agents.llm import model_from_env
 from app.bus import EventBus
+from app.commentary_lane import CommentaryLane
 from app.contracts import LoadRequest, SeekRequest, SpeedRequest
 from app.fixture import MATCH_ID, SCOUTING_REPORT, SUMMARY, GeneratorSource
 from app.scout_lane import ScoutLane, tactics_enabled
@@ -26,7 +27,8 @@ bus = EventBus()
 smart_lane = SmartLane(model_from_env())    # MODEL_PROVIDER: offline (default), github, foundry, foundry-agents
 # TACTICS_ENABLED=1: the Scout's tactical cards every 5 minutes, at half time and after substitutions
 scout_lane = ScoutLane(smart_lane.model, SCOUTING_REPORT) if tactics_enabled() else None
-simulator = Simulator(bus, {MATCH_ID: GeneratorSource}, smart_lane, scout_lane)
+commentary_lane = CommentaryLane(smart_lane.model) if tactics_enabled() else None   # a checked line per minute
+simulator = Simulator(bus, {MATCH_ID: GeneratorSource}, smart_lane, scout_lane, commentary_lane)
 
 
 @asynccontextmanager
@@ -38,6 +40,8 @@ async def lifespan(app: FastAPI):
     smart_lane.cancel_all()
     if scout_lane:
         scout_lane.cancel_all()
+    if commentary_lane:
+        commentary_lane.cancel_all()
 
 
 app = FastAPI(title="Inside the Game", lifespan=lifespan)

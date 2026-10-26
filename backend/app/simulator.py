@@ -13,10 +13,14 @@ Behaves like the frontend's mock (frontend/lib/mock/engine.ts):
 """
 import asyncio
 import time
+from bisect import bisect_left, bisect_right
 from collections.abc import Callable
 
 from app.bus import EventBus
-from app.contracts import Insight, MatchEvent, MatchState, Mode, Overlay, SourceEvent, SourceFrame, Speed, Tick
+from app.commentary_lane import CommentaryLane
+from app.contracts import (
+    Commentary, Insight, MatchEvent, MatchState, Mode, Overlay, SourceEvent, SourceFrame, Speed, Tick,
+)
 from app.moments import FrameIndex, MatchContext, Statistician
 from app.overlays import OverlayComposer
 from app.scout_lane import ScoutLane
@@ -32,11 +36,13 @@ HOLD_AFTER_INSIGHT_S = 7.0  # keep the finished insight of a key moment on scree
 
 class Simulator:
     def __init__(self, bus: EventBus, sources: dict[str, Callable[[], MatchSource]],
-                 smart_lane: SmartLane | None = None, scout_lane: ScoutLane | None = None) -> None:
+                 smart_lane: SmartLane | None = None, scout_lane: ScoutLane | None = None,
+                 commentary_lane: CommentaryLane | None = None) -> None:
         self.bus = bus
         self.sources = sources
         self.smart_lane = smart_lane
         self.scout_lane = scout_lane            # tactical analysis, only with TACTICS_ENABLED
+        self.commentary_lane = commentary_lane  # a line of commentary per minute, only with TACTICS_ENABLED
         self.source: MatchSource | None = None
         self.mode: Mode = "replay"
         self.t = 0.0
@@ -148,6 +154,8 @@ class Simulator:
             self.smart_lane.cancel_all()
         if self.scout_lane:
             self.scout_lane.cancel_all()
+        if self.commentary_lane:
+            self.commentary_lane.cancel_all()
         if self.key_moment_id:
             self.speed = self._speed_before_key
         self.key_moment_id = None
@@ -189,6 +197,20 @@ class Simulator:
         if self.scout_lane:
             self.scout_lane.on_item(item, publish, self._history, self._stats.agent_snapshot, self.generation,
                                     self._on_insight)
+        if self.commentary_lane and publish and isinstance(item, SourceFrame):
+            tactics = max((i for i in self.insights.values() if i.type == "tactics" and i.phase == "done"),
+                          key=lambda i: i.t, default=None)
+            self.commentary_lane.on_frame(self.source.info, self.source.roster, item, self._frames_between,
+                                          self._history, self._stats.agent_snapshot(), tactics, self.generation,
+                                          self._on_commentary)
+
+    def _frames_between(self, a: float, b: float) -> list[SourceFrame]:
+        fs, ts = self._frame_at.frames, self._frame_at.ts
+        return fs[bisect_left(ts, a):bisect_right(ts, b)]
+
+    def _on_commentary(self, line: Commentary) -> None:
+        if line.generation == self.generation:
+            self.bus.publish("commentary", line.to_json())
 
     def _publish_overlays(self, overlays: list[Overlay], publish: bool) -> None:
         if not publish:
