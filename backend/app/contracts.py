@@ -1,4 +1,4 @@
-"""Shared data contracts, v0.3. The single place for every shape the backend uses.
+"""Shared data contracts, v0.4. The single place for every shape the backend uses.
 
 Three layers:
 
@@ -92,7 +92,7 @@ class MatchEvent(CamelModel):
     key: bool | None = None         # key moment: slow to 1x and show the hero card
 
 
-InsightType = Literal["goal", "bigchance", "card", "momentum", "update", "fulltime"]
+InsightType = Literal["goal", "bigchance", "card", "momentum", "update", "fulltime", "tactics"]
 InsightStatus = Literal["checked", "corrected", "fallback"]
 InsightPhase = Literal["analysing", "streaming", "done"]
 
@@ -123,6 +123,39 @@ class RejectedClaim(CamelModel):
     fact_ids: list[str] = []
 
 
+TacticalTrigger = Literal["interval", "half_time", "substitution", "scouting"]
+CompareToCup = Literal["same", "changed", "n/a"]
+
+
+class TacticalWindow(CamelModel):
+    """The stretch of play a tactical analysis covers."""
+    from_t: float
+    to_t: float
+    label: str                      # "60'–65'"
+
+
+class TacticalObservation(CamelModel):
+    """One checked observation of the Scout. `consequence` and `coach_action` are
+    interpretation: they contain no numbers or names beyond the observation's facts."""
+    observation: str                # what happens, with numbers from the facts
+    fact_ids: list[str]
+    consequence: str                # what it means for the match
+    coach_action: str | None = None # what the opposing staff would adjust
+    compare_to_cup: CompareToCup = "n/a"
+    team: TeamId | None = None      # the team the observation is about
+
+
+class Heatmap(CamelModel):
+    """Share of a team's presence per zone in a window, in % (sums to about 100).
+
+    Absolute pitch coordinates like everything else: grid[row][col], rows along y
+    (0 -> 68), columns along x (0 -> 105). `dir` = the team's attacking direction.
+    """
+    team: TeamId
+    grid: list[list[float]]
+    dir: Literal[1, -1] = 1
+
+
 class Insight(CamelModel):
     """Smart lane: output of run_workflow, sent as SSE `insight` (updated by id)."""
     id: str
@@ -142,6 +175,12 @@ class Insight(CamelModel):
     analyst_stats: list[dict[str, str]] | None = None
     fallback_reason: str | None = None
     generation: int = 0
+    # type "tactics" (the Scout): window, checked observations and the mini pitch
+    trigger: TacticalTrigger | None = None
+    window: TacticalWindow | None = None
+    observations: list[TacticalObservation] | None = None
+    heatmap: Heatmap | None = None
+    build_up: list[Player] | None = None  # mean positions in build-up phases (shows where the 6 stands)
     # Traceability (not shown in the UI yet)
     cited_fact_ids: list[str] = []
     rejected_claims: list[RejectedClaim] = []
@@ -178,6 +217,29 @@ class Marker(CamelModel):
     title: str
 
 
+class Commentary(CamelModel):
+    """Narrator per minute: one checked line of commentary, sent as SSE `commentary`."""
+    t: float
+    minute: str
+    text: str                       # at most 25 words
+    source_insight_id: str | None = None  # the tactics insight it builds on
+    generation: int = 0
+
+
+class ScoutingReport(CamelModel):
+    """Scout's report on a previous match, made before kick-off and shown next to the feed."""
+    id: str                         # "kba-ngr-cup"
+    title: str                      # "Cup round 2: Northgate 1-2 Kingsbridge"
+    home: TeamId
+    away: TeamId
+    observations: list[TacticalObservation]
+    facts: list[Fact]               # every fact the observations cite (evidence)
+    status: InsightStatus = "checked"
+    rejected_claims: list[RejectedClaim] = []
+    heatmaps: list[Heatmap] = []
+    generated_by: str | None = None # model provider that wrote it
+
+
 class MatchState(Tick):
     """Full picture, sent on (re)connect and from GET /state."""
     match_id: str
@@ -187,6 +249,7 @@ class MatchState(Tick):
     events: list[MatchEvent] = []
     insights: list[Insight] = []
     markers: list[Marker] | None = None  # replay only
+    scouting: ScoutingReport | None = None  # cup-match report, when TACTICS_ENABLED
 
 
 class TeamInfo(CamelModel):
@@ -209,7 +272,7 @@ class MatchSummary(CamelModel):
 
 
 # GET /stream sends `event: <name>` + `data: <payload.to_json()>`.
-SseEventName = Literal["tick", "overlay", "event", "insight", "state"]
+SseEventName = Literal["tick", "overlay", "event", "insight", "state", "commentary"]
 
 
 # Request bodies keep snake_case keys, as the frontend sends them.
@@ -241,6 +304,8 @@ class Fact(CamelModel):
     unit: str | None = None
     window: str | None = Field(default=None, description="Time window, e.g. \"53'–87'\"")
     source_event_ids: list[int] = []
+    team: TeamId | None = None      # tactical facts: the team it is about
+    concept: str | None = None      # tactical facts: playbook id, e.g. "B1"
 
 
 class Moment(CamelModel):
@@ -285,6 +350,36 @@ class FactSheet(CamelModel):
 
     def fact(self, fact_id: str) -> Fact | None:
         return next((f for f in self.facts if f.fact_id == fact_id), None)
+
+
+class TacticalFactSheet(CamelModel):
+    """Input for the Scout: the tactical fingerprint of both teams in one window.
+
+    Facts are computed by app/tactics.py, one detector per playbook concept; a detector
+    only adds a fact when its signal is meaningful. Fact ids are "T1", "T2", ...;
+    the cup-match baseline uses "C1", "C2", ... so both can be cited side by side.
+    """
+    window: TacticalWindow
+    trigger: TacticalTrigger
+    minute: str                     # minute label at the end of the window
+    headline: str = Field(description="Neutral one-liner, e.g. \"Tactics 60'–65': Kingsbridge 1-1 Northgate\"")
+    home: TeamId
+    away: TeamId
+    team_names: dict[TeamId, str]
+    match_state: MatchSnapshot | None = None   # None for the scouting report
+    facts: list[Fact]
+    baseline: list[Fact] = []       # the same metrics in the cup match
+    concepts_fired: list[str] = []  # playbook ids whose detector produced a fact, e.g. ["B1", "D1"]
+
+    @model_validator(mode="after")
+    def _teams_have_names(self) -> TacticalFactSheet:
+        missing = {self.home, self.away} - self.team_names.keys()
+        if missing:
+            raise ValueError(f"team_names has no name for {sorted(missing)}")
+        return self
+
+    def fact(self, fact_id: str) -> Fact | None:
+        return next((f for f in (*self.facts, *self.baseline) if f.fact_id == fact_id), None)
 
 
 # ============================================================================ 3. source
@@ -362,3 +457,8 @@ class MatchInfo(BaseModel):
     mode: Mode = "replay"
     duration_s: float | None = None # None while a live match is still running
 
+
+
+# ScoutingReport (wire layer) refers to Fact (agents layer), defined further down.
+ScoutingReport.model_rebuild()
+MatchState.model_rebuild()

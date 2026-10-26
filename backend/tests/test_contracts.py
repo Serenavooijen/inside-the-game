@@ -148,3 +148,35 @@ def test_fact_sheet_needs_a_name_for_both_teams():
         FactSheet(moment=Moment(moment_id="m", t=1, minute="1", kind="update", headline="h"),
                   match_state=MatchSnapshot(score=(0, 0), possession=(50, 50), xg=(0, 0), shots=(0, 0)),
                   facts=[], home="hv", away="su", team_names={"hv": "Harlow Vale"})
+
+
+# ------------------------------------------------------------------ tactics (v0.4)
+
+def test_tactical_fact_sheet_finds_live_and_baseline_facts():
+    from app.contracts import Fact, TacticalFactSheet, TacticalWindow
+    sheet = TacticalFactSheet(
+        window=TacticalWindow(from_t=3600, to_t=3900, label="60'–65'"), trigger="interval", minute="65",
+        headline="Tactics 60'–65'", home="kba", away="ngr", team_names={"kba": "Kingsbridge", "ngr": "Northgate"},
+        facts=[Fact(fact_id="T1", text="6 drops in 0% of build-ups", metric="dm_drop_between", value=0, team="ngr", concept="B1")],
+        baseline=[Fact(fact_id="C1", text="Cup: 6 drops in 71% of build-ups", metric="dm_drop_between", value=71)],
+    )
+    assert sheet.fact("T1").concept == "B1" and sheet.fact("C1").value == 71
+    data = sheet.to_json()
+    assert data["window"] == {"fromT": 3600, "toT": 3900, "label": "60'–65'"}
+    assert data["facts"][0]["concept"] == "B1"
+
+
+def test_tactics_insight_and_commentary_serialise_to_frontend_shape():
+    from app.contracts import Commentary, Heatmap, TacticalObservation, TacticalWindow
+    i = Insight(id="i-tac-65", t=3900, minute="65", type="tactics", text="", trigger="interval",
+                window=TacticalWindow(from_t=3600, to_t=3900, label="60'–65'"),
+                observations=[TacticalObservation(observation="o", fact_ids=["T1"], consequence="c",
+                                                  coach_action="a", compare_to_cup="changed", team="ngr")],
+                heatmap=Heatmap(team="ngr", grid=[[0.0] * 6] * 4, dir=-1))
+    data = i.to_json()
+    assert data["observations"][0] == {"observation": "o", "factIds": ["T1"], "consequence": "c",
+                                       "coachAction": "a", "compareToCup": "changed", "team": "ngr"}
+    assert data["heatmap"]["dir"] == -1 and len(data["heatmap"]["grid"]) == 4
+    c = Commentary(t=3910, minute="66", text="Northgate keep the ball wide.", source_insight_id="i-tac-65")
+    assert c.to_json() == {"t": 3910, "minute": "66", "text": "Northgate keep the ball wide.",
+                           "sourceInsightId": "i-tac-65", "generation": 0}

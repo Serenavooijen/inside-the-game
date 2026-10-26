@@ -73,7 +73,7 @@ export type MatchEvent = {
 };
 
 /** Smart lane: agent output, checked against event data. */
-export type InsightType = 'goal' | 'bigchance' | 'card' | 'momentum' | 'update' | 'fulltime';
+export type InsightType = 'goal' | 'bigchance' | 'card' | 'momentum' | 'update' | 'fulltime' | 'tactics';
 export type InsightStatus = 'checked' | 'corrected' | 'fallback';
 export type InsightPhase = 'analysing' | 'streaming' | 'done';
 /** Area highlighted on the mini pitch (metres, absolute). */
@@ -97,6 +97,28 @@ export type CorrectionStats = {
   bLabel: string;
   bTeam: TeamId;
 };
+
+export type TacticalTrigger = 'interval' | 'half_time' | 'substitution' | 'scouting';
+export type CompareToCup = 'same' | 'changed' | 'n/a';
+
+/** The stretch of play a tactical analysis covers. */
+export type TacticalWindow = { fromT: number; toT: number; label: string };
+
+/** One checked observation of the Scout. consequence and coachAction are interpretation:
+ *  no numbers or names beyond the observation's facts. */
+export type TacticalObservation = {
+  observation: string;
+  factIds: string[];
+  consequence: string;
+  coachAction?: string;
+  compareToCup: CompareToCup;
+  /** the team the observation is about */
+  team?: TeamId;
+};
+
+/** Share of a team's presence per zone in %, absolute coordinates:
+ *  grid[row][col], rows along y (0 → 68), columns along x (0 → 105). */
+export type Heatmap = { team: TeamId; grid: number[][]; dir: 1 | -1 };
 
 export type Insight = {
   id: string;
@@ -122,6 +144,13 @@ export type Insight = {
   /** status 'fallback': why the template text was used */
   fallbackReason?: string;
   generation: number;
+  /** type 'tactics' (the Scout): window, checked observations and the mini pitch */
+  trigger?: TacticalTrigger;
+  window?: TacticalWindow;
+  observations?: TacticalObservation[];
+  heatmap?: Heatmap;
+  /** mean positions in build-up phases (shows where the 6 stands) */
+  buildUp?: Player[];
   /** Traceability from the agents (optional) */
   rejectedClaims?: { text: string; reason: string; factIds?: string[] }[];
   citedFactIds?: string[];
@@ -162,6 +191,44 @@ export type Marker = {
   title: string;
 };
 
+/** Narrator per minute: one checked line of commentary (at most 25 words). */
+export type Commentary = {
+  t: number;
+  minute: string;
+  text: string;
+  /** the tactics insight it builds on */
+  sourceInsightId?: string;
+  generation: number;
+};
+
+export type Fact = {
+  factId: string;
+  text: string;
+  metric: string;
+  value: number | string;
+  unit?: string;
+  window?: string;
+  sourceEventIds: number[];
+  team?: TeamId;
+  /** playbook concept id, e.g. "B1" */
+  concept?: string;
+};
+
+/** The Scout's report on the previous (cup) match, shown next to the feed. */
+export type ScoutingReport = {
+  id: string;
+  title: string;
+  home: TeamId;
+  away: TeamId;
+  observations: TacticalObservation[];
+  /** every fact the observations cite */
+  facts: Fact[];
+  status: InsightStatus;
+  rejectedClaims: { text: string; reason: string; factIds?: string[] }[];
+  heatmaps: Heatmap[];
+  generatedBy?: string;
+};
+
 /** Full picture, sent on (re)connect and from GET /state. */
 export type MatchState = Tick & {
   matchId: string;
@@ -174,6 +241,8 @@ export type MatchState = Tick & {
   insights: Insight[];
   /** Replay mode only: every marker for the whole match */
   markers?: Marker[];
+  /** Cup-match scouting report (backend with TACTICS_ENABLED=1) */
+  scouting?: ScoutingReport;
 };
 
 export type StreamMessage =
@@ -181,7 +250,8 @@ export type StreamMessage =
   | { type: 'overlay'; data: Overlay }
   | { type: 'event'; data: MatchEvent }
   | { type: 'insight'; data: Insight }
-  | { type: 'state'; data: MatchState };
+  | { type: 'state'; data: MatchState }
+  | { type: 'commentary'; data: Commentary };
 
 export type TeamInfo = {
   id: string;
