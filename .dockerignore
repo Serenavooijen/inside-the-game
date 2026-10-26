@@ -11,5 +11,6 @@ frontend
 output
 docs
 fixtures
+!fixtures/scouting
 backend/tests
 backend/tools

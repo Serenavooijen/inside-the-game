@@ -1,0 +1,474 @@
+{
+ "id": "kba-ngr-cup",
+ "title": "Cup round 2: Kingsbridge 2-1 Northgate",
+ "home": "kba",
+ "away": "ngr",
+ "observations": [
+  {
+   "observation": "Kingsbridge built up with a 2-3-2-3 shape, using a left-back who inverted inside 34% of the time, forming a 3-2 box for protection against counters.",
+   "factIds": [
+    "C4",
+    "C6"
+   ],
+   "consequence": "This formation improved defensive cover centrally but shifted width responsibility to the wingers.",
+   "coachAction": "Opponents should have their winger track inside or accept the 3-2 and press centre-backs.",
+   "compareToCup": "n/a",
+   "team": "kba"
+  },
+  {
+   "observation": "Kingsbridge attacked evenly, with 32% down left flank, 34% centre, and 34% right; after a substitution, attacks down the right fell from 48% to 26%, shifting play focus.",
+   "factIds": [
+    "C7",
+    "C8",
+    "C9",
+    "C29"
+   ],
+   "consequence": "The attack became less balanced, reducing threats from the right flank later in the match.",
+   "coachAction": "Shift defensive focus away from the weakened flank and prepare for overloads on the opposite side.",
+   "compareToCup": "n/a",
+   "team": "kba"
+  },
+  {
+   "observation": "Kingsbridge's defensive block dropped from 37 m to 30 m from goal after a substitution, moving their block deeper in later stages.",
+   "factIds": [
+    "C10",
+    "C30"
+   ],
+   "consequence": "The deeper block reduces space behind defenders but concedes more territory to the opponent.",
+   "coachAction": "Use width, patience, and set pieces to break down this deeper defense.",
+   "compareToCup": "n/a",
+   "team": "kba"
+  },
+  {
+   "observation": "Northgate built out mainly with their 6 dropping between centre-backs in 58% of phases, forming a back three to counter a two-striker press, at the cost of midfield presence.",
+   "factIds": [
+    "C14"
+   ],
+   "consequence": "This provided clean first passes but weakened midfield control in front of the defense, inviting mid-block pressure.",
+   "compareToCup": "n/a",
+   "team": "ngr"
+  },
+  {
+   "observation": "At 61 minutes, Northgate switched formation from 4-3-3 to 4-4-2 and moved their last defensive line deeper from 26 m to 20 m, adopting a lower defensive block.",
+   "factIds": [
+    "C27",
+    "C28"
+   ],
+   "consequence": "This change decreased space behind the defense, reducing vulnerability to through balls but conceding midfield territory.",
+   "coachAction": "Respond by increasing midfield control and adjust to fewer spaces behind the defense for through balls.",
+   "compareToCup": "n/a",
+   "team": "ngr"
+  }
+ ],
+ "facts": [
+  {
+   "factId": "C1",
+   "text": "Cup match: Kingsbridge's 6, Brannigan (6), dropped between the centre-backs in 5% of 99 build-up phases",
+   "metric": "dm_between_pct",
+   "value": 5.0,
+   "window": "cup match",
+   "sourceEventIds": [],
+   "team": "kba",
+   "concept": "B1"
+  },
+  {
+   "factId": "C2",
+   "text": "Cup match: Kingsbridge's 6 dropped beside a centre-back in 0% of 99 build-up phases",
+   "metric": "dm_beside_pct",
+   "value": 0.0,
+   "window": "cup match",
+   "sourceEventIds": [],
+   "team": "kba",
+   "concept": "B2"
+  },
+  {
+   "factId": "C3",
+   "text": "Cup match: Kingsbridge's right-back Okafor-Hale (2) moved inside next to the 6 for 1% of the build-up time",
+   "metric": "fb_invert_rb_pct",
+   "value": 1.0,
+   "window": "cup match",
+   "sourceEventIds": [],
+   "team": "kba",
+   "concept": "B3"
+  },
+  {
+   "factId": "C4",
+   "text": "Cup match: Kingsbridge's left-back Mbeki (3) moved inside next to the 6 for 34% of the build-up time",
+   "metric": "fb_invert_lb_pct",
+   "value": 34.0,
+   "window": "cup match",
+   "sourceEventIds": [],
+   "team": "kba",
+   "concept": "B3"
+  },
+  {
+   "factId": "C5",
+   "text": "Cup match: 10% of Kingsbridge's passes from their own half went long",
+   "metric": "long_ball_pct",
+   "value": 10.0,
+   "window": "cup match",
+   "sourceEventIds": [],
+   "team": "kba",
+   "concept": "B5"
+  },
+  {
+   "factId": "C6",
+   "text": "Cup match: Kingsbridge's build-up shape 2-3-2-3",
+   "metric": "buildup_shape",
+   "value": "2-3-2-3",
+   "window": "cup match",
+   "sourceEventIds": [],
+   "team": "kba",
+   "concept": "B6"
+  },
+  {
+   "factId": "C7",
+   "text": "Cup match: 32% of Kingsbridge's attacks went down the left",
+   "metric": "channel_left_pct",
+   "value": 32.0,
+   "window": "cup match",
+   "sourceEventIds": [],
+   "team": "kba",
+   "concept": "P1"
+  },
+  {
+   "factId": "C8",
+   "text": "Cup match: 34% of Kingsbridge's attacks went down the centre",
+   "metric": "channel_centre_pct",
+   "value": 34.0,
+   "window": "cup match",
+   "sourceEventIds": [],
+   "team": "kba",
+   "concept": "P1"
+  },
+  {
+   "factId": "C9",
+   "text": "Cup match: 34% of Kingsbridge's attacks went down the right",
+   "metric": "channel_right_pct",
+   "value": 34.0,
+   "window": "cup match",
+   "sourceEventIds": [],
+   "team": "kba",
+   "concept": "P1"
+  },
+  {
+   "factId": "C10",
+   "text": "Cup match: Kingsbridge's last line without the ball 34 m from their own goal",
+   "metric": "line_height_m",
+   "value": 34.0,
+   "window": "cup match",
+   "sourceEventIds": [],
+   "team": "kba",
+   "concept": "D1"
+  },
+  {
+   "factId": "C11",
+   "text": "Cup match: Kingsbridge's block 28 m deep without the ball",
+   "metric": "compactness_m",
+   "value": 28.0,
+   "window": "cup match",
+   "sourceEventIds": [],
+   "team": "kba",
+   "concept": "D2"
+  },
+  {
+   "factId": "C12",
+   "text": "Cup match: Kingsbridge's PPDA 5.5",
+   "metric": "ppda",
+   "value": 5.5,
+   "window": "cup match",
+   "sourceEventIds": [],
+   "team": "kba",
+   "concept": "D3"
+  },
+  {
+   "factId": "C13",
+   "text": "Cup match: Kingsbridge won the ball back within 5 seconds after 35% of losses",
+   "metric": "counterpress_pct",
+   "value": 35.0,
+   "window": "cup match",
+   "sourceEventIds": [],
+   "team": "kba",
+   "concept": "T1"
+  },
+  {
+   "factId": "C14",
+   "text": "Cup match: Northgate's 6, Duarte (8), dropped between the centre-backs in 58% of 97 build-up phases",
+   "metric": "dm_between_pct",
+   "value": 58.0,
+   "window": "cup match",
+   "sourceEventIds": [],
+   "team": "ngr",
+   "concept": "B1"
+  },
+  {
+   "factId": "C15",
+   "text": "Cup match: Northgate's 6 dropped beside a centre-back in 3% of 97 build-up phases",
+   "metric": "dm_beside_pct",
+   "value": 3.0,
+   "window": "cup match",
+   "sourceEventIds": [],
+   "team": "ngr",
+   "concept": "B2"
+  },
+  {
+   "factId": "C16",
+   "text": "Cup match: Northgate's right-back Quiroga (2) moved inside next to the 6 for 2% of the build-up time",
+   "metric": "fb_invert_rb_pct",
+   "value": 2.0,
+   "window": "cup match",
+   "sourceEventIds": [],
+   "team": "ngr",
+   "concept": "B3"
+  },
+  {
+   "factId": "C17",
+   "text": "Cup match: Northgate's left-back Gallagher (3) moved inside next to the 6 for 2% of the build-up time",
+   "metric": "fb_invert_lb_pct",
+   "value": 2.0,
+   "window": "cup match",
+   "sourceEventIds": [],
+   "team": "ngr",
+   "concept": "B3"
+  },
+  {
+   "factId": "C18",
+   "text": "Cup match: 13% of Northgate's passes from their own half went long",
+   "metric": "long_ball_pct",
+   "value": 13.0,
+   "window": "cup match",
+   "sourceEventIds": [],
+   "team": "ngr",
+   "concept": "B5"
+  },
+  {
+   "factId": "C19",
+   "text": "Cup match: Northgate's build-up shape 2-3-5",
+   "metric": "buildup_shape",
+   "value": "2-3-5",
+   "window": "cup match",
+   "sourceEventIds": [],
+   "team": "ngr",
+   "concept": "B6"
+  },
+  {
+   "factId": "C20",
+   "text": "Cup match: 22% of Northgate's attacks went down the left",
+   "metric": "channel_left_pct",
+   "value": 22.0,
+   "window": "cup match",
+   "sourceEventIds": [],
+   "team": "ngr",
+   "concept": "P1"
+  },
+  {
+   "factId": "C21",
+   "text": "Cup match: 54% of Northgate's attacks went down the centre",
+   "metric": "channel_centre_pct",
+   "value": 54.0,
+   "window": "cup match",
+   "sourceEventIds": [],
+   "team": "ngr",
+   "concept": "P1"
+  },
+  {
+   "factId": "C22",
+   "text": "Cup match: 25% of Northgate's attacks went down the right",
+   "metric": "channel_right_pct",
+   "value": 25.0,
+   "window": "cup match",
+   "sourceEventIds": [],
+   "team": "ngr",
+   "concept": "P1"
+  },
+  {
+   "factId": "C23",
+   "text": "Cup match: Northgate's last line without the ball 25 m from their own goal",
+   "metric": "line_height_m",
+   "value": 25.0,
+   "window": "cup match",
+   "sourceEventIds": [],
+   "team": "ngr",
+   "concept": "D1"
+  },
+  {
+   "factId": "C24",
+   "text": "Cup match: Northgate's block 31 m deep without the ball",
+   "metric": "compactness_m",
+   "value": 31.0,
+   "window": "cup match",
+   "sourceEventIds": [],
+   "team": "ngr",
+   "concept": "D2"
+  },
+  {
+   "factId": "C25",
+   "text": "Cup match: Northgate's PPDA 4.5",
+   "metric": "ppda",
+   "value": 4.5,
+   "window": "cup match",
+   "sourceEventIds": [],
+   "team": "ngr",
+   "concept": "D3"
+  },
+  {
+   "factId": "C26",
+   "text": "Cup match: Northgate won the ball back within 5 seconds after 30% of losses",
+   "metric": "counterpress_pct",
+   "value": 30.0,
+   "window": "cup match",
+   "sourceEventIds": [],
+   "team": "ngr",
+   "concept": "T1"
+  },
+  {
+   "factId": "C27",
+   "text": "Cup match: Northgate changed from a 4-3-3 to a 4-4-2 at 61'",
+   "metric": "formation",
+   "value": "4-4-2",
+   "window": "cup match",
+   "sourceEventIds": [
+    1864
+   ],
+   "team": "ngr",
+   "concept": "G1"
+  },
+  {
+   "factId": "C28",
+   "text": "Cup match: Since Petrov (10) came on at 61', Northgate's last line without the ball moved back from 26 m to 20 m",
+   "metric": "sub_line_height_m",
+   "value": 20.0,
+   "unit": "m",
+   "window": "cup match",
+   "sourceEventIds": [
+    1864
+   ],
+   "team": "ngr",
+   "concept": "G2"
+  },
+  {
+   "factId": "C29",
+   "text": "Cup match: Since Marchetti (18) came on at 71', the share of Kingsbridge's attacks down the right fell from 48% to 26%",
+   "metric": "sub_channel_right_pct",
+   "value": 26.0,
+   "unit": "%",
+   "window": "cup match",
+   "sourceEventIds": [
+    2140
+   ],
+   "team": "kba",
+   "concept": "G2"
+  },
+  {
+   "factId": "C30",
+   "text": "Cup match: Since Marchetti (18) came on at 71', Kingsbridge's last line without the ball moved back from 37 m to 30 m",
+   "metric": "sub_line_height_m",
+   "value": 30.0,
+   "unit": "m",
+   "window": "cup match",
+   "sourceEventIds": [
+    2140
+   ],
+   "team": "kba",
+   "concept": "G2"
+  }
+ ],
+ "status": "corrected",
+ "rejectedClaims": [
+  {
+   "text": "Coach action: Press with three upfront or block the lanes into midfield to disrupt build-up.",
+   "reason": "Coach action added number(s) not in the observation's facts: 3 (dropped)",
+   "factIds": [
+    "C14"
+   ]
+  },
+  {
+   "text": "Northgate used a build-up shape of 2-3-5, attacking mainly through the centre (54%) and left flank (22%), while maintaining a mid-level defensive block 31 m deep.",
+   "reason": "Number(s) not in the cited facts: 22",
+   "factIds": [
+    "C19",
+    "C21",
+    "C24"
+   ]
+  }
+ ],
+ "heatmaps": [
+  {
+   "team": "kba",
+   "grid": [
+    [
+     0.1,
+     2.7,
+     4.7,
+     5.8,
+     3.3,
+     1.7
+    ],
+    [
+     1.0,
+     8.0,
+     10.4,
+     6.6,
+     4.2,
+     1.2
+    ],
+    [
+     1.1,
+     8.0,
+     12.0,
+     6.3,
+     4.1,
+     1.6
+    ],
+    [
+     0.2,
+     2.2,
+     4.1,
+     6.1,
+     3.3,
+     1.5
+    ]
+   ],
+   "dir": 1
+  },
+  {
+   "team": "ngr",
+   "grid": [
+    [
+     0.2,
+     2.9,
+     3.3,
+     5.8,
+     3.9,
+     1.6
+    ],
+    [
+     1.0,
+     3.1,
+     6.3,
+     8.4,
+     9.5,
+     4.1
+    ],
+    [
+     0.3,
+     3.0,
+     6.2,
+     7.7,
+     9.6,
+     4.2
+    ],
+    [
+     0.2,
+     3.4,
+     3.6,
+     6.0,
+     4.1,
+     1.3
+    ]
+   ],
+   "dir": -1
+  }
+ ],
+ "generatedBy": "foundry-agents"
+}

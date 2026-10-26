@@ -38,7 +38,7 @@ MAX_EVIDENCE = 6
 # "the 6", "their 8s", "a back three", "three at the back": football terms, not statistics.
 # Hidden from the number check only.
 ROLE = re.compile(r"\b(the|a|an|their|our|its|his|her|both|two|new|opposing|own)( \w+)? (6|8|10)s?\b", re.I)
-LINE_TERM = re.compile(r"\b(back|front) (two|three|four|five)\b|\b(two|three|four|five) (at the back|up front)\b"
+LINE_TERM = re.compile(r"\b(back|front) (two|three|four|five)\b|\b(two|three|four|five) (at the back|up ?front)\b"
                        r"|\b(two|three|four|five)-man\b", re.I)
 
 

@@ -87,6 +87,10 @@ def scout_prompt(sheet: TacticalFactSheet) -> str:
     home, away = sheet.team_names[sheet.home], sheet.team_names[sheet.away]
     lines = [f"Window {sheet.window.label} ({TRIGGER_LABEL.get(sheet.trigger, sheet.trigger)}): {sheet.headline}",
              f"Team ids: {sheet.home} = {home}, {sheet.away} = {away}"]
+    if sheet.trigger == "scouting":
+        lines.append("This is the scouting report on the cup match itself, written before today's kick-off. "
+                     "Describe how each team played in the cup match: their plan and what changed during it. "
+                     "There is no live match yet: never compare, and use compare_to_cup \"n/a\".")
     if sheet.match_state:
         s = sheet.match_state
         lines.append(f"Score: {home} {s.score[0]}-{s.score[1]} {away} · players on the pitch {s.players_on_pitch[0]} v {s.players_on_pitch[1]}")

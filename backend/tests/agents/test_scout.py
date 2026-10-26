@@ -217,3 +217,22 @@ def test_football_terms_are_no_numbers_but_statistics_are():
 def test_tactical_vocabulary_passes_the_checks():
     ok, rejected = check_observation(obs(coach_action="Far-side full-back stays narrow; press with three up front."), sheet())
     assert ok and ok.coach_action and not rejected
+
+
+def test_the_committed_scouting_report_is_backed_by_its_own_facts():
+    """fixtures/scouting/kba-ngr-cup.json: every observation still passes the checker against the report's facts."""
+    import json
+    from pathlib import Path
+
+    from app.contracts import ScoutingReport
+
+    path = Path(__file__).resolve().parents[3] / "fixtures" / "scouting" / "kba-ngr-cup.json"
+    report = ScoutingReport.model_validate(json.loads(path.read_text(encoding="utf-8")))
+    assert 4 <= len(report.observations) <= 6 and all(f.fact_id.startswith("C") for f in report.facts)
+    sheet = TacticalFactSheet(window=TacticalWindow(from_t=0, to_t=1, label="cup match"), trigger="scouting", minute="90",
+                              headline=report.title, home=report.home, away=report.away,
+                              team_names={"kba": "Kingsbridge", "ngr": "Northgate"}, facts=report.facts)
+    for o in report.observations:
+        ok, _ = check_observation(o, sheet)
+        assert ok is not None, o.observation
+    assert any(f.metric == "dm_between_pct" and f.team == "ngr" and f.value >= 40 for f in report.facts)
