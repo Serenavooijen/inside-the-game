@@ -39,6 +39,7 @@ LONG_M = 35.0               # B5: a long ball
 SWITCH_M = 30.0             # P2: lateral distance of a switch of play
 PPDA_ZONE_X = 42.0          # D3: the defending team's x beyond which it presses (the opponent's own 60%)
 HIGH_X = 70.0               # D3: recoveries in the attacking third
+MIN_DEF_ACTIONS = 5         # D3: a PPDA fact needs at least this many defensive actions in the window
 MIDFIELD_X = (35.0, 70.0)   # D1/D2/G2/G3: the block is measured with the opponent's ball in the middle third
 MIN_BLOCK_FRAMES = 20       # ... at least this many such seconds in the window
 COUNTERPRESS_S = 5          # T1
@@ -170,6 +171,7 @@ class Print:
     depth_m: float | None = None                # D2: deepest to highest outfield player, without the ball
     width_m: float | None = None
     ppda: float | None = None                   # D3
+    def_actions: int = 0                        # D3: defensive actions behind the PPDA
     high_recoveries: int = 0
     high_recovery_ids: list[int] = field(default_factory=list)
     losses: int = 0                             # T1
@@ -322,8 +324,9 @@ def fingerprint(track: Track, team: str, frames: list[FrameRel], events: list[So
     actions = [e for e in events if e.team == team and e.x is not None
                and (e.type in ("interception", "foul", "block") or (e.type == "tackle" and e.outcome == "won"))
                and rel_ev(e, e.x, e.y)[0] > PPDA_ZONE_X]
-    if len(opp_passes) >= 8 and actions:
+    if len(opp_passes) >= 8 and len(actions) >= MIN_DEF_ACTIONS:   # fewer actions make PPDA a coin toss
         p.ppda = round(len(opp_passes) / len(actions), 1)
+        p.def_actions = len(actions)
     high = [e for e in events if e.team == team and e.x is not None
             and e.type in ("ball_recovery", "interception") and rel_ev(e, e.x, e.y)[0] > HIGH_X]
     p.high_recoveries, p.high_recovery_ids = len(high), [e.event_id for e in high]
@@ -611,7 +614,8 @@ class Tactician:
             if level != "moderate pressing" or changed or now.high_recoveries >= 2:
                 rec = (f", {now.high_recoveries} ball recover{'y' if now.high_recoveries == 1 else 'ies'} in the attacking third"
                        if now.high_recoveries else "")
-                out.append(Draft(f"{name}'s PPDA {now.ppda:g} ({level}){rec}{cmp_}", "ppda", now.ppda, team,
+                out.append(Draft(f"{name}'s PPDA {now.ppda:g} ({level}, over {now.def_actions} defensive actions){rec}{cmp_}",
+                                 "ppda", now.ppda, team,
                                  "D3", src=now.high_recovery_ids[:10], change=changed))
 
         # T1: counter-press

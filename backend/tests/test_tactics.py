@@ -228,3 +228,23 @@ def test_the_direction_is_in_the_fact_text():
     assert "m higher than the cup match (35 m, high block)" in d1["kba"]
     assert "m deeper than the cup match (28 m, mid block)" in d1["ngr"]
     assert "about the same as the previous 5 minutes" in d1["ngr"]
+
+
+def test_ppda_needs_at_least_five_defensive_actions():
+    from app.tactics import MIN_DEF_ACTIONS
+
+    info, roster_, fs, evs = match("today")
+    tac = Tactician(info, roster_, fs)
+    for minute in range(5, 95, 5):
+        try:
+            to = t_at(fs, minute)
+        except StopIteration:
+            continue
+        prints = tac.prints(to - 299, to, evs)
+        for p in prints.values():
+            assert p.ppda is None or p.def_actions >= MIN_DEF_ACTIONS
+        sheet = tac.sheet("interval", to - 299, to, evs)
+        for f in (sheet.facts if sheet else []):
+            if f.concept == "D3":
+                n = int(f.text.split("over ")[1].split(" defensive")[0])
+                assert n >= MIN_DEF_ACTIONS
