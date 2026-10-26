@@ -82,6 +82,7 @@ class ScoutLane:
         self._period_start: dict[int, float] = {}
         self._pending_subs: list[tuple[float, list[SourceEvent]]] = []   # (due t, substitutions)
         self._previous: list[TacticalObservation] = []   # the last checked analysis, so advice is not repeated
+        self.last_facts: list[Fact] = []                  # today's facts of the last live sheet (for the commentary)
 
     # ------------------------------------------------------------------ set-up
 
@@ -100,6 +101,7 @@ class ScoutLane:
         self._queue.clear()
         self._pending_subs.clear()
         self._previous = []
+        self.last_facts = []
         if self._task and not self._task.done():
             self._task.cancel()
         self._task = None
@@ -182,6 +184,8 @@ class ScoutLane:
         tac = self.tactician
         sheet = await asyncio.to_thread(tac.sheet, job.trigger, job.from_t, job.to_t, job.events, job.snapshot,
                                         job.prev, job.subs or None)
+        if sheet is not None:
+            self.last_facts = list(sheet.facts)     # today only: the cup baseline is a separate list
         if sheet is None or all(f.metric == "game_state" for f in sheet.facts):
             await self._status(job, publish)    # too few facts: still a card, made by the code
             return

@@ -200,11 +200,14 @@ class Simulator:
             self.scout_lane.on_item(item, publish, self._history, self._stats.agent_snapshot, self.generation,
                                     self._on_insight)
         if self.commentary_lane and publish and isinstance(item, SourceFrame):
-            tactics = max((i for i in self.insights.values() if i.type == "tactics" and i.phase == "done"),
+            # The latest live tactics card; the scouting report (t = 0) is about the cup match, not today.
+            tactics = max((i for i in self.insights.values()
+                           if i.type == "tactics" and i.phase == "done" and i.trigger != "scouting"),
                           key=lambda i: i.t, default=None)
             self.commentary_lane.on_frame(self.source.info, self.source.roster, item, self._frames_between,
                                           self._history, self._stats.agent_snapshot(), tactics, self.generation,
-                                          self._on_commentary)
+                                          self._on_commentary,
+                                          self.scout_lane.last_facts if self.scout_lane else None)
 
     def _frames_between(self, a: float, b: float) -> list[SourceFrame]:
         fs, ts = self._frame_at.frames, self._frame_at.ts

@@ -95,3 +95,62 @@ def test_the_simulator_sends_a_line_per_minute_and_drops_it_on_seek():
     first, after_seek = asyncio.run(main())
     assert len(first) == 1 and first[0]["minute"] == "25" and first[0]["text"].startswith("Goal by Adeyemi-Clarke (9)")
     assert after_seek == []
+
+
+def lb_sheet():
+    """Minute 3 with today's fact: the left-back inverts 3% of the time (cup match: 34%)."""
+    from app.contracts import Fact
+
+    today = Fact(fact_id="T4", text="Kingsbridge's left-back Mbeki (3) moved inside next to the 6 for 3% of the build-up time "
+                 "(cup match: 34%, down 31 points)", metric="fb_invert_lb_pct", value=3, team="kba", concept="B3")
+    src = GeneratorSource()
+    frames = [i for i in src._items if isinstance(i, SourceFrame)]
+    frame = next(f for f in frames if f.clock == "03:00")
+    stats = StatsEngine(src.info.home, src.info.away)
+    return minute_sheet(src.info, src.roster, frame, [f for f in frames if frame.t - 60 < f.t <= frame.t], [],
+                        stats.agent_snapshot(), [today])
+
+
+def test_the_cup_match_is_no_fact_about_today():
+    """The line at 3' said "using their inverting left-back" while the left-back inverts 3% today (cup: 34%)."""
+    s = lb_sheet()
+    reason = check_line("Kingsbridge build patiently using their inverting left-back.", s, [])
+    assert reason and "invert" in reason and "cup match" in reason
+    assert check_line("Kingsbridge's left-back moves inside 34% of the time.", s, []).startswith(
+        "'moves inside' is not what today's facts show")
+    assert "34" in check_line("Kingsbridge's left-back is involved 34% of the time.", s, [])
+    # an explicit comparison is fine, and so is today's number on its own
+    assert check_line("In the cup match Kingsbridge's left-back inverted 34% of the time; today only 3%.", s, []) is None
+    assert check_line("Kingsbridge's left-back stays wide, inside only 3% of the build-up time.", s, []) is None
+
+
+def test_the_commentary_does_not_get_the_scouting_report():
+    from app.fixture import SCOUTING_REPORT
+    from app.scout_lane import ScoutLane
+
+    prompts = []
+
+    class Recording(OfflineModel):
+        name = "recording"
+
+        async def narrate(self, sheet, claims, prompt):
+            prompts.append((prompt, claims))
+            yield "Kingsbridge have the ball."
+
+    async def main():
+        bus = EventBus(maxsize=10_000)
+        lane = CommentaryLane(Recording())
+        scout = ScoutLane(OfflineModel(), SCOUTING_REPORT)
+        sim = Simulator(bus, {MATCH_ID: GeneratorSource}, None, scout, lane)
+        await sim.load(MATCH_ID, "replay")
+        t3 = next(i.t for i in sim._items if isinstance(i, SourceFrame) and i.clock == "03:00")
+        sim.seek(t3 - 2)
+        sim.step(0.4)
+        await lane.wait()
+        return sim
+
+    sim = asyncio.run(main())
+    assert sim.state().insights[0].trigger == "scouting"            # the report is on screen ...
+    prompt, claims = prompts[-1]
+    assert claims == [] and "34%" not in prompt and "Cup match" not in prompt   # ... but not in the commentary's input
+    assert "Talk about today's match" in prompt

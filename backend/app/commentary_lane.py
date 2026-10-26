@@ -30,13 +30,16 @@ LABEL = {"goal": "goal", "red_card": "red card", "shot": "shot", "yellow_card": 
          "interception": "interception"}
 
 MIN_POSSESSION_S = 20
+MAX_TACTICS_FACTS = 6
 
 Publish = Callable[[Commentary], None]
 
 
 def minute_sheet(info: MatchInfo, roster: dict[str, PlayerInfo], frame: SourceFrame, minute_frames: list[SourceFrame],
-                 minute_events: list[SourceEvent], snapshot: MatchSnapshot, tactics: Insight | None) -> FactSheet:
-    """The facts of the minute that ends at `frame`."""
+                 minute_events: list[SourceEvent], snapshot: MatchSnapshot, tactics_facts: list[Fact] | None = None
+                 ) -> FactSheet:
+    """The facts of the minute that ends at `frame`, plus today's tactical facts (with concept and value, so the
+    checker can tell what a team does today). Never the cup baseline itself."""
     def who(pid: str | None) -> str:
         p = roster.get(pid or "")
         return f"{p.surname} ({p.n})" if p else (pid or "")
@@ -73,23 +76,23 @@ def minute_sheet(info: MatchInfo, roster: dict[str, PlayerInfo], frame: SourceFr
         facts.append((f"Possession in this minute: {home} {share}%, {away} {100 - share}%", "minute_possession", share, []))
     s = snapshot
     facts.append((f"Score: {home} {s.score[0]}-{s.score[1]} {away}", "score", f"{s.score[0]}-{s.score[1]}", []))
-    if tactics:
-        for line in (tactics.evidence or [])[:3]:
-            facts.append((line, "tactics_fact", tactics.id, []))
+    built = [Fact(fact_id=f"F{i}", text=t, metric=m, value=v, source_event_ids=src)
+             for i, (t, m, v, src) in enumerate(facts, start=1)]
+    today = [f for f in (tactics_facts or []) if f.metric != "game_state" and not f.text.lower().startswith("cup match")]
+    built += [f.model_copy(update={"fact_id": f"F{len(built) + i}"}) for i, f in enumerate(today[:MAX_TACTICS_FACTS], start=1)]
 
     h, a = team_id(info.home), team_id(info.away)
     return FactSheet(
         moment=Moment(moment_id=f"min-{minute}", t=frame.t, minute=minute, kind="update",
                       headline=f"{home} {s.score[0]}-{s.score[1]} {away}"),
-        match_state=snapshot, home=h, away=a, team_names={h: home, a: away},
-        facts=[Fact(fact_id=f"F{i}", text=t, metric=m, value=v, source_event_ids=src)
-               for i, (t, m, v, src) in enumerate(facts, start=1)],
+        match_state=snapshot, home=h, away=a, team_names={h: home, a: away}, facts=built,
     )
 
 
 def tactics_claims(tactics: Insight | None) -> list[Claim]:
-    """The latest tactics card's checked observations (and consequences) as claims the line may use."""
-    if not tactics or not tactics.observations:
+    """The latest live tactics card's checked observations (and consequences) as claims the line may use.
+    Never the scouting report: that card describes the cup match, not today."""
+    if not tactics or not tactics.observations or tactics.trigger == "scouting":
         return []
     out = []
     for o in tactics.observations:
@@ -122,11 +125,12 @@ class CommentaryLane:
 
     def on_frame(self, info: MatchInfo, roster: dict[str, PlayerInfo], frame: SourceFrame,
                  frames: Callable[[float, float], list[SourceFrame]], history: list[SourceEvent],
-                 snapshot: MatchSnapshot, tactics: Insight | None, generation: int, publish: Publish) -> None:
+                 snapshot: MatchSnapshot, tactics: Insight | None, generation: int, publish: Publish,
+                 tactics_facts: list[Fact] | None = None) -> None:
         if not self.is_minute(frame) or (self._task and not self._task.done()):
             return                          # not a new minute, or the previous line is still busy: skip
         events = [e for e in history if frame.t - 60 < e.t <= frame.t]
-        sheet = minute_sheet(info, roster, frame, frames(frame.t - 59, frame.t), events, snapshot, tactics)
+        sheet = minute_sheet(info, roster, frame, frames(frame.t - 59, frame.t), events, snapshot, tactics_facts)
         claims = tactics_claims(tactics)
 
         async def job():
