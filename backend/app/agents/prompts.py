@@ -86,7 +86,7 @@ TRIGGER_LABEL = {"interval": "every 5 minutes", "half_time": "half time", "subst
 
 def scout_prompt(sheet: TacticalFactSheet) -> str:
     """Only the one-line definitions of the concepts whose detector fired, never the whole playbook."""
-    from .playbook import one_liner
+    from .playbook import concepts, one_liner
 
     home, away = sheet.team_names[sheet.home], sheet.team_names[sheet.away]
     lines = [f"Window {sheet.window.label} ({TRIGGER_LABEL.get(sheet.trigger, sheet.trigger)}): {sheet.headline}",
@@ -100,10 +100,12 @@ def scout_prompt(sheet: TacticalFactSheet) -> str:
         s = sheet.match_state
         lines.append(f"Score: {home} {s.score[0]}-{s.score[1]} {away} · players on the pitch {s.players_on_pitch[0]} v {s.players_on_pitch[1]}")
     lines.append("Concepts found:")
-    lines += [f"- {one_liner(c)}" for c in sheet.concepts_fired if one_liner(c)]
+    # Names only: concept ids ("P1") look like fact ids ("T1") and got cited as such.
+    lines += [f"- {one_liner(c).split(' ', 1)[1]}" for c in sheet.concepts_fired if one_liner(c)]
     lines.append("Facts:")
-    lines += [f"[{f.fact_id}] {f.text} (team {f.team}, concept {f.concept})" for f in sheet.facts]
+    name = lambda c: concepts()[c].name if c in concepts() else "game state"
+    lines += [f"[{f.fact_id}] {f.text} (team {f.team}; {name(f.concept)})" for f in sheet.facts]
     if sheet.baseline:
         lines.append("Cup-match baseline:")
-        lines += [f"[{f.fact_id}] {f.text} (team {f.team}, concept {f.concept})" for f in sheet.baseline]
+        lines += [f"[{f.fact_id}] {f.text} (team {f.team}; {name(f.concept)})" for f in sheet.baseline]
     return "\n".join(lines)

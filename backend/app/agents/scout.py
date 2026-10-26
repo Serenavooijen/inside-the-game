@@ -26,6 +26,7 @@ import time
 from app.contracts import Heatmap, Player, TacticalFactSheet, TacticalObservation
 
 from .checker import check_claim, check_text, game_state_errors, unknown_names
+from .deadline import within
 from .llm import ModelClient
 from .models import Claim, Insight, RejectedClaim, ScoutObservationDraft
 from .playbook import compare_from_text, concept_terms, template_observations
@@ -154,8 +155,8 @@ async def run_scout(
                      claim=dropped[0].text if dropped else (rejected[0].text if rejected else None))
 
     try:
-        insight = await asyncio.wait_for(pipeline(), timeout=deadline)
-    except asyncio.TimeoutError:
+        insight = await within(pipeline(), deadline)
+    except TimeoutError:
         insight = _fallback(base, sheet, f"Scout timed out after {deadline:g} s")
     except NoUsableObservations as e:
         insight = _fallback(base, sheet, "No observation passed the fact-check", e.rejected)

@@ -23,6 +23,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from app.agents.deadline import within
 from app.agents.llm import ModelClient
 from app.agents.scout import SCOUT_DEADLINE_S, run_scout
 from app.contracts import (
@@ -179,10 +180,10 @@ class ScoutLane:
         heatmap, build_up = await asyncio.to_thread(
             lambda: (tac.heatmap(team, job.from_t, job.to_t), tac.build_up_positions(team, job.from_t, job.to_t)))
         try:
-            await asyncio.wait_for(
+            await within(
                 run_scout(sheet, publish, generation=job.generation, model=self.model, deadline_s=self.deadline_s,
                           heatmap=heatmap, build_up=build_up),
-                timeout=self.deadline_s + SAFETY_MARGIN_S,
+                self.deadline_s + SAFETY_MARGIN_S,
             )
         except TimeoutError:
             log.warning("Scout safety net hit at %s", job.to_t)

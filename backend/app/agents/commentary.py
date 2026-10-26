@@ -19,6 +19,7 @@ import os
 from app.contracts import Commentary
 
 from .checker import check_text, unknown_names
+from .deadline import within
 from .models import Claim, FactSheet
 from .playbook import concept_terms
 
@@ -70,7 +71,7 @@ async def run_commentary(sheet: FactSheet, claims: list[Claim], *, model, genera
         return " ".join(text.split())
 
     try:
-        text = await asyncio.wait_for(write(), timeout=deadline_s or COMMENTARY_DEADLINE_S)
+        text = await within(write(), deadline_s or COMMENTARY_DEADLINE_S)
     except asyncio.CancelledError:
         raise
     except Exception:          # timeout, model or network error: a silent minute

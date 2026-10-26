@@ -5,6 +5,7 @@ The Scout: checked observations from a TacticalFactSheet. No token or network ne
 from __future__ import annotations
 
 import asyncio
+import re
 
 import pytest
 
@@ -59,9 +60,11 @@ def test_playbook_is_parsed_and_condensed():
 
 def test_the_prompt_has_only_the_fired_concepts():
     p = scout_prompt(sheet())
-    assert "B1 Back three" in p and "D1 Block height" in p and "P1 Overload" in p
-    assert "B5" not in p and "Rules for the Scout" not in p
-    assert "(team ngr, concept B1)" in p and "[C14] Cup match" in p and "10 v 11" in p
+    assert "- Back three via a dropping 6" in p and "- Block height" in p and "- Overload on one flank" in p
+    assert "Direct build-up" not in p and "Rules for the Scout" not in p
+    assert "(team ngr; Back three via a dropping 6" in p and "[C14] Cup match" in p and "10 v 11" in p
+    # concept ids look like fact ids ("P1" vs "T1") and got cited as such: they are not in the prompt
+    assert not re.search(r"\b[BPDTSG]\d\b", p.split("Facts:")[0].split("Concepts found:")[1])
 
 
 # ---------------------------------------------------------------- checker
@@ -289,3 +292,27 @@ def test_claims_about_the_score_must_match_the_game_state_facts():
     ok, rejected = check_observation(obs(observation="Kingsbridge leads 2-1 and Northgate's 6 no longer drops in: 0% of 5 build-up phases.",
                                          fact_ids=["T8", "T1"]), s)
     assert ok is None and rejected[0].reason.startswith("Game state does not match the facts")
+
+
+def test_the_deadline_does_not_wait_for_a_call_that_ignores_cancellation():
+    """A model call stuck in its client once held a 15 s deadline for 727 s: the deadline must not wait for it."""
+    import time
+
+    class Stuck(OfflineModel):
+        name = "stuck"
+
+        async def scout(self, sheet, prompt):
+            try:
+                await asyncio.sleep(30)
+            except asyncio.CancelledError:
+                await asyncio.sleep(2)          # unwinds slowly, like a hung HTTP client
+                raise
+
+    async def main():
+        t0 = time.perf_counter()
+        insight = await run_scout(sheet(), None, model=Stuck(), deadline_s=0.2)
+        return insight, time.perf_counter() - t0
+
+    insight, took = asyncio.run(main())
+    assert insight.status == "fallback" and "timed out" in insight.fallback_reason
+    assert took < 1.0
