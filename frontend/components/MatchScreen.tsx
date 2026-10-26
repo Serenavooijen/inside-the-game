@@ -59,12 +59,14 @@ export function MatchScreen({ matchId, mode }: { matchId: string; mode: Mode }) 
 
   const t = tick?.t ?? 0;
   const markers: Marker[] = useMemo(
-    () => s.markers ?? markersFrom(s.events, s.insights.filter((i) => i.phase === 'done')),
+    () => s.markers ?? markersFrom(s.events, s.insights.filter((i) => i.phase === 'done' && i.type !== 'tactics')),
     [s.markers, s.events, s.insights],
   );
   const period = !tick ? '' : tick.finished ? 'FULL TIME' : PERIOD[tick.period] ?? '';
 
-  const recentCorrection = s.insights.find((i) => i.status === 'corrected' && i.phase === 'done' && t - i.t < 240 && t >= i.t);
+  // Tactics cards only show in Analyst mode, so their corrections only get the pill there.
+  const recentCorrection = s.insights.find((i) => i.status === 'corrected' && i.phase === 'done' && t - i.t < 240 && t >= i.t
+    && (i.type !== 'tactics' || feedMode === 'analyst'));
   const overlays = Object.values(s.overlays).filter((o): o is NonNullable<typeof o> => !!o);
   const stats = tick?.stats ?? { score: [0, 0] as [number, number], xg: [0, 0] as [number, number], possession: [50, 50] as [number, number] };
 
@@ -131,6 +133,7 @@ export function MatchScreen({ matchId, mode }: { matchId: string; mode: Mode }) 
           onMode={setFeedMode}
           arrivingId={arrivingId}
           focusId={focusId}
+          scouting={s.scouting}
         />
       </main>
 

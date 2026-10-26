@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useReducer, useRef } from 'react';
 import type {
-  Insight, Marker, MatchEvent, MatchState, Mode, Overlay, OverlaySlot, Speed, Tick,
+  Insight, Marker, MatchEvent, MatchState, Mode, Overlay, OverlaySlot, ScoutingReport, Speed, Tick,
 } from './contracts';
 
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL || '/api/mock').replace(/\/$/, '');
@@ -20,6 +20,8 @@ export type StreamState = {
   insights: Insight[];
   overlays: Partial<Record<OverlaySlot, ActiveOverlay>>;
   markers?: Marker[];
+  /** The Scout's cup-match report (backend with TACTICS_ENABLED=1) */
+  scouting?: ScoutingReport;
   /** Last frame of the match and first frame of the second half */
   duration: number;
   halftime: number;
@@ -55,6 +57,7 @@ function reducer(s: StreamState, a: Action): StreamState {
         events: a.data.events,
         insights: a.data.insights,
         markers: a.data.markers,
+        scouting: a.data.scouting,
         duration: a.data.duration,
         halftime: a.data.halftime,
         overlays: {},

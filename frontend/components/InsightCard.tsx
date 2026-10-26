@@ -31,24 +31,38 @@ function TypeIcon({ type, card }: { type: Insight['type']; card?: Insight['card'
   return <Stopwatch size={22} strokeWidth={1.5} />;
 }
 
+/** Pitch lines for the mini pitches (viewBox -3 -3 111 74, metres). */
+export function PitchMarkings() {
+  return (
+    <g fill="none" stroke="#fff" strokeOpacity=".75" strokeWidth=".7">
+      <rect x="0" y="0" width="105" height="68" />
+      <line x1="52.5" y1="0" x2="52.5" y2="68" />
+      <circle cx="52.5" cy="34" r="9.15" />
+      <rect x="0" y="13.84" width="16.5" height="40.32" />
+      <rect x="88.5" y="13.84" width="16.5" height="40.32" />
+    </g>
+  );
+}
+
+/** Attacking direction of the team the mini pitch is about. */
+export function AttackArrow({ dir }: { dir: 1 | -1 }) {
+  return (
+    <path
+      d={dir === 1 ? 'M40 60 L100 60 M94 55 L100 60 L94 65' : 'M65 60 L5 60 M11 55 L5 60 L11 65'}
+      fill="none" stroke="#fff" strokeWidth="1.2" strokeOpacity=".6"
+    />
+  );
+}
+
 function MiniPitch({ zone: z, width }: { zone: Zone; width: number }) {
   const dir = z.dir ?? 1;
   return (
     <div className="flex flex-none flex-col gap-[6px]" style={{ width }}>
       <svg viewBox="-3 -3 111 74" className="block w-full rounded-md" style={{ background: 'var(--itg-grass-a)' }} aria-label={z.label}>
         <rect x={z.x} y={z.y} width={z.w} height={z.h} fill="#D4FF3F" fillOpacity=".42" stroke="#D4FF3F" strokeWidth=".8" />
-        <g fill="none" stroke="#fff" strokeOpacity=".75" strokeWidth=".7">
-          <rect x="0" y="0" width="105" height="68" />
-          <line x1="52.5" y1="0" x2="52.5" y2="68" />
-          <circle cx="52.5" cy="34" r="9.15" />
-          <rect x="0" y="13.84" width="16.5" height="40.32" />
-          <rect x="88.5" y="13.84" width="16.5" height="40.32" />
-        </g>
+        <PitchMarkings />
         {z.line !== undefined && <line x1={z.line} y1="-2" x2={z.line} y2="70" stroke="#fff" strokeWidth="1" strokeDasharray="2 1.5" />}
-        <path
-          d={dir === 1 ? 'M40 60 L100 60 M94 55 L100 60 L94 65' : 'M65 60 L5 60 M11 55 L5 60 L11 65'}
-          fill="none" stroke="#fff" strokeWidth="1.2" strokeOpacity=".6"
-        />
+        <AttackArrow dir={dir} />
       </svg>
       <div className="font-mono text-label text-fg-3">{z.label}</div>
     </div>
