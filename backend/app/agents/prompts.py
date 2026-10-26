@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.contracts import TacticalFactSheet
+from app.contracts import TacticalFactSheet, TacticalObservation
 
 from .models import Claim, FactSheet
 
@@ -74,7 +74,9 @@ Rules:
 9. For intensity, height and compactness use only the labels written in the facts ("very intense pressing",
    "low block", "compact" ...). Never judge a number yourself.
 10. Say something about the score, the game state or the purpose of a substitution only if it matches the
-    game-state fact (e.g. "At 61' Northgate were trailing 1-2, 11 v 11").
+    game-state fact (e.g. "At 61' Northgate were level at 1-1, 11 v 11").
+11. When your previous analysis is given: give only new or changed advice for the coach and repeat nothing.
+    If the advice for a point would be the same as before, leave coach_action "".
 
 Tone: concrete, tactical, no hype. Example observation: "Northgate's 6 drops between the centre-backs in
 most build-up phases, creating a back three; Kingsbridge's two strikers are outnumbered in the first press."
@@ -84,8 +86,9 @@ TRIGGER_LABEL = {"interval": "every 5 minutes", "half_time": "half time", "subst
                  "scouting": "scouting report on the cup match"}
 
 
-def scout_prompt(sheet: TacticalFactSheet) -> str:
-    """Only the one-line definitions of the concepts whose detector fired, never the whole playbook."""
+def scout_prompt(sheet: TacticalFactSheet, previous: list[TacticalObservation] | None = None) -> str:
+    """Only the one-line definitions of the concepts whose detector fired, never the whole playbook.
+    `previous`: the Scout's last checked analysis, so it gives only new or changed advice."""
     from .playbook import concepts, one_liner
 
     home, away = sheet.team_names[sheet.home], sheet.team_names[sheet.away]
@@ -108,4 +111,7 @@ def scout_prompt(sheet: TacticalFactSheet) -> str:
     if sheet.baseline:
         lines.append("Cup-match baseline:")
         lines += [f"[{f.fact_id}] {f.text} (team {f.team}; {name(f.concept)})" for f in sheet.baseline]
+    if previous:
+        lines.append("Your previous analysis (context only: do not cite it, do not repeat its advice):")
+        lines += [f"- {o.observation} Advice: {o.coach_action or '-'}" for o in previous]
     return "\n".join(lines)

@@ -36,6 +36,7 @@ from .workflow import OnUpdate, _emit, default_model
 SCOUT_DEADLINE_S = float(os.getenv("SCOUT_DEADLINE_S", "15"))
 MAX_OBSERVATIONS = 3
 MAX_EVIDENCE = 6
+REPEAT_SIMILARITY = 0.6     # coach advice this similar to earlier advice is a repeat
 # "the 6", "their 8s", "a back three", "three at the back", "a 3v2": football terms, not statistics.
 # Hidden from the number check only.
 ROLE = re.compile(r"\b(the|a|an|their|our|its|his|her|both|two|new|opposing|own)( \w+)? (6|8|10)s?\b", re.I)
@@ -101,11 +102,30 @@ def check_observation(o: ScoutObservationDraft | TacticalObservation, sheet: Tac
                                coach_action=coach, compare_to_cup=compare, team=team), rejected
 
 
-def check_observations(drafts: list, sheet: TacticalFactSheet) -> tuple[list[TacticalObservation], list[RejectedClaim]]:
+def _words(text: str) -> set[str]:
+    return set(re.findall(r"[a-z]{3,}", text.lower()))
+
+
+def repeats(advice: str, previous: list[TacticalObservation]) -> bool:
+    """Advice that mostly reuses the words of earlier advice (Jaccard >= REPEAT_SIMILARITY)."""
+    words = _words(advice)
+    for o in previous:
+        before = _words(o.coach_action or "")
+        if words and before and len(words & before) / len(words | before) >= REPEAT_SIMILARITY:
+            return True
+    return False
+
+
+def check_observations(drafts: list, sheet: TacticalFactSheet, previous: list[TacticalObservation] | None = None
+                       ) -> tuple[list[TacticalObservation], list[RejectedClaim]]:
     accepted, rejected = [], []
     for d in drafts:
         ok, rej = check_observation(d, sheet)
         rejected += rej
+        if ok and ok.coach_action and previous and repeats(ok.coach_action, previous):
+            rejected.append(RejectedClaim(text=f"Coach action: {ok.coach_action}",
+                                          reason="Repeats the advice of the previous analysis (dropped)", fact_ids=ok.fact_ids))
+            ok = ok.model_copy(update={"coach_action": None})
         if ok and len(accepted) < MAX_OBSERVATIONS:
             accepted.append(ok)
     return accepted, rejected
@@ -134,6 +154,7 @@ async def run_scout(
     deadline_s: float | None = None,
     heatmap: Heatmap | None = None,
     build_up: list[Player] | None = None,
+    previous: list[TacticalObservation] | None = None,
 ) -> Insight:
     model = model or default_model()
     deadline = deadline_s or SCOUT_DEADLINE_S
@@ -151,9 +172,9 @@ async def run_scout(
         scout = getattr(model, "scout", None)
         if scout is None:
             raise LookupError(f"model {getattr(model, 'name', '?')} has no Scout")
-        draft, used = await scout(sheet, scout_prompt(sheet))
+        draft, used = await scout(sheet, scout_prompt(sheet, previous))
         tokens += used or 0
-        accepted, rejected = check_observations(draft.observations, sheet)
+        accepted, rejected = check_observations(draft.observations, sheet, previous)
         if not accepted:
             raise NoUsableObservations(rejected)
         dropped = [r for r in rejected if not r.reason.endswith("(dropped)")]

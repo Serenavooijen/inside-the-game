@@ -27,7 +27,8 @@ from app.agents.deadline import within
 from app.agents.llm import ModelClient
 from app.agents.scout import SCOUT_DEADLINE_S, run_scout
 from app.contracts import (
-    Fact, Insight, MatchInfo, MatchSnapshot, ScoutingReport, SourceEvent, SourceFrame, TacticalTrigger,
+    Fact, Insight, MatchInfo, MatchSnapshot, ScoutingReport, SourceEvent, SourceFrame, TacticalObservation,
+    TacticalTrigger,
 )
 from app.sources import MatchItem, PlayerInfo
 from app.tactics import Tactician
@@ -80,6 +81,7 @@ class ScoutLane:
         self._task: asyncio.Task | None = None
         self._period_start: dict[int, float] = {}
         self._pending_subs: list[tuple[float, list[SourceEvent]]] = []   # (due t, substitutions)
+        self._previous: list[TacticalObservation] = []   # the last checked analysis, so advice is not repeated
 
     # ------------------------------------------------------------------ set-up
 
@@ -97,6 +99,7 @@ class ScoutLane:
     def cancel_all(self) -> None:
         self._queue.clear()
         self._pending_subs.clear()
+        self._previous = []
         if self._task and not self._task.done():
             self._task.cancel()
         self._task = None
@@ -180,10 +183,12 @@ class ScoutLane:
         heatmap, build_up = await asyncio.to_thread(
             lambda: (tac.heatmap(team, job.from_t, job.to_t), tac.build_up_positions(team, job.from_t, job.to_t)))
         try:
-            await within(
+            insight = await within(
                 run_scout(sheet, publish, generation=job.generation, model=self.model, deadline_s=self.deadline_s,
-                          heatmap=heatmap, build_up=build_up),
+                          heatmap=heatmap, build_up=build_up, previous=self._previous),
                 self.deadline_s + SAFETY_MARGIN_S,
             )
+            if insight.status != "fallback" and insight.observations:
+                self._previous = list(insight.observations)
         except TimeoutError:
             log.warning("Scout safety net hit at %s", job.to_t)

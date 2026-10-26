@@ -159,3 +159,30 @@ def test_a_missing_report_is_no_problem(tmp_path):
 
     sim = run(scenario, report_path=tmp_path / "nope.json")
     assert "scouting" not in sim.state().to_json()
+
+
+class RecordingScout(OfflineModel):
+    prompts: list[str] = []
+
+    async def scout(self, sheet, prompt):
+        RecordingScout.prompts.append(prompt)
+        return await super().scout(sheet, prompt)
+
+
+def test_the_lane_gives_the_scout_its_previous_analysis_and_forgets_it_on_seek():
+    RecordingScout.prompts = []
+
+    async def scenario(sim, lane, q):
+        sim.seek(t_clock("09:58", 1))
+        sim.step(0.4)
+        await lane.wait()
+        sim.seek(t_clock("14:58", 1))      # a seek forgets the previous analysis ...
+        sim.step(0.4)
+        await lane.wait()
+        sim.step(30.0)                     # ... and the next window (20') gets the one from 15'
+        await lane.wait()
+
+    run(scenario, model=RecordingScout())
+    first, after_seek, *later = RecordingScout.prompts
+    assert "Your previous analysis" not in first and "Your previous analysis" not in after_seek
+    assert any("Your previous analysis" in p for p in later)

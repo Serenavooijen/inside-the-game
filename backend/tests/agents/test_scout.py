@@ -330,3 +330,21 @@ def test_comparatives_may_not_contradict_the_cited_facts():
     assert direction_errors("Kingsbridge's press is more intense than in the cup.", facts) == ["'more intense' where the facts say 'less intense'"]
     assert direction_errors("Kingsbridge hold a higher line now.", facts) == ["'higher' where the facts say 'deeper'"]
     assert direction_errors("Kingsbridge enjoy higher possession.", facts) == []           # not about the line
+
+
+def test_the_previous_analysis_is_context_and_its_advice_is_not_repeated():
+    from app.agents.scout import check_observations
+    from app.contracts import TacticalObservation
+
+    before = [TacticalObservation(observation="Northgate's 6 stopped dropping in.", fact_ids=["T1"],
+                                  consequence="Kingsbridge can press man for man.",
+                                  coach_action="Press the centre-backs with both strikers.", compare_to_cup="changed")]
+    p = scout_prompt(sheet(), before)
+    assert "Your previous analysis (context only: do not cite it, do not repeat its advice):" in p
+    assert "Advice: Press the centre-backs with both strikers." in p
+    same = obs(coach_action="Press both centre-backs with the two strikers.")
+    new = obs(coach_action="Keep a midfielder on Duarte when he steps up.")
+    [kept], rejected = check_observations([same], sheet(), before)
+    assert kept.coach_action is None and rejected[0].reason == "Repeats the advice of the previous analysis (dropped)"
+    [kept], rejected = check_observations([new], sheet(), before)
+    assert kept.coach_action == "Keep a midfielder on Duarte when he steps up." and not rejected

@@ -67,15 +67,17 @@ async def main() -> int:
     warm = getattr(model, "warmup", None)
     if warm:
         await warm()
-    results = []
+    results, previous = [], []
     for label, sheet, tac in sheets():
         if sheet is None:
             print(f"\n== {label}: no meaningful tactical facts")
             continue
         team = {f.team for f in sheet.facts}
-        insight = await run_scout(sheet, None, model=model, deadline_s=args.deadline,
+        insight = await run_scout(sheet, None, model=model, deadline_s=args.deadline, previous=previous,
                                   heatmap=tac.heatmap(sheet.facts[0].team.upper(), sheet.window.from_t, sheet.window.to_t))
         results.append(insight.to_json())
+        if insight.status != "fallback" and insight.observations:
+            previous = list(insight.observations)        # like the Scout lane: the last checked analysis
         print(f"\n== {label} · {sheet.window.label} · {insight.status} · {insight.latency_ms} ms"
               f"{f' · {insight.tokens} tokens' if insight.tokens else ''} · concepts {sheet.concepts_fired} · teams {sorted(team)}")
         for o in insight.observations or []:

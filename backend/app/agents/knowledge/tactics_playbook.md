@@ -198,7 +198,8 @@ The Scout labels each observation:
 5. Prefer what **changed** (compared with the previous window or the cup match) over what stayed the same. A coach wants the deviation.
 6. 2–3 observations per analysis. Quality over coverage.
 7. For intensity, height and compactness, use only the fixed labels the facts carry (see **Fixed labels**). Never judge a number yourself: PPDA 4.5 is "very intense pressing" because the code says so.
-8. Say something about the score, the game state or the purpose of a substitution only if it matches the game-state fact, for example "At 61' Northgate were trailing 1-2, 11 v 11".
+8. Say something about the score, the game state or the purpose of a substitution only if it matches the game-state fact, for example "At 61' Northgate were level at 1-1, 11 v 11".
+9. The Scout gets its previous analysis: give only new or changed advice for the coach, and repeat nothing.
 
 ## Fixed labels
 
