@@ -121,6 +121,7 @@ Tactician (code, app/tactics.py)  →  Scout (LLM)  →  Fact-checker (code)
 - **Tactician:** `app/tactics.py` implementeert de detectors uit [`knowledge/tactics_playbook.md`](knowledge/tactics_playbook.md): B1 B2 B3 B5 B6, P1 P2, D1 D2 D3, T1 T3 en G1 G2 G3.
   - Een detector levert alleen een feit als het signaal betekenisvol is, of als het veranderd is ten opzichte van het vorige venster of de beker.
   - Vergelijkingen en verschillen staan al in de tekst van het feit, bijvoorbeeld `(previous 5 minutes: 31%; cup match: 58%, down 58 points)`.
+  - Blokhoogte en compactheid (D1, D2, ook in G2 en G3) worden alleen gemeten als de tegenstander de bal in het middenstuk heeft (35–70 m van het eigen doel). Over alle frames zegt de linie vooral waar de bal was: een diepe bal trekt hem naar 10–13 m. Met de bal in het middenstuk zie je de keuze van het team, en kun je wedstrijden eerlijk vergelijken.
 - **Scout:** `scout.py` en `run_scout()` geven een `Insight` van type `"tactics"` met `observations`, `heatmap` en `buildUp`.
   - De Scout krijgt alleen de regels van de concepten waarvan de detector vuurde, één regel per concept (`playbook.py`), nooit het hele playbook.
   - Conceptnamen en tactische termen ("Far-side", "the 6", "back three", "three up front") gelden niet als verzonnen naam of getal.

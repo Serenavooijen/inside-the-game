@@ -39,6 +39,8 @@ LONG_M = 35.0               # B5: a long ball
 SWITCH_M = 30.0             # P2: lateral distance of a switch of play
 PPDA_ZONE_X = 42.0          # D3: the defending team's x beyond which it presses (the opponent's own 60%)
 HIGH_X = 70.0               # D3: recoveries in the attacking third
+MIDFIELD_X = (35.0, 70.0)   # D1/D2/G2/G3: the block is measured with the opponent's ball in the middle third
+MIN_BLOCK_FRAMES = 20       # ... at least this many such seconds in the window
 COUNTERPRESS_S = 5          # T1
 COUNTER_S = 10              # T3
 MOVED_M = 10.0              # G1: a player's mean position moved this far
@@ -110,6 +112,11 @@ def _clock_minute(clock: str, up: bool) -> str:
     base, _, extra = mm.partition("+")
     n = int(extra or base) + (1 if up and int(ss) > 0 else 0)
     return f"{int(base)}+{n}" if extra else str(n)
+
+
+def in_midfield(x: float) -> bool:
+    """Team-relative ball x in the middle third: where block height is comparable between teams and matches."""
+    return MIDFIELD_X[0] <= x < MIDFIELD_X[1]
 
 
 def channel(y: float) -> str:
@@ -262,9 +269,12 @@ def fingerprint(track: Track, team: str, frames: list[FrameRel], events: list[So
         p.channels = {k: pct(c[k], len(attack)) for k in ("left", "centre", "right")}
 
     # ---- without the ball: block (D1, D2)
-    if len(out) >= MIN_FRAMES:
+    # Only with the opponent's ball in the middle third: over all frames the line mostly tells where the ball
+    # was (deep balls pull it to 10-13 m), not how high the team chooses to defend.
+    block = [f for f in out if in_midfield(f.ball[team][0])]
+    if len(block) >= MIN_BLOCK_FRAMES:
         lines, firsts, depths, widths = [], [], [], []
-        for f in out:
+        for f in block:
             field_ = [a for a in f.team[team] if a.role != "GK"]
             if len(field_) < 8:
                 continue
@@ -550,16 +560,16 @@ class Tactician:
             block = "high" if now.line_m >= 33 else "low" if now.line_m < 24 else "mid"
             cmp_, changed = _vs(now.line_m, pv("line_m"), self.base(team, "line_height_m"), " m", prev_label, 4)
             if block != "mid" or changed:
-                out.append(Draft(f"{name} defended in a {block} block: last line {now.line_m:g} m from their own goal, "
-                                 f"first line {now.first_line_m:g} m{cmp_}", "line_height_m", now.line_m, team, "D1", "m",
-                                 change=changed))
+                out.append(Draft(f"{name} defended in a {block} block: with the ball in midfield, last line {now.line_m:g} m "
+                                 f"from their own goal, first line {now.first_line_m:g} m{cmp_}", "line_height_m", now.line_m,
+                                 team, "D1", "m", change=changed))
 
         # D2: compactness
         if now.depth_m is not None:
             cmp_, changed = _vs(now.depth_m, pv("depth_m"), self.base(team, "compactness_m"), " m", prev_label, 4)
             if now.depth_m >= 35 or now.depth_m <= 26 or changed:
                 verdict = "stretched" if now.depth_m >= 35 else "compact" if now.depth_m <= 26 else "medium"
-                out.append(Draft(f"{name}'s block without the ball was {verdict}: {now.depth_m:g} m deep and "
+                out.append(Draft(f"{name}'s block with the ball in midfield was {verdict}: {now.depth_m:g} m deep and "
                                  f"{now.width_m:g} m wide{cmp_}", "compactness_m", now.depth_m, team, "D2", "m",
                                  change=changed))
 
@@ -648,7 +658,7 @@ class Tactician:
                                  after.channels[k], team, "G2", "%", src=src, change=True))
         if before.line_m is not None and after.line_m is not None and abs(after.line_m - before.line_m) >= 3:
             d = round(after.line_m - before.line_m)
-            out.append(Draft(f"{since}, {name}'s last line without the ball moved {'up' if d > 0 else 'back'} from "
+            out.append(Draft(f"{since}, {name}'s last line (ball in midfield) moved {'up' if d > 0 else 'back'} from "
                              f"{before.line_m:g} m to {after.line_m:g} m", "sub_line_height_m", after.line_m, team, "G2",
                              "m", src=src, change=True))
         for s in subs:
@@ -693,12 +703,12 @@ class Tactician:
                 by_state[state].append(f)
             lines = {}
             for state, fs in by_state.items():
-                out_f = [f for f in fs if f.poss == opp]
-                if len(out_f) >= 3 * MIN_FRAMES:
+                out_f = [f for f in fs if f.poss == opp and in_midfield(f.ball[team][0])]
+                if len(out_f) >= 3 * MIN_BLOCK_FRAMES:
                     lines[state] = round(mean(mean(sorted(a.x for a in f.team[team] if a.role != "GK")[:4]) for f in out_f))
             if len(lines) >= 2 and max(lines.values()) - min(lines.values()) >= 3:
                 parts = ", ".join(f"{v} m when {k}" for k, v in lines.items())
-                out.append(Draft(f"{self.name(team)}'s last line without the ball so far: {parts}", "line_by_state",
+                out.append(Draft(f"{self.name(team)}'s last line with the ball in midfield so far: {parts}", "line_by_state",
                                  max(lines.values()) - min(lines.values()), team, "G3", "m"))
         return out
 
@@ -799,8 +809,8 @@ class Tactician:
                 for k, v in p.channels.items():
                     out.append((f"Cup match: {v:g}% of {n}'s attacks went down the {k}", f"channel_{k}_pct", v, team, "P1"))
             if p.line_m is not None:
-                out.append((f"Cup match: {n}'s last line without the ball {p.line_m:g} m from their own goal", "line_height_m", p.line_m, team, "D1"))
-                out.append((f"Cup match: {n}'s block {p.depth_m:g} m deep without the ball", "compactness_m", p.depth_m, team, "D2"))
+                out.append((f"Cup match: {n}'s last line with the ball in midfield {p.line_m:g} m from their own goal", "line_height_m", p.line_m, team, "D1"))
+                out.append((f"Cup match: {n}'s block {p.depth_m:g} m deep with the ball in midfield", "compactness_m", p.depth_m, team, "D2"))
             if p.ppda is not None:
                 out.append((f"Cup match: {n}'s PPDA {p.ppda:g}", "ppda", p.ppda, team, "D3"))
             if p.regained is not None:

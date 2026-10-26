@@ -35,11 +35,11 @@ from .workflow import OnUpdate, _emit, default_model
 SCOUT_DEADLINE_S = float(os.getenv("SCOUT_DEADLINE_S", "15"))
 MAX_OBSERVATIONS = 3
 MAX_EVIDENCE = 6
-# "the 6", "their 8s", "a back three", "three at the back": football terms, not statistics.
+# "the 6", "their 8s", "a back three", "three at the back", "a 3v2": football terms, not statistics.
 # Hidden from the number check only.
 ROLE = re.compile(r"\b(the|a|an|their|our|its|his|her|both|two|new|opposing|own)( \w+)? (6|8|10)s?\b", re.I)
 LINE_TERM = re.compile(r"\b(back|front) (two|three|four|five)\b|\b(two|three|four|five) (at the back|up ?front)\b"
-                       r"|\b(two|three|four|five)-man\b", re.I)
+                       r"|\b(two|three|four|five)-man\b|\b[1-5] ?(v|vs|-v-|against) ?[1-5]\b", re.I)
 
 
 def _roles_out(text: str) -> str:

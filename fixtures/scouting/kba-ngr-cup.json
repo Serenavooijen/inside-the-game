@@ -5,57 +5,75 @@
  "away": "ngr",
  "observations": [
   {
-   "observation": "Kingsbridge built up with a 2-3-2-3 shape, using a left-back who inverted inside 34% of the time, forming a 3-2 box for protection against counters.",
+   "observation": "Kingsbridge used a 2-3-2-3 build-up shape with the left-back inverting inside 34% of the time, creating a back three in build-up that shifts width to the wingers.",
    "factIds": [
     "C4",
     "C6"
    ],
-   "consequence": "This formation improved defensive cover centrally but shifted width responsibility to the wingers.",
-   "coachAction": "Opponents should have their winger track inside or accept the 3-2 and press centre-backs.",
+   "consequence": "This structure provides better protection against counters by adding midfield presence, but requires the opposing winger to track inside or concede central pressure.",
+   "coachAction": "Opposing winger tracks inside tightly to exploit space left wide.",
    "compareToCup": "n/a",
    "team": "kba"
   },
   {
-   "observation": "Kingsbridge attacked evenly, with 32% down left flank, 34% centre, and 34% right; after a substitution, attacks down the right fell from 48% to 26%, shifting play focus.",
+   "observation": "Kingsbridge balanced attacks down all flanks, with 32% left, 34% centre, and 34% right, but after substituting Marchetti at 71', right flank use dropped from 48% to 26%.",
    "factIds": [
     "C7",
     "C8",
     "C9",
     "C29"
    ],
-   "consequence": "The attack became less balanced, reducing threats from the right flank later in the match.",
-   "coachAction": "Shift defensive focus away from the weakened flank and prepare for overloads on the opposite side.",
+   "consequence": "The shift reduces right-side threat, allowing defense to focus more on left and centre attacks.",
+   "coachAction": "Adjust defense to reinforce left and central areas while guarding reduced right threat.",
    "compareToCup": "n/a",
    "team": "kba"
   },
   {
-   "observation": "Kingsbridge's defensive block dropped from 37 m to 30 m from goal after a substitution, moving their block deeper in later stages.",
+   "observation": "Kingsbridge maintained a mid-height compact block 30 m deep, with PPDA 5.5 press intensity and 35% counter-press success, but after substitute Marchetti arrival their defensive line dropped 5 m deeper (37 to 32 m).",
    "factIds": [
     "C10",
+    "C11",
+    "C12",
+    "C13",
     "C30"
    ],
-   "consequence": "The deeper block reduces space behind defenders but concedes more territory to the opponent.",
-   "coachAction": "Use width, patience, and set pieces to break down this deeper defense.",
+   "consequence": "Deeper defensive line may concede more space behind but increases solidity; pressing effectiveness sustained despite deeper position.",
+   "coachAction": "Exploit space behind deep line with long balls or quick transitions.",
    "compareToCup": "n/a",
    "team": "kba"
   },
   {
-   "observation": "Northgate built out mainly with their 6 dropping between centre-backs in 58% of phases, forming a back three to counter a two-striker press, at the cost of midfield presence.",
+   "observation": "Northgate played with a back three via Duarte (6) dropping between centre-backs in 58% of build-up phases, using a 2-3-5 shape mainly attacking through the centre (54%).",
    "factIds": [
-    "C14"
+    "C14",
+    "C19",
+    "C21"
    ],
-   "consequence": "This provided clean first passes but weakened midfield control in front of the defense, inviting mid-block pressure.",
+   "consequence": "This created a clean first pass and midfield body cost, focusing attacks centrally.",
+   "coachAction": "Press with three forwards or block passes into midfield.",
    "compareToCup": "n/a",
    "team": "ngr"
   },
   {
-   "observation": "At 61 minutes, Northgate switched formation from 4-3-3 to 4-4-2 and moved their last defensive line deeper from 26 m to 20 m, adopting a lower defensive block.",
+   "observation": "Northgate defended with a 34 m deep block and last line 28 m from goal, pressing moderately with PPDA 4.5.",
+   "factIds": [
+    "C23",
+    "C24",
+    "C25"
+   ],
+   "consequence": "A moderately deep, compact block makes penetrating difficult but concedes some midfield space.",
+   "coachAction": "Attempt to play through lines or switch play to stretch their block.",
+   "compareToCup": "n/a",
+   "team": "ngr"
+  },
+  {
+   "observation": "At 61 minutes Northgate switched from 4-3-3 to 4-4-2, bringing on Petrov (10), which pulled their defensive line deeper from 29 m to 23 m.",
    "factIds": [
     "C27",
     "C28"
    ],
-   "consequence": "This change decreased space behind the defense, reducing vulnerability to through balls but conceding midfield territory.",
-   "coachAction": "Respond by increasing midfield control and adjust to fewer spaces behind the defense for through balls.",
+   "consequence": "A tactical shift that compressed defensive space and likely aimed to protect a lead or change dynamics.",
+   "coachAction": "Adjust to the new formation and possibly double up on fresh attacking zones.",
    "compareToCup": "n/a",
    "team": "ngr"
   }
@@ -153,9 +171,9 @@
   },
   {
    "factId": "C10",
-   "text": "Cup match: Kingsbridge's last line without the ball 34 m from their own goal",
+   "text": "Cup match: Kingsbridge's last line with the ball in midfield 35 m from their own goal",
    "metric": "line_height_m",
-   "value": 34.0,
+   "value": 35.0,
    "window": "cup match",
    "sourceEventIds": [],
    "team": "kba",
@@ -163,9 +181,9 @@
   },
   {
    "factId": "C11",
-   "text": "Cup match: Kingsbridge's block 28 m deep without the ball",
+   "text": "Cup match: Kingsbridge's block 30 m deep with the ball in midfield",
    "metric": "compactness_m",
-   "value": 28.0,
+   "value": 30.0,
    "window": "cup match",
    "sourceEventIds": [],
    "team": "kba",
@@ -283,9 +301,9 @@
   },
   {
    "factId": "C23",
-   "text": "Cup match: Northgate's last line without the ball 25 m from their own goal",
+   "text": "Cup match: Northgate's last line with the ball in midfield 28 m from their own goal",
    "metric": "line_height_m",
-   "value": 25.0,
+   "value": 28.0,
    "window": "cup match",
    "sourceEventIds": [],
    "team": "ngr",
@@ -293,9 +311,9 @@
   },
   {
    "factId": "C24",
-   "text": "Cup match: Northgate's block 31 m deep without the ball",
+   "text": "Cup match: Northgate's block 34 m deep with the ball in midfield",
    "metric": "compactness_m",
-   "value": 31.0,
+   "value": 34.0,
    "window": "cup match",
    "sourceEventIds": [],
    "team": "ngr",
@@ -335,9 +353,9 @@
   },
   {
    "factId": "C28",
-   "text": "Cup match: Since Petrov (10) came on at 61', Northgate's last line without the ball moved back from 26 m to 20 m",
+   "text": "Cup match: Since Petrov (10) came on at 61', Northgate's last line (ball in midfield) moved back from 29 m to 23 m",
    "metric": "sub_line_height_m",
-   "value": 20.0,
+   "value": 23.0,
    "unit": "m",
    "window": "cup match",
    "sourceEventIds": [
@@ -361,9 +379,9 @@
   },
   {
    "factId": "C30",
-   "text": "Cup match: Since Marchetti (18) came on at 71', Kingsbridge's last line without the ball moved back from 37 m to 30 m",
+   "text": "Cup match: Since Marchetti (18) came on at 71', Kingsbridge's last line (ball in midfield) moved back from 37 m to 32 m",
    "metric": "sub_line_height_m",
-   "value": 30.0,
+   "value": 32.0,
    "unit": "m",
    "window": "cup match",
    "sourceEventIds": [
@@ -373,25 +391,8 @@
    "concept": "G2"
   }
  ],
- "status": "corrected",
- "rejectedClaims": [
-  {
-   "text": "Coach action: Press with three upfront or block the lanes into midfield to disrupt build-up.",
-   "reason": "Coach action added number(s) not in the observation's facts: 3 (dropped)",
-   "factIds": [
-    "C14"
-   ]
-  },
-  {
-   "text": "Northgate used a build-up shape of 2-3-5, attacking mainly through the centre (54%) and left flank (22%), while maintaining a mid-level defensive block 31 m deep.",
-   "reason": "Number(s) not in the cited facts: 22",
-   "factIds": [
-    "C19",
-    "C21",
-    "C24"
-   ]
-  }
- ],
+ "status": "checked",
+ "rejectedClaims": [],
  "heatmaps": [
   {
    "team": "kba",

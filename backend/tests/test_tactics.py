@@ -178,3 +178,17 @@ def test_every_window_of_today_builds_a_short_sheet(minute):
                       prev=(t_at(fs, minute - 10) + 1, t_at(fs, minute - 5)))
     assert sheet is not None and 1 <= len(sheet.facts) <= 12
     assert sheet.window.label == f"{minute - 5}'–{minute}'"
+
+
+def test_block_height_is_measured_with_the_ball_in_midfield():
+    """Over all out-of-possession frames Northgate's line reads 15-17 m because the ball sat deep in their half;
+    with the ball in the middle third it is the block they chose: about 20 m today, about 28 m in the cup."""
+    info, roster_, fs, evs = match("today")
+    today = Tactician(info, roster_, fs).prints(0, fs[-1].t, evs)
+    c_info, c_roster, c_fs, c_evs = match("cup")
+    cup = Tactician(c_info, c_roster, c_fs).prints(0, c_fs[-1].t, c_evs)
+    assert 19 <= today["NGR"].line_m <= 25 and 25 <= cup["NGR"].line_m <= 31
+    assert today["KBA"].line_m >= 33                       # Kingsbridge's high block
+    sheet = Tactician(info, roster_, fs).sheet("interval", t_at(fs, 5) + 1, t_at(fs, 10), evs)
+    d1 = next(f for f in sheet.facts if f.concept == "D1" and f.team == "kba")
+    assert "with the ball in midfield" in d1.text
