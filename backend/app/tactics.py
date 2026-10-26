@@ -540,7 +540,8 @@ class Tactician:
         prev_sw = pv("switches")
         if now.switches >= 3 or (prev_sw is not None and abs(now.switches - prev_sw) >= 3):
             extra = f" ({prev_label}: {prev_sw})" if prev_sw is not None else ""
-            out.append(Draft(f"{name} completed {now.switches} switches of play (over 30 m across){extra}",
+            out.append(Draft(f"{name} completed {now.switches} switch{'' if now.switches == 1 else 'es'} of play "
+                             f"(over 30 m across){extra}",
                              "switches", now.switches, team, "P2", src=now.switch_ids[:10],
                              change=prev_sw is not None and abs(now.switches - prev_sw) >= 3))
 
