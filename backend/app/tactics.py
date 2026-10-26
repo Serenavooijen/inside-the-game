@@ -446,12 +446,27 @@ def _vs(value: float | None, prev: float | None, base: float | None, unit: str, 
         if ref is None:
             continue
         diff = round(value - ref)
-        part = f"{label}: {ref:g}{unit}" + (f" ({band(metric, ref)})" if metric else "")
-        if abs(diff) >= min_change:
-            changed = True
-            part += f", {'up' if diff > 0 else 'down'} {abs(diff)}{points}"
-        parts.append(part)
+        ref_text = f"{ref:g}{unit}" + (f", {band(metric, ref)}" if metric else "")
+        if abs(diff) < min_change:
+            parts.append(f"{label}: {ref_text}" if not metric else f"about the same as the {label} ({ref_text})")
+            continue
+        changed = True
+        if metric in DIRECTION:
+            # the direction in words, so the Scout does not have to work out what a lower number means
+            word = DIRECTION[metric][diff > 0]
+            amount = "" if metric == "ppda" else f"{abs(diff)}{unit} "
+            parts.append(f"{amount}{word} than the {label} ({ref_text})")
+        else:
+            parts.append(f"{label}: {ref_text}, {'up' if diff > 0 else 'down'} {abs(diff)}{points}")
     return (f" ({'; '.join(parts)})" if parts else ""), changed
+
+
+# Direction words per metric: (value went down, value went up).
+DIRECTION = {
+    "line_height_m": ("deeper", "higher"),
+    "compactness_m": ("more compact", "less compact"),
+    "ppda": ("more intense", "less intense"),
+}
 
 
 class Tactician:

@@ -316,3 +316,17 @@ def test_the_deadline_does_not_wait_for_a_call_that_ignores_cancellation():
     insight, took = asyncio.run(main())
     assert insight.status == "fallback" and "timed out" in insight.fallback_reason
     assert took < 1.0
+
+
+def test_comparatives_may_not_contradict_the_cited_facts():
+    from app.agents.checker import direction_errors
+
+    facts = ("Kingsbridge's block with the ball in midfield was compact: 23 m deep (5 m more compact than the previous "
+             "5 minutes (28 m, medium)); Kingsbridge's PPDA 9 (intense pressing) (less intense than the cup match "
+             "(5.5, very intense pressing)); last line 26 m (9 m deeper than the cup match (35 m, high block))")
+    assert direction_errors("Kingsbridge's block is less compact now.", facts) == ["'less compact' where the facts say 'more compact'"]
+    assert direction_errors("Kingsbridge's block is more compact; their press is less intense.", facts) == []
+    assert direction_errors("Kingsbridge press more intensely.", facts) == []            # not the same word: left alone
+    assert direction_errors("Kingsbridge's press is more intense than in the cup.", facts) == ["'more intense' where the facts say 'less intense'"]
+    assert direction_errors("Kingsbridge hold a higher line now.", facts) == ["'higher' where the facts say 'deeper'"]
+    assert direction_errors("Kingsbridge enjoy higher possession.", facts) == []           # not about the line

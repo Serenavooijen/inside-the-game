@@ -25,7 +25,7 @@ import time
 
 from app.contracts import Heatmap, Player, TacticalFactSheet, TacticalObservation
 
-from .checker import check_claim, check_text, game_state_errors, unknown_names
+from .checker import check_claim, check_text, direction_errors, game_state_errors, unknown_names
 from .deadline import within
 from .llm import ModelClient
 from .models import Claim, Insight, RejectedClaim, ScoutObservationDraft
@@ -63,6 +63,10 @@ def check_observation(o: ScoutObservationDraft | TacticalObservation, sheet: Tac
         return None, [RejectedClaim(text=o.observation, reason=f"Game state does not match the facts: {'; '.join(wrong)}",
                                     fact_ids=o.fact_ids)]
     facts = [sheet.fact(fid) for fid in o.fact_ids]
+    facts_text = " ".join(f.text for f in facts)
+    if wrong := direction_errors(o.observation, facts_text):
+        return None, [RejectedClaim(text=o.observation, reason=f"Direction contradicts the facts: {'; '.join(wrong)}",
+                                    fact_ids=o.fact_ids)]
     # Interpretation may only lean on the observation and its facts.
     known = [Claim(text=o.observation, fact_ids=o.fact_ids), *(Claim(text=f.text, fact_ids=[f.fact_id]) for f in facts)]
     terms = concept_terms()
@@ -70,6 +74,8 @@ def check_observation(o: ScoutObservationDraft | TacticalObservation, sheet: Tac
     def fails(text: str, part: str) -> str | None:
         if wrong := game_state_errors(text, sheet):
             return f"{part} misstates the game state: {'; '.join(wrong)}"
+        if wrong := direction_errors(text, facts_text):
+            return f"{part} contradicts the facts' direction: {'; '.join(wrong)}"
         extra = check_text(_roles_out(text), sheet, o.fact_ids)
         if extra:
             return f"{part} added number(s) not in the observation's facts: {', '.join(f'{n:g}' for n in extra)}"

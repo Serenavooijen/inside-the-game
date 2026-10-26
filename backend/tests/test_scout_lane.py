@@ -150,7 +150,7 @@ def test_the_report_is_in_the_state_and_its_facts_are_the_baseline(tmp_path):
     sim, msgs = run(scenario, report_path=path)
     assert sim.state().to_json()["scouting"]["id"] == "kba-ngr-cup"
     card = tactics(msgs)[0]
-    assert any("cup match: 20 m" in e for e in card["evidence"])
+    assert any("than the cup match (20 m, low block)" in e for e in card["evidence"])
 
 
 def test_a_missing_report_is_no_problem(tmp_path):

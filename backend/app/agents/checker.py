@@ -212,6 +212,30 @@ def game_state_errors(text: str, sheet: Sheet) -> list[str]:
     return errors
 
 
+# ---------------------------------------------------------------- direction
+
+# (word in the text, its opposite, only in sentences about the line or block)
+_DIRECTIONS = [("more compact", "less compact", False), ("less compact", "more compact", False),
+               ("more intense", "less intense", False), ("less intense", "more intense", False),
+               ("higher", "deeper", True), ("deeper", "higher", True), ("lower", "higher", True)]
+_LINE_CONTEXT = re.compile(r"\b(line|block)\b", re.I)
+
+
+def direction_errors(text: str, facts_text: str) -> list[str]:
+    """Comparatives that contradict the cited facts: the text says "less compact" where the facts only say
+    "more compact". Only contradictions count; a direction the facts do not mention is left alone."""
+    facts = facts_text.lower()
+    errors = []
+    for sentence in re.split(r"(?<=[.;!?])\s+", text):
+        low = sentence.lower()
+        for word, opposite, needs_line in _DIRECTIONS:
+            if needs_line and not _LINE_CONTEXT.search(low):
+                continue
+            if re.search(rf"\b{word}\b", low) and re.search(rf"\b{opposite}\b", facts) and not re.search(rf"\b{word}\b", facts):
+                errors.append(f"'{word}' where the facts say '{opposite}'")
+    return list(dict.fromkeys(errors))
+
+
 def check_text(text: str, sheet: Sheet, fact_ids: list[str]) -> list[float]:
     """Numbers in a free text (the Narrator's) that are not backed by these facts."""
     allowed = _allowed_numbers(sheet, fact_ids)

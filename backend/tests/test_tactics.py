@@ -216,3 +216,15 @@ def test_game_state_before_a_formation_change_in_the_cup():
     info, roster_, fs, evs = match("cup")
     states = [d.text for d in Tactician(info, roster_, fs).event_states(evs, 0, fs[-1].t)]
     assert "At 61' Northgate were level at 1-1, 11 v 11" in states      # equalised at 57', not trailing
+
+
+def test_the_direction_is_in_the_fact_text():
+    info, roster_, fs, evs = match("today")
+    cup_info, cup_roster, cup_fs, cup_evs = match("cup")
+    baseline = Tactician(cup_info, cup_roster, cup_fs).baseline_facts(cup_evs, 0, cup_fs[-1].t)
+    sheet = Tactician(info, roster_, fs, baseline).sheet("interval", t_at(fs, 5) + 1, t_at(fs, 10), evs,
+                                                          prev=(1, t_at(fs, 5)))
+    d1 = {f.team: f.text for f in sheet.facts if f.concept == "D1"}
+    assert "m higher than the cup match (35 m, high block)" in d1["kba"]
+    assert "m deeper than the cup match (28 m, mid block)" in d1["ngr"]
+    assert "about the same as the previous 5 minutes" in d1["ngr"]

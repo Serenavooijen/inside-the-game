@@ -119,6 +119,8 @@ def compare_from_text(fact: Fact) -> CompareToCup:
     text = fact.text
     if "cup match" not in text.lower():
         return "n/a"
+    if re.search(r"\b(higher|deeper|more compact|less compact|more intense|less intense) than the cup match", text):
+        return "changed"
     cup = text[text.lower().index("cup match"):]
     if re.search(r"\b(up|down) \d", cup):
         return "changed"
