@@ -99,6 +99,10 @@ def scout_prompt(sheet: TacticalFactSheet, previous: list[TacticalObservation] |
                      "Describe how each team played in the cup match: their plan and what changed during it. "
                      "There is no live match yet: never compare, and use compare_to_cup \"n/a\". "
                      "Only describe what a team clearly did; a low percentage means the team did not do it.")
+    if sheet.trigger == "substitution":
+        lines.append("This is the impact of a substitution, about 8 minutes after it. Answer: did the change work and "
+                     "what changed for the team; how did the opponent react. Keep the order structure, change, "
+                     "consequence, coach response. Facts about the period after the change describe that period only.")
     if sheet.match_state:
         s = sheet.match_state
         lines.append(f"Score: {home} {s.score[0]}-{s.score[1]} {away} · players on the pitch {s.players_on_pitch[0]} v {s.players_on_pitch[1]}")

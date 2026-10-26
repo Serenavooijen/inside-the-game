@@ -23,7 +23,9 @@ import os
 import re
 import time
 
-from app.contracts import Heatmap, Player, ScoutingReport, TacticalFactSheet, TacticalObservation, TacticalWindow
+from app.contracts import (
+    Heatmap, Player, ScoutingReport, SubstitutionFactSheet, TacticalFactSheet, TacticalObservation, TacticalWindow,
+)
 
 from .checker import check_claim, check_text, direction_errors, game_state_errors, unknown_names
 from .deadline import within
@@ -50,7 +52,30 @@ def _roles_out(text: str) -> str:
 
 
 def insight_id(sheet: TacticalFactSheet) -> str:
+    if isinstance(sheet, SubstitutionFactSheet):
+        info = sheet.substitution
+        return f"i-sub-{info.stage}-{info.team}-{round(sheet.window.from_t)}"
     return f"i-tac-{sheet.trigger}-{round(sheet.window.to_t)}"
+
+
+def _card(sheet: TacticalFactSheet) -> dict:
+    """Type and substitution block of the card: a substitution sheet gives a substitution card."""
+    if isinstance(sheet, SubstitutionFactSheet):
+        return {"type": "substitution", "substitution": sheet.substitution}
+    return {"type": "tactics"}
+
+
+def watch_card(sheet: SubstitutionFactSheet, generation: int = 0) -> Insight:
+    """"Substitution: what to watch", at the moment itself: made by the code, no model. The watch points are
+    built from the same values as the facts, so every number and name on it stands in a fact."""
+    info = sheet.substitution
+    ids = [f.fact_id for f in sheet.facts]
+    return Insight(
+        id=insight_id(sheet), t=sheet.window.to_t, minute=info.minute, type="substitution", trigger="substitution",
+        window=sheet.window, team=info.team, text=" ".join(info.watch), status="checked", phase="done",
+        generation=generation, substitution=info, evidence=[f.text for f in sheet.facts][:MAX_EVIDENCE],
+        cited_fact_ids=ids, latency_ms=0,
+    )
 
 
 def check_observation(o: ScoutObservationDraft | TacticalObservation, sheet: TacticalFactSheet
@@ -159,9 +184,9 @@ async def run_scout(
     model = model or default_model()
     deadline = deadline_s or SCOUT_DEADLINE_S
     base = Insight(
-        id=insight_id(sheet), t=sheet.window.to_t, minute=sheet.minute, type="tactics", trigger=sheet.trigger,
+        id=insight_id(sheet), t=sheet.window.to_t, minute=sheet.minute, trigger=sheet.trigger,
         window=sheet.window, text="", phase="analysing", generation=generation,
-        heatmap=heatmap, build_up=build_up or None,
+        heatmap=heatmap, build_up=build_up or None, **_card(sheet),
     )
     start = time.perf_counter()
     tokens = 0
@@ -223,7 +248,7 @@ def status_card(sheet: TacticalFactSheet, generation: int = 0, heatmap: Heatmap 
             observations.append(ok)
     ids = list(dict.fromkeys([*(f.fact_id for f in state), *(fid for o in observations for fid in o.fact_ids)]))
     return Insight(
-        id=insight_id(sheet), t=sheet.window.to_t, minute=sheet.minute, type="tactics", trigger=sheet.trigger,
+        id=insight_id(sheet), t=sheet.window.to_t, minute=sheet.minute, trigger=sheet.trigger, **_card(sheet),
         window=sheet.window, text=NO_CHANGE, status="checked", phase="done", generation=generation,
         observations=observations, evidence=[sheet.fact(i).text for i in ids][:MAX_EVIDENCE], cited_fact_ids=ids,
         heatmap=heatmap, build_up=build_up or None, rejected_claims=rejected or [], latency_ms=0,

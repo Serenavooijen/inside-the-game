@@ -25,7 +25,7 @@ from pathlib import Path
 
 from app.agents.deadline import within
 from app.agents.llm import ModelClient
-from app.agents.scout import SCOUT_DEADLINE_S, run_scout, scouting_card, status_card
+from app.agents.scout import SCOUT_DEADLINE_S, run_scout, scouting_card, status_card, watch_card
 from app.contracts import (
     Fact, Insight, MatchInfo, MatchSnapshot, ScoutingReport, SourceEvent, SourceFrame, TacticalObservation,
     TacticalTrigger,
@@ -36,7 +36,8 @@ from app.tactics import Tactician
 log = logging.getLogger(__name__)
 
 INTERVAL_MIN = 5
-SUB_DELAY_S = 180
+SUB_WATCH_S = 2             # "what to watch": as soon as the new roles are in the tracking
+SUB_IMPACT_S = 480          # "impact": about 8 minutes after the substitution
 QUEUE_MAX = 6               # a 5-minute card must never be dropped
 SAFETY_MARGIN_S = 3.0
 
@@ -54,6 +55,7 @@ class Job:
     to_t: float
     prev: tuple[float, float] | None
     subs: list[SourceEvent] = field(default_factory=list)
+    stage: str | None = None    # substitutions: "watch" or "impact"
     events: list[SourceEvent] = field(default_factory=list)
     snapshot: MatchSnapshot | None = None
     generation: int = 0
@@ -80,7 +82,7 @@ class ScoutLane:
         self._queue: list[tuple[Job, Publish]] = []
         self._task: asyncio.Task | None = None
         self._period_start: dict[int, float] = {}
-        self._pending_subs: list[tuple[float, list[SourceEvent]]] = []   # (due t, substitutions)
+        self._pending_subs: list[tuple[float, str, list[SourceEvent]]] = []   # (due t, stage, substitutions)
         self._previous: list[TacticalObservation] = []   # the last checked analysis, so advice is not repeated
         self.last_facts: list[Fact] = []                  # today's facts of the last live sheet (for the commentary)
 
@@ -120,11 +122,13 @@ class ScoutLane:
             return
         if isinstance(item, SourceEvent):
             if item.type == "substitution":
-                same = next((p for p in self._pending_subs if p[1][0].t == item.t and p[1][0].team == item.team), None)
-                if same:
-                    same[1].append(item)
+                same = [p for p in self._pending_subs if p[2][0].t == item.t and p[2][0].team == item.team]
+                if same:                        # one card per substitution moment, also with several changes
+                    same[0][2].append(item)     # the watch and impact entries share this list
                 else:
-                    self._pending_subs.append((item.t + SUB_DELAY_S, [item]))
+                    group = [item]
+                    self._pending_subs.append((item.t + SUB_WATCH_S, "watch", group))
+                    self._pending_subs.append((item.t + SUB_IMPACT_S, "impact", group))
             elif item.type == "period_end" and item.period == 1 and live:
                 start = self._period_start.get(1, 0.0)
                 self.submit(Job("half_time", start, item.t - 1, None), history, snapshot, generation, publish)
@@ -134,9 +138,9 @@ class ScoutLane:
         for p in due:
             self._pending_subs.remove(p)
             if live:
-                subs = p[1]
-                self.submit(Job("substitution", subs[0].t, item.t, None, subs=list(subs)), history, snapshot,
-                            generation, publish)
+                _, stage, subs = p
+                self.submit(Job("substitution", subs[0].t, item.t, None, subs=list(subs), stage=stage), history,
+                            snapshot, generation, publish)
         minute = self._interval_minute(item)
         if minute and live:
             start = self._period_start.get(item.period, 0.0)
@@ -182,15 +186,22 @@ class ScoutLane:
 
     async def _run(self, job: Job, publish: Publish) -> None:
         tac = self.tactician
-        sheet = await asyncio.to_thread(tac.sheet, job.trigger, job.from_t, job.to_t, job.events, job.snapshot,
-                                        job.prev, job.subs or None)
-        if sheet is not None:
+        if job.stage == "watch":                # code only, no model
+            sheet = await asyncio.to_thread(tac.substitution_sheet, job.subs, job.events, job.to_t, "watch", job.snapshot)
+            publish(watch_card(sheet, job.generation))
+            return
+        if job.stage == "impact":
+            sheet = await asyncio.to_thread(tac.substitution_sheet, job.subs, job.events, job.to_t, "impact", job.snapshot)
+        else:
+            sheet = await asyncio.to_thread(tac.sheet, job.trigger, job.from_t, job.to_t, job.events, job.snapshot,
+                                            job.prev, job.subs or None)
+        if sheet is not None and job.stage is None:
             self.last_facts = list(sheet.facts)     # today only: the cup baseline is a separate list
         if sheet is None or all(f.metric == "game_state" for f in sheet.facts):
-            await self._status(job, publish)    # too few facts: still a card, made by the code
+            await self._status(job, publish, sheet=sheet)    # too few facts: still a card, made by the code
             return
         team = (sheet.facts[0].team or sheet.home).upper()
-        heatmap, build_up = await asyncio.to_thread(
+        heatmap, build_up = (None, None) if job.stage else await asyncio.to_thread(   # a substitution card has its own
             lambda: (tac.heatmap(team, job.from_t, job.to_t), tac.build_up_positions(team, job.from_t, job.to_t)))
         try:
             insight = await within(
@@ -201,12 +212,15 @@ class ScoutLane:
             if insight.status != "fallback" and insight.observations:
                 self._previous = list(insight.observations)
             if not insight.observations:        # nothing new from the Scout: the status card replaces it
-                await self._status(job, publish, insight.rejected_claims)
+                await self._status(job, publish, insight.rejected_claims, sheet)
         except TimeoutError:
             log.warning("Scout safety net hit at %s", job.to_t)
 
-    async def _status(self, job: Job, publish: Publish, rejected: list | None = None) -> None:
+    async def _status(self, job: Job, publish: Publish, rejected: list | None = None, sheet=None) -> None:
         tac = self.tactician
+        if job.stage == "impact" and sheet is not None:     # a substitution keeps its own card, from its own facts
+            publish(status_card(sheet, job.generation, rejected=rejected))
+            return
         sheet = await asyncio.to_thread(tac.status_sheet, job.trigger, job.from_t, job.to_t, job.events, job.snapshot)
         team = sheet.home.upper()
         heatmap = await asyncio.to_thread(tac.heatmap, team, job.from_t, job.to_t)

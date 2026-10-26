@@ -71,19 +71,33 @@ def test_a_card_every_five_minutes():
     assert c["id"] in {i.id for i in sim.state().insights}
 
 
-def test_a_card_three_minutes_after_the_substitutions_at_64():
+def substitution_cards(msgs):
+    return [d for n, d in msgs if n == "insight" and d["type"] == "substitution" and d["phase"] == "done"]
+
+
+def test_what_to_watch_at_the_moment_and_the_impact_8_minutes_later_at_64():
     subs = [i for i in items() if isinstance(i, SourceEvent) and i.type == "substitution" and i.minute == "64"]
 
     async def scenario(sim, lane, q):
-        sim.seek(subs[0].t + 178)           # the substitutions are replayed silently and stay pending
+        sim.seek(subs[0].t - 1)
+        drain(q)
+        sim.step(0.4)                       # the substitutions happen: "what to watch"
+        await lane.wait()
+        watch = substitution_cards(drain(q))
+        sim.seek(subs[0].t + 478)           # replayed silently: the impact stays pending
         drain(q)
         sim.step(0.4)
         await lane.wait()
-        return drain(q)
+        return watch, substitution_cards(drain(q))
 
-    cards = [c for c in tactics(run(scenario)) if c["trigger"] == "substitution"]
-    assert len(cards) == 1
-    assert "Halvorsen (18) and Diallo-Kerr (20) came on at 64'" in " ".join(cards[0]["evidence"])
+    watch, impact = run(scenario)
+    assert len(watch) == 1 and len(impact) == 1                  # one card per moment, with two changes
+    w, i = watch[0]["substitution"], impact[0]["substitution"]
+    assert w["stage"] == "watch" and w["kind"] == "shape change" and watch[0]["status"] == "checked"
+    assert [p["n"] for p in w["off"]] == [7, 10] and [p["n"] for p in w["on"]] == [18, 20]
+    assert watch[0]["text"].startswith("Northgate switch from a 4-4-2 to a 4-3-3 at 64'")
+    assert i["stage"] == "impact" and len(i["heatmaps"]) == 2 and impact[0]["observations"]
+    assert impact[0]["id"] == f"i-sub-impact-ngr-{round(subs[0].t)}" and impact[0]["status"] in ("checked", "corrected")
 
 
 def test_a_card_at_half_time_over_the_first_half():
@@ -215,6 +229,14 @@ def test_a_whole_match_has_18_five_minute_cards_and_starts_with_the_scouting_rep
     assert [i.window.label.split("–")[1] for i in intervals] == [f"{m}'" for m in range(5, 95, 5)]
     assert tactics[0].id == "i-tac-scouting" and tactics[0].t == 0 and tactics[0].observations
     assert all(i.phase == "done" and i.status in ("checked", "corrected") for i in intervals)
+    # every substitution moment: "what to watch" at the moment, the impact about 8 minutes later
+    subs = sorted((i for i in state.insights if i.type == "substitution"), key=lambda i: i.t)
+    watch = [i for i in subs if i.substitution.stage == "watch"]
+    impact = [i for i in subs if i.substitution.stage == "impact"]
+    assert [i.substitution.minute for i in watch] == ["46", "59", "64", "76", "87"]
+    assert [i.substitution.minute for i in impact] == ["46", "59", "64", "76", "87"]
+    assert all(470 <= b.t - a.t <= 490 for a, b in zip(watch, impact))
+    assert all(i.observations and i.status in ("checked", "corrected") for i in impact)
 
 
 class SilentScout(OfflineModel):
