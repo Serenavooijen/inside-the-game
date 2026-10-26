@@ -443,9 +443,51 @@ class Match:
                 x = clamp(x, 7.5, 103)   # outfield players never camp on the goal line
                 y = clamp(y, 1.5, 66.5)
                 tg[q] = (self.to_abs(side, [x, y]), inten)
+        if in_poss is not None and not kickoff:
+            self.build_up_targets(tg, in_poss, ball_abs)
         if self.ball and self.ball["state"] == "dead" and self.ball.get("sp_type") in ("corner", "long_throw"):
             self.set_piece_targets(tg)
         return tg
+
+    def build_up_targets(self, tg, side, ball_abs):
+        """Scripted build-up structure (phase style "build_up"), only in own possession in the own half.
+
+        dm_drop: "between" (the DM drops between the centre-backs, who split wide: a back three),
+                 "beside_left" / "beside_right" (the DM drops next to one centre-back, that full-back pushes on).
+        fb_invert: "RB" or "LB" (that full-back moves inside next to the DM).
+        Deterministic and without random draws, so a script without "build_up" gives the same match.
+        """
+        bu = self.style(side).get("build_up")
+        if not bu or self.to_rel(side, ball_abs)[0] >= 52.5:
+            return
+        by_role = {self.role_of(q): q for q in self.on_pitch(side)}
+        rel = {r: self.to_rel(side, tg[q][0]) for r, q in by_role.items() if q in tg}
+
+        def put(role, x, y):
+            q = by_role[role]
+            tg[q] = (self.to_abs(side, [clamp(x, 7.5, 103), clamp(y, 1.5, 66.5)]), max(tg[q][1], 0.6))
+
+        drop = bu.get("dm_drop")
+        if drop and "DM" in rel and "RCB" in rel and "LCB" in rel:
+            cb_x = (rel["RCB"][0] + rel["LCB"][0]) / 2
+            if drop == "between":
+                put("DM", cb_x, 34)
+                put("RCB", rel["RCB"][0], rel["RCB"][1] - 9)
+                put("LCB", rel["LCB"][0], rel["LCB"][1] + 9)
+                for fb in ("RB", "LB"):
+                    if fb in rel:
+                        put(fb, rel[fb][0] + 10, rel[fb][1])
+            elif drop in ("beside_left", "beside_right"):
+                left = drop == "beside_left"
+                cb = rel["LCB" if left else "RCB"]
+                put("DM", cb_x, cb[1] + (9 if left else -9))
+                fb = "LB" if left else "RB"
+                if fb in rel:
+                    put(fb, rel[fb][0] + 12, rel[fb][1])
+        inv = bu.get("fb_invert")
+        if inv in rel:
+            dm_x = self.to_rel(side, tg[by_role["DM"]][0])[0] if "DM" in by_role else rel[inv][0] + 8
+            put(inv, max(dm_x, rel[inv][0]), 34 + (12 if inv == "LB" else -12))
 
     def set_piece_targets(self, tg):
         """Box occupation for corners / long throws: attackers to slots, defenders mark (man or zonal)."""
