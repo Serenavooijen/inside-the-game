@@ -49,6 +49,27 @@ The backend replays the reference match from `output/` and streams it over SSE i
 | `app/scout_lane.py` | Runs the Scout every 5 minutes, at half time and after substitutions (`TACTICS_ENABLED=1`) |
 | `app/commentary_lane.py` | One checked line of commentary per minute, SSE `commentary` (`TACTICS_ENABLED=1`) |
 
+### Tactical analysis (`TACTICS_ENABLED=1`)
+
+With `TACTICS_ENABLED=1` the backend adds the **Scout**, a third agent: an opposition analyst for the staff.
+
+- **When:** every 5 minutes of match time, at half time, and 3 minutes after a team's substitution(s).
+- **How:**
+  1. The code measures tactical facts in `app/tactics.py`, one detector per concept in `app/agents/knowledge/tactics_playbook.md`, compared with the earlier cup match.
+  2. The Scout writes 2–3 observations, each with a consequence and advice for the coach.
+  3. The checker rejects numbers, names, score claims and directions that the facts do not back.
+- **Output:** the result is sent as an `insight` of type `"tactics"`. The scouting report on the cup match (`fixtures/scouting/kba-ngr-cup.json`) is sent in `state.scouting`.
+- **Commentary:** every match minute the Narrator writes one checked line (≤ 25 words), sent as the new SSE message **`commentary`** `{ t, minute, text, sourceInsightId, generation }`.
+- **The match itself:** the live match is unchanged (seed 8002, 2-2, xG 2.48–1.52). The cup match (`script/cup/`) is only the baseline.
+
+Container App settings for it (all of them in `docs/overdracht-agents.md`, section 5):
+
+| Setting | Value |
+|---|---|
+| `TACTICS_ENABLED` | `1` |
+| `FOUNDRY_SCOUT_AGENT` / `FOUNDRY_SCOUT_AGENT_VERSION` | `itg-scout` / `3` (publish with `tools/create_foundry_agents.py --only scout`) |
+| `SCOUT_DEADLINE_S`, `COMMENTARY_DEADLINE_S` | optional, default 15 and 5 |
+
 ### Docker and Azure Container Apps
 
 `backend/Dockerfile` builds the backend image from the repo root. The reference match is generated from its seed during the build, so the image does not depend on `output/` in git.

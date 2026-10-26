@@ -125,10 +125,18 @@ Tactician (code, app/tactics.py)  →  Scout (LLM)  →  Fact-checker (code)
 - **Scout:** `scout.py` en `run_scout()` geven een `Insight` van type `"tactics"` met `observations`, `heatmap` en `buildUp`.
   - De Scout krijgt alleen de regels van de concepten waarvan de detector vuurde, één regel per concept (`playbook.py`), nooit het hele playbook.
   - Conceptnamen en tactische termen ("Far-side", "the 6", "back three", "three up front") gelden niet als verzonnen naam of getal.
+- **Labels, richting en stand komen uit de code:**
+  - vaste labels (`BANDS` in `tactics.py`): PPDA *very intense / intense / moderate / passive pressing*, blokhoogte *low / mid / high block*, compactheid *compact / medium / stretched*;
+  - de richting staat in woorden in de tekst ("8 m deeper than the cup match", "5 m more compact than the previous 5 minutes");
+  - de stand is een feit, aan het eind van elk venster en voor elke wissel of formatiewijziging ("At 64' Northgate were level at 1-1, 11 v 10");
+  - PPDA alleen bij minimaal 5 verdedigende acties.
 - **Controle:**
-  - Een afgekeurde observatie valt weg en wordt met de reden getoond.
-  - Een afgekeurde coach-actie valt alleen zelf weg.
+  - Een observatie valt weg, met de reden erbij, bij een getal dat niet in de geciteerde feiten staat, bij een uitspraak over de stand die geen standfeit toelaat, of bij een vergelijkend woord dat de feiten tegenspreekt ("less compact" waar de feiten "more compact" zeggen).
+  - Een gevolg met nieuwe getallen of namen laat de hele observatie wegvallen.
+  - Een afgekeurde coach-actie valt alleen zelf weg. Dat gebeurt ook als hij het advies van de vorige analyse herhaalt.
   - `compareToCup` wordt `n/a` als geen geciteerd feit de beker noemt.
+- **De vorige analyse** gaat mee als context. De instructie is: alleen nieuw of veranderd advies.
+- **Harde deadlines:** alle model-aanroepen, ook die voor de momentkaarten, lopen via `deadline.within()`. Die komt op tijd terug, ook als een geannuleerde aanroep blijft hangen.
 - **Wanneer:** elke 5 minuten speeltijd, bij de rust, en 3 minuten na de wissel(s) van een team (`app/scout_lane.py`). Er draait er hoogstens één tegelijk, met een eigen deadline van 15 s. Een seek gooit alles weg. Bij een timeout of fout komen er template-observaties uit feiten plus playbook, met status `fallback`.
 - **Scoutingrapport:** `tools/build_scouting_report.py` laat de Scout vooraf de bekerwedstrijd (`script/cup/`, `output/cup/`) beschrijven en schrijft `fixtures/scouting/kba-ngr-cup.json`.
   - De feiten C1 … C30 zijn tegelijk de baseline voor elke live analyse.
@@ -144,7 +152,7 @@ Tactician (code, app/tactics.py)  →  Scout (LLM)  →  Fact-checker (code)
 | --- | --- |
 | `TACTICS_ENABLED` | `1` zet de Scout, het scoutingrapport en het commentaar per minuut aan. Zonder de vlag verandert er niets. |
 | `MODEL_SCOUT` | modelnaam voor de Scout bij `github` en `foundry`, standaard `gpt-4.1-mini` |
-| `FOUNDRY_SCOUT_AGENT`, `FOUNDRY_SCOUT_AGENT_VERSION` | de gehoste Scout, standaard `itg-scout`. Zonder versie werkt de rest gewoon, en krijgen de tactische kaarten de fallback. |
+| `FOUNDRY_SCOUT_AGENT`, `FOUNDRY_SCOUT_AGENT_VERSION` | de gehoste Scout, standaard `itg-scout`, nu versie 3. Zonder versie werkt de rest gewoon, en krijgen de tactische kaarten de fallback. |
 | `SCOUT_DEADLINE_S` | standaard `15` |
 | `COMMENTARY_DEADLINE_S` | standaard `5` |
 | `ITG_SCOUTING_REPORT` | pad naar het rapport, standaard `fixtures/scouting/kba-ngr-cup.json` |
@@ -158,7 +166,7 @@ uv run python tools/create_foundry_agents.py --only scout          # alleen itg-
 uv run python tools/build_scouting_report.py --provider foundry-agents
 ```
 
-Gemeten met `itg-scout` (gpt-4.1-mini): 3–5 s per venster. Alle vensters zijn `checked` of `corrected`, waarbij een afgekeurde claim met reden wordt weggelaten.
+Gemeten met `itg-scout` v3 (gpt-4.1-mini) op 5 vensters, de rust en de wissels van 64': alle 7 analyses `checked`, 4,5–5,6 s per analyse.
 
 ## Testen
 

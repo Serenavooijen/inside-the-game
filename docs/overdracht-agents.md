@@ -120,19 +120,33 @@ Zet deze omgevingsvariabelen op de Container App:
 MODEL_PROVIDER=foundry-agents
 FOUNDRY_PROJECT_ENDPOINT=https://svanooijen-7451-resource.services.ai.azure.com/api/projects/svanooijen-7451
 FOUNDRY_ANALYST_AGENT=itg-analyst
-FOUNDRY_ANALYST_AGENT_VERSION=<uit backend/.env.foundry-agents>
+FOUNDRY_ANALYST_AGENT_VERSION=2
 FOUNDRY_NARRATOR_AGENT=itg-narrator
-FOUNDRY_NARRATOR_AGENT_VERSION=<uit backend/.env.foundry-agents>
+FOUNDRY_NARRATOR_AGENT_VERSION=1
 AGENT_DEADLINE_S=6
+ITG_CORS_ORIGINS=<de URL('s) van de frontend, met komma's ertussen>
 # tactische analyse (sectie 8)
 TACTICS_ENABLED=1
 FOUNDRY_SCOUT_AGENT=itg-scout
-FOUNDRY_SCOUT_AGENT_VERSION=<uit backend/.env.foundry-agents>
+FOUNDRY_SCOUT_AGENT_VERSION=3
 ```
+
+| Variabele | Nodig? | Betekenis |
+| --- | --- | --- |
+| `MODEL_PROVIDER` | ja | `foundry-agents` voor de demo. Andere waarden: `foundry`, `github`, `offline`. |
+| `FOUNDRY_PROJECT_ENDPOINT` | ja | het endpoint van het Foundry-project |
+| `FOUNDRY_ANALYST_AGENT(_VERSION)`, `FOUNDRY_NARRATOR_AGENT(_VERSION)` | ja | de gehoste agents voor de momentkaarten en het commentaar |
+| `ITG_CORS_ORIGINS` | ja | de frontend-URL('s) |
+| `TACTICS_ENABLED` | voor de tactische analyse | `1` zet de Scout, het scoutingrapport en het commentaar per minuut aan. Zonder de vlag verandert er niets. |
+| `FOUNDRY_SCOUT_AGENT(_VERSION)` | bij `TACTICS_ENABLED=1` | `itg-scout`, versie **3**. Zonder versie blijft de rest werken, maar dan krijgen de tactische kaarten de fallback uit feiten en playbook. |
+| `AGENT_DEADLINE_S`, `SCOUT_DEADLINE_S`, `COMMENTARY_DEADLINE_S` | nee | deadlines van de momentkaarten (6 s), de Scout (15 s) en het commentaar (5 s) |
+| `ITG_SCOUTING_REPORT` | nee | het pad naar het scoutingrapport. De image bevat het al op de standaardplek. |
+
+De versienummers staan ook in `backend/.env.foundry-agents`. Dat bestand is lokaal en staat niet in git.
 
 - **Inloggen:** zet een **system-assigned managed identity** aan op de Container App. Geef die de rol **Cognitive Services User** op de resource `svanooijen-7451-resource`. De code ziet zelf dat hij in Azure draait en gebruikt dan de managed identity. Er zijn dus geen sleutels nodig.
 - **Geen secrets in de repo.** `.env` en `.env.foundry-agents` staan in `.gitignore`.
-- **Promptwijziging?** Draai dan `uv run python tools/create_foundry_agents.py`. Dat maakt een nieuwe versie van de gehoste agents. Zet het nieuwe versienummer daarna op de Container App.
+- **Promptwijziging?** Draai dan `uv run python tools/create_foundry_agents.py`. Dat maakt een nieuwe versie van de gehoste agents. Met `--only scout` publiceer je alleen de Scout. Zet het nieuwe versienummer daarna op de Container App.
 
 ## 6. Bekende beperkingen
 
@@ -154,7 +168,7 @@ Voor `foundry-agents` heb je de rol **Cognitive Services User** op de resource n
 
 ## 8. Tactische analyse: de Scout (vlag `TACTICS_ENABLED=1`)
 
-**Toegevoegd op:** 26 okt 2026.
+**Bijgewerkt op:** 27 okt 2026.
 
 Naast de momentkaarten komt er een derde agent, de **Scout**. Die kijkt als een opposition analyst:
 - hoe bouwt een team op;
@@ -163,7 +177,9 @@ Naast de momentkaarten komt er een derde agent, de **Scout**. Die kijkt als een 
 - wat veranderde er door een wissel;
 - wijkt het af van de bekerwedstrijd?
 
-Bij elk van die punten zegt hij ook wat het betekent en wat een trainer zou doen. Zonder de vlag verandert er niets. De momentkaarten, hun deadline van 6 s en alle bestaande tests blijven zoals ze waren.
+Bij elk van die punten zegt hij ook wat het betekent en wat een trainer zou doen. Zonder de vlag verandert er niets.
+
+De Scout analyseert de bestaande wedstrijd: seed 8002, Kingsbridge – Northgate 2-2, met xG 2.48–1.52. Die wedstrijd blijft byte voor byte gelijk. De bekerwedstrijd is alleen de baseline.
 
 **Wat de backend doet** (alles in `simulator.py` via twee lanes, met de bestaande regels):
 
@@ -179,30 +195,52 @@ Voor beide lanes geldt:
 - een seek of load annuleert alles, en `generation` gooit oude resultaten weg;
 - een timeout of fout geeft een fallback (Scout) of een stille minuut (commentaar), maar nooit een crash.
 
+**Harde deadlines.** Alle model-aanroepen lopen via `app/agents/deadline.within()`. Dat geldt voor de Scout, het commentaar en ook de momentkaarten (`workflow.py`, `smart_lane.py`).
+- `asyncio.wait_for` wacht na de deadline tot de geannuleerde aanroep echt gestopt is. Eén keer hing een Foundry-aanroep, waardoor een deadline van 15 s 727 s duurde.
+- `within()` komt op tijd terug en laat de aanroep op de achtergrond afbreken.
+
 **De SSE-berichten** (contract v0.4, PR #4):
 - `insight` met `type: "tactics"`: zelfde vorm als nu, plus `trigger`, `window` (`{fromT, toT, label}`), `observations[]` (`observation`, `factIds`, `consequence`, `coachAction?`, `compareToCup`, `team`), `heatmap` (6×4, absolute coördinaten) en `buildUp` (gemiddelde posities in de opbouw).
-- `commentary` (nieuw): `{ t, minute, text, sourceInsightId, generation }`.
+- **`commentary`** (nieuw): `{ t, minute, text, sourceInsightId, generation }`. Eén gecontroleerde zin per wedstrijdminuut. De frontend toont de nieuwste zin onder het veld.
 - `state` heeft een optioneel veld `scouting` met het rapport.
 
-**De feiten:**
-- Per concept uit `backend/app/agents/knowledge/tactics_playbook.md` meet een detector de signalen in de tracking (1 Hz) en de events. De concepten zijn B1 B2 B3 B5 B6, P1 P2, D1 D2 D3, T1 T3 en G1 G2 G3.
-- Een feit komt er alleen als het signaal betekenisvol is of veranderd is.
-- Vergelijkingen staan al in de tekst, bijvoorbeeld "Northgate's 6, Duarte (8), dropped between the centre-backs in 0% of 5 build-up phases (cup match: 58%, down 58 points)". Zo kan de checker elk getal narekenen.
+**De feiten: de code meet, het model interpreteert**
+- **Detectors:** per concept uit `backend/app/agents/knowledge/tactics_playbook.md` meet een detector de signalen in de tracking (1 Hz) en de events: B1 B2 B3 B5 B6, P1 P2, D1 D2 D3, T1 T3 en G1 G2 G3. Een feit komt er alleen als het signaal betekenisvol is of veranderd is.
+- **Vaste labels uit de code** (`BANDS` in `tactics.py` en "Fixed labels" in het playbook):
+  - PPDA: *very intense / intense / moderate / passive pressing* (grenzen 6, 10 en 15);
+  - blokhoogte: *low / mid / high block* (24 en 33 m);
+  - compactheid: *compact / medium / stretched* (27 en 35 m).
+
+  De Scout gebruikt alleen deze labels en beoordeelt zelf geen getallen.
+- **Richting in de tekst**, bijvoorbeeld "8 m deeper than the cup match (28 m, mid block)", "5 m more compact than the previous 5 minutes" en "less intense than the cup match (5.5, very intense pressing)".
+- **Blokhoogte en compactheid** worden alleen gemeten als de tegenstander de bal in het middenstuk heeft (35–70 m van het eigen doel). Over alle frames zegt de linie vooral waar de bal was.
+- **PPDA** alleen bij minimaal 5 verdedigende acties in het venster. Het aantal staat in de tekst.
+- **De stand als feit:** aan het eind van elk venster, en voor elke wissel of formatiewijziging vanuit dat team gezien, bijvoorbeeld "At 64' Northgate were level at 1-1, 11 v 10".
+- **Drempels:** een percentage onder de drempel van een concept betekent "deed het niet" en wordt dus niet als plan getoond. De uitzondering is een bekerbaseline boven de drempel ("0%, cup match: 58%"): dan is juist de afwezigheid de verandering.
+
+**De controle (checker)** keurt af met een reden. Die reden is zichtbaar op de kaart als "Not verifiable · left out". Hij controleert:
+- getallen die niet in de geciteerde feiten staan;
+- namen die niet in de observatie of haar feiten staan;
+- uitspraken over de stand die geen standfeit toelaat ("Kingsbridge leads 1-2");
+- vergelijkende woorden die de feiten tegenspreken ("less compact" waar de feiten "more compact" zeggen);
+- een advies voor de trainer dat de vorige analyse herhaalt.
+
+**De vorige analyse:** de Scout krijgt zijn laatste gecontroleerde analyse mee, alleen als context. Instructie: geef alleen nieuw of veranderd advies. Een seek wist de vorige analyse.
 
 **De bekerwedstrijd:**
 - `script/cup/match_script.json` (seed 4417, 2-1) is de eerdere bekerontmoeting. Die staat ook in `pre_match_context.json` onder `head_to_head`.
 - Het bekerscript bevat gescripte tactiek: de 6 van Northgate zakt in, Kingsbridge laat de linksback inschuiven, en beide teams wijzigen dat bij 60' en 70'. Dat staat gemarkeerd in `meta.scripted_tactics`, en de tests controleren dat de detectors het vinden.
-- De referentiewedstrijd (seed 8002) is ongewijzigd en wordt byte voor byte gelijk gegenereerd.
+- Het rapport maak je met `uv run python tools/build_scouting_report.py --provider foundry-agents`. Het huidige rapport heeft 6 observaties, allemaal `checked`.
 
 **Frontend:**
 - In de modus Analyst verschijnt een tactische kaart: "TACTICS 60'–65'", per observatie de tekst, daaronder apart "Consequence" en "For the coach", een label "As in the cup" of "Changed since the cup", en een mini-veld met de heatmap.
 - Naast de feed staat de tab "Scouting report (cup)".
 - Onder het veld staat één commentaarregel. Die ruimte wordt alleen vrijgehouden als de backend de vlag aan heeft.
 
-**Eenmalig in Foundry:** `uv run python tools/create_foundry_agents.py --only scout`. Dat publiceert alleen `itg-scout`; de Analyst en de Narrator houden hun versie. Versie 1 staat er al.
+**Foundry:** `itg-scout` staat op **versie 3**. Publiceer alleen de Scout met `uv run python tools/create_foundry_agents.py --only scout`; de Analyst en de Narrator houden dan hun versie.
 
 **Gemeten** met `foundry-agents` en gpt-4.1-mini:
-- Scout: 3–5 s per venster, alles `checked` of `corrected`;
+- Scout: 3,5–5 s per analyse;
 - commentaar: 1–2,5 s, 15–22 woorden.
 
 **Docker:** de image neemt `fixtures/scouting/` mee (`.dockerignore` en `Dockerfile`).
@@ -214,5 +252,5 @@ cd backend
 $env:TACTICS_ENABLED = "1"
 uv run uvicorn app.main:app --reload                                   # met MODEL_PROVIDER naar keuze
 uv run python -m app.agents.run_scout --provider foundry-agents        # 5 vensters, de rust en de wissels van 64'
-uv run pytest -q                                                       # 115 tests, zonder netwerk
+uv run pytest -q                                                       # alle tests, zonder netwerk
 ```
