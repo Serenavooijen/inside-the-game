@@ -125,7 +125,12 @@ export function useMatchStream(matchId: string, mode: Mode) {
     let cancelled = false;
     const resync = async () => {
       try {
-        const res = await fetch(`${API_URL}/state`, { cache: 'no-store' });
+        let res = await fetch(`${API_URL}/state`, { cache: 'no-store' });
+        if (res.status === 409 && !cancelled) {
+          // The backend has no match loaded (restarted, or opened before it was ready): load it ourselves.
+          await post('/match/load', { match_id: matchId, mode });
+          res = await fetch(`${API_URL}/state`, { cache: 'no-store' });
+        }
         if (res.ok && !cancelled) dispatch({ type: 'state', data: await res.json() });
       } catch { /* the stream will send state too */ }
     };
