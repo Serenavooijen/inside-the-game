@@ -11,6 +11,8 @@ Statistician (code, Stats Engine)  →  Analyst (LLM)  →  Fact-checker (code) 
 
 De Analyst en de Narrator zijn Microsoft Agent Framework-`Agent`s op een OpenAI-compatibele client. GitHub Models en Foundry gebruiken dus dezelfde code.
 
+Met `TACTICS_ENABLED=1` komt er een derde agent bij, de **Scout** (tactische analyse), en maakt de Narrator elke minuut één commentaarzin. Zie [Tactische analyse](#tactische-analyse-de-scout).
+
 ## Installeren
 
 Vanuit `backend/`:
@@ -103,6 +105,60 @@ Waar je op kunt letten:
 - **Kwaliteit:** halen de claims de fact-check? Zijn de teksten even goed?
 - **Beheer en zichtbaarheid:** gehoste agents staan in de portal met versies en traces. Dat is mooi voor de jury, maar een promptwijziging vraagt dan om een nieuwe versie.
 
+## Tactische analyse: de Scout
+
+De blik van een opposition analyst: hoe bouwt een team op, hoe hoog staat de linie, welke flank, wat veranderde er door een wissel, en wijkt het af van de bekerwedstrijd? En vooral: wat betekent het?
+
+```
+Tactician (code, app/tactics.py)  →  Scout (LLM)  →  Fact-checker (code)
+  tactische feiten per venster,        2–3 observaties,    observatie: check_claim
+  één detector per playbook-concept    elk met gevolg en   gevolg en coach-actie: check_text + unknown_names
+  + de bekerbaseline (C-feiten)        coach-actie         (geen nieuwe getallen of namen)
+```
+
+**De code meet, het model interpreteert.**
+
+- **Tactician:** `app/tactics.py` implementeert de detectors uit [`knowledge/tactics_playbook.md`](knowledge/tactics_playbook.md): B1 B2 B3 B5 B6, P1 P2, D1 D2 D3, T1 T3 en G1 G2 G3.
+  - Een detector levert alleen een feit als het signaal betekenisvol is, of als het veranderd is ten opzichte van het vorige venster of de beker.
+  - Vergelijkingen en verschillen staan al in de tekst van het feit, bijvoorbeeld `(previous 5 minutes: 31%; cup match: 58%, down 58 points)`.
+- **Scout:** `scout.py` en `run_scout()` geven een `Insight` van type `"tactics"` met `observations`, `heatmap` en `buildUp`.
+  - De Scout krijgt alleen de regels van de concepten waarvan de detector vuurde, één regel per concept (`playbook.py`), nooit het hele playbook.
+  - Conceptnamen en tactische termen ("Far-side", "the 6", "back three", "three up front") gelden niet als verzonnen naam of getal.
+- **Controle:**
+  - Een afgekeurde observatie valt weg en wordt met de reden getoond.
+  - Een afgekeurde coach-actie valt alleen zelf weg.
+  - `compareToCup` wordt `n/a` als geen geciteerd feit de beker noemt.
+- **Wanneer:** elke 5 minuten speeltijd, bij de rust, en 3 minuten na de wissel(s) van een team (`app/scout_lane.py`). Er draait er hoogstens één tegelijk, met een eigen deadline van 15 s. Een seek gooit alles weg. Bij een timeout of fout komen er template-observaties uit feiten plus playbook, met status `fallback`.
+- **Scoutingrapport:** `tools/build_scouting_report.py` laat de Scout vooraf de bekerwedstrijd (`script/cup/`, `output/cup/`) beschrijven en schrijft `fixtures/scouting/kba-ngr-cup.json`.
+  - De feiten C1 … C30 zijn tegelijk de baseline voor elke live analyse.
+  - De backend laadt het rapport bij de wedstrijd en stuurt het mee als `MatchState.scouting`.
+
+**Narrator per minuut** (`commentary.py`, `app/commentary_lane.py`):
+- Elke minuut maakt de code een kleine FactSheet: de belangrijkste actie, het balbezit in die minuut, de stand en de feitregels van de laatste tactische kaart.
+- De Narrator maakt daar één zin van, maximaal 25 woorden.
+- De zin gaat door `check_text` en `unknown_names` en daarna als SSE-bericht `commentary` naar de frontend.
+- Afgekeurd, te lang of later dan 5 s: dan blijft de minuut stil.
+
+| Variabele | Betekenis |
+| --- | --- |
+| `TACTICS_ENABLED` | `1` zet de Scout, het scoutingrapport en het commentaar per minuut aan. Zonder de vlag verandert er niets. |
+| `MODEL_SCOUT` | modelnaam voor de Scout bij `github` en `foundry`, standaard `gpt-4.1-mini` |
+| `FOUNDRY_SCOUT_AGENT`, `FOUNDRY_SCOUT_AGENT_VERSION` | de gehoste Scout, standaard `itg-scout`. Zonder versie werkt de rest gewoon, en krijgen de tactische kaarten de fallback. |
+| `SCOUT_DEADLINE_S` | standaard `15` |
+| `COMMENTARY_DEADLINE_S` | standaard `5` |
+| `ITG_SCOUTING_REPORT` | pad naar het rapport, standaard `fixtures/scouting/kba-ngr-cup.json` |
+
+Zelf proberen:
+
+```powershell
+uv run python -m app.agents.run_scout --provider offline          # 5 vensters, de rust en de wissels van 64'
+uv run python -m app.agents.run_scout --provider foundry-agents
+uv run python tools/create_foundry_agents.py --only scout          # alleen itg-scout publiceren
+uv run python tools/build_scouting_report.py --provider foundry-agents
+```
+
+Gemeten met `itg-scout` (gpt-4.1-mini): 3–5 s per venster. Alle vensters zijn `checked` of `corrected`, waarbij een afgekeurde claim met reden wordt weggelaten.
+
 ## Testen
 
 ```bash
@@ -137,3 +193,5 @@ Elk feit is berekend uit `events.json`, `tracking.csv` en `stats_per_minute.json
 - **Echte modellen:** draaien met `github`, `foundry` en `foundry-agents`, de uitkomsten vergelijken en een keuze maken voor de demo.
 - **Contract:** zodra Bryans `contracts.py` op `main` staat, `models.py` daarop laten aansluiten en de dubbele modellen hier weghalen.
 - **Tracing:** naar Application Insights (OpenTelemetry). Agent Framework ondersteunt dat.
+- **Overige detectors:** B4, P3–P7, D4–D6, T2, T4, S1–S2 en G4 uit het playbook. De Scout kan ze pas noemen als hun detector bestaat.
+- **Betekenis van een gevolg:** de checker houdt nieuwe getallen en namen tegen, maar niet een gevolg dat de verkeerde kant op redeneert, zoals "less intense" bij een lagere PPDA. Een steekproef per demo-run blijft nodig.

@@ -124,6 +124,10 @@ FOUNDRY_ANALYST_AGENT_VERSION=<uit backend/.env.foundry-agents>
 FOUNDRY_NARRATOR_AGENT=itg-narrator
 FOUNDRY_NARRATOR_AGENT_VERSION=<uit backend/.env.foundry-agents>
 AGENT_DEADLINE_S=6
+# tactische analyse (sectie 8)
+TACTICS_ENABLED=1
+FOUNDRY_SCOUT_AGENT=itg-scout
+FOUNDRY_SCOUT_AGENT_VERSION=<uit backend/.env.foundry-agents>
 ```
 
 - **Inloggen:** zet een **system-assigned managed identity** aan op de Container App. Geef die de rol **Cognitive Services User** op de resource `svanooijen-7451-resource`. De code ziet zelf dat hij in Azure draait en gebruikt dan de managed identity. Er zijn dus geen sleutels nodig.
@@ -147,3 +151,68 @@ uv run python -m app.agents.run_fixtures --provider foundry-agents --inject-wron
 ```
 
 Voor `foundry-agents` heb je de rol **Cognitive Services User** op de resource nodig. Vraag Serena die toe te wijzen.
+
+## 8. Tactische analyse: de Scout (vlag `TACTICS_ENABLED=1`)
+
+**Toegevoegd op:** 26 okt 2026.
+
+Naast de momentkaarten komt er een derde agent, de **Scout**. Die kijkt als een opposition analyst:
+- hoe bouwt een team op;
+- hoe hoog staat de linie;
+- welke flank gebruiken ze;
+- wat veranderde er door een wissel;
+- wijkt het af van de bekerwedstrijd?
+
+Bij elk van die punten zegt hij ook wat het betekent en wat een trainer zou doen. Zonder de vlag verandert er niets. De momentkaarten, hun deadline van 6 s en alle bestaande tests blijven zoals ze waren.
+
+**Wat de backend doet** (alles in `simulator.py` via twee lanes, met de bestaande regels):
+
+| Wanneer | Wat | Waar |
+| --- | --- | --- |
+| elke 5 minuten speeltijd, bij de rust, 3 minuten na de wissel(s) van een team | tactische feiten (code) → Scout (LLM) → controle → `insight` van type `"tactics"` | `app/tactics.py`, `app/scout_lane.py`, `app/agents/scout.py` |
+| elke wedstrijdminuut | minuutfeiten (code) → Narrator (één zin, ≤ 25 woorden) → controle → `commentary` | `app/commentary_lane.py`, `app/agents/commentary.py` |
+| bij het laden van de wedstrijd | het scoutingrapport over de beker inlezen; de feiten daarvan zijn de baseline | `fixtures/scouting/kba-ngr-cup.json` |
+
+Voor beide lanes geldt:
+- het zijn losse asyncio-taken, en er draait er per lane hoogstens één tegelijk;
+- het rekenwerk loopt in een thread;
+- een seek of load annuleert alles, en `generation` gooit oude resultaten weg;
+- een timeout of fout geeft een fallback (Scout) of een stille minuut (commentaar), maar nooit een crash.
+
+**De SSE-berichten** (contract v0.4, PR #4):
+- `insight` met `type: "tactics"`: zelfde vorm als nu, plus `trigger`, `window` (`{fromT, toT, label}`), `observations[]` (`observation`, `factIds`, `consequence`, `coachAction?`, `compareToCup`, `team`), `heatmap` (6×4, absolute coördinaten) en `buildUp` (gemiddelde posities in de opbouw).
+- `commentary` (nieuw): `{ t, minute, text, sourceInsightId, generation }`.
+- `state` heeft een optioneel veld `scouting` met het rapport.
+
+**De feiten:**
+- Per concept uit `backend/app/agents/knowledge/tactics_playbook.md` meet een detector de signalen in de tracking (1 Hz) en de events. De concepten zijn B1 B2 B3 B5 B6, P1 P2, D1 D2 D3, T1 T3 en G1 G2 G3.
+- Een feit komt er alleen als het signaal betekenisvol is of veranderd is.
+- Vergelijkingen staan al in de tekst, bijvoorbeeld "Northgate's 6, Duarte (8), dropped between the centre-backs in 0% of 5 build-up phases (cup match: 58%, down 58 points)". Zo kan de checker elk getal narekenen.
+
+**De bekerwedstrijd:**
+- `script/cup/match_script.json` (seed 4417, 2-1) is de eerdere bekerontmoeting. Die staat ook in `pre_match_context.json` onder `head_to_head`.
+- Het bekerscript bevat gescripte tactiek: de 6 van Northgate zakt in, Kingsbridge laat de linksback inschuiven, en beide teams wijzigen dat bij 60' en 70'. Dat staat gemarkeerd in `meta.scripted_tactics`, en de tests controleren dat de detectors het vinden.
+- De referentiewedstrijd (seed 8002) is ongewijzigd en wordt byte voor byte gelijk gegenereerd.
+
+**Frontend:**
+- In de modus Analyst verschijnt een tactische kaart: "TACTICS 60'–65'", per observatie de tekst, daaronder apart "Consequence" en "For the coach", een label "As in the cup" of "Changed since the cup", en een mini-veld met de heatmap.
+- Naast de feed staat de tab "Scouting report (cup)".
+- Onder het veld staat één commentaarregel. Die ruimte wordt alleen vrijgehouden als de backend de vlag aan heeft.
+
+**Eenmalig in Foundry:** `uv run python tools/create_foundry_agents.py --only scout`. Dat publiceert alleen `itg-scout`; de Analyst en de Narrator houden hun versie. Versie 1 staat er al.
+
+**Gemeten** met `foundry-agents` en gpt-4.1-mini:
+- Scout: 3–5 s per venster, alles `checked` of `corrected`;
+- commentaar: 1–2,5 s, 15–22 woorden.
+
+**Docker:** de image neemt `fixtures/scouting/` mee (`.dockerignore` en `Dockerfile`).
+
+**Zelf proberen:**
+
+```powershell
+cd backend
+$env:TACTICS_ENABLED = "1"
+uv run uvicorn app.main:app --reload                                   # met MODEL_PROVIDER naar keuze
+uv run python -m app.agents.run_scout --provider foundry-agents        # 5 vensters, de rust en de wissels van 64'
+uv run pytest -q                                                       # 115 tests, zonder netwerk
+```
