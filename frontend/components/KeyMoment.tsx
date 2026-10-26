@@ -15,6 +15,8 @@ type Props = {
 
 const BAR_LABEL: Record<MatchEvent['kind'], string> = { goal: 'GOAL', bigchance: 'BIG CHANCE', yellow: 'CARD', red: 'RED CARD', sub: 'SUB' };
 
+const HERO_GAP = 12;     // px between the detail pill and the hero card
+const HERO_BOTTOM = 28;  // bottom-7
 const touch = (a: DOMRect, b: DOMRect) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
 
 /** The bar (GOAL / CARD / RED CARD) stays at the top; the status pills give way so they never cover it:
@@ -31,11 +33,16 @@ export function KeyMoment({ event, insight, stats, mode, exiting }: Props) {
   const pill = useRef<HTMLDivElement>(null);
   const replay = useRef<HTMLDivElement>(null);
   const bar = useRef<HTMLDivElement>(null);
+  const top = useRef<HTMLDivElement>(null);        // the bar plus the detail pill under it
+  const heroBox = useRef<HTMLDivElement>(null);
+  // The hero card must stay below the bar and its detail pill: 0 full, 1 smaller text, 2 no evidence, 3 capped height.
+  const [heroFit, setHeroFit] = useState<0 | 1 | 2 | 3>(0);
 
   // Start from the full pills for every new key moment and after every resize, then step down while they touch.
   useEffect(() => {
     setFit('full');
-    const reset = () => setFit('full');
+    setHeroFit(0);
+    const reset = () => { setFit('full'); setHeroFit(0); };
     window.addEventListener('resize', reset);
     return () => window.removeEventListener('resize', reset);
   }, [event.id]);
@@ -46,6 +53,19 @@ export function KeyMoment({ event, insight, stats, mode, exiting }: Props) {
       setFit(fit === 'full' ? 'compact' : 'below');
     }
   });
+  // The hero grows while its text streams in: measure after every render, only ever step down per key moment.
+  useLayoutEffect(() => {
+    if (!top.current || !heroBox.current || heroFit === 3) return;
+    if (heroBox.current.getBoundingClientRect().top < top.current.getBoundingClientRect().bottom + HERO_GAP) {
+      setHeroFit((heroFit + 1) as 1 | 2 | 3);
+    }
+  });
+  const heroMaxHeight = (): string | undefined => {
+    if (heroFit < 3 || !top.current || !heroBox.current?.parentElement) return undefined;
+    const box = heroBox.current.parentElement.getBoundingClientRect();
+    const room = box.bottom - HERO_BOTTOM - (top.current.getBoundingClientRect().bottom + HERO_GAP);
+    return `${Math.max(120, room)}px`;
+  };
   const compact = fit !== 'full';
   return (
     <>
@@ -73,7 +93,7 @@ export function KeyMoment({ event, insight, stats, mode, exiting }: Props) {
         </div>
       </div>
 
-      <div className={`absolute left-1/2 ${fit === 'below' ? 'top-[76px]' : 'top-7'} flex -translate-x-1/2 flex-col items-center gap-[10px] transition-opacity duration-[480ms] ${exiting ? 'opacity-0' : 'itg-in'}`}>
+      <div className={`absolute left-1/2 ${fit === 'below' ? 'top-[76px]' : 'top-7'} flex -translate-x-1/2 flex-col items-center gap-[10px] transition-opacity duration-[480ms] ${exiting ? 'opacity-0' : 'itg-in'}`} ref={top}>
         <div ref={bar} className="flex h-16 overflow-hidden rounded-md shadow-[0_12px_32px_rgba(0,0,0,.45)]">
           <div className="flex items-center whitespace-nowrap bg-chalk px-6 font-display text-tv-bar font-extrabold tracking-[.08em] text-ink">{BAR_LABEL[event.kind]}</div>
           <div
@@ -93,9 +113,11 @@ export function KeyMoment({ event, insight, stats, mode, exiting }: Props) {
 
       {insight && (
         <div
-          className={`absolute bottom-7 left-7 w-[min(700px,calc(100%-56px))] origin-top-right transition-[transform,opacity] duration-[480ms] ease-out ${exiting ? 'translate-x-[45%] -translate-y-[85%] scale-[.6] opacity-0' : 'itg-in'}`}
+          ref={heroBox}
+          className={`absolute bottom-7 left-7 w-[min(700px,calc(100%-56px))] origin-top-right ${heroFit === 3 ? 'overflow-hidden rounded-lg' : ''} transition-[transform,opacity] duration-[480ms] ease-out ${exiting ? 'translate-x-[45%] -translate-y-[85%] scale-[.6] opacity-0' : 'itg-in'}`}
+          style={{ maxHeight: heroMaxHeight() }}
         >
-          <InsightCard insight={insight} size="hero" mode={mode} />
+          <InsightCard insight={insight} size="hero" mode={mode} dense={Math.min(heroFit, 2) as 0 | 1 | 2} />
         </div>
       )}
     </>

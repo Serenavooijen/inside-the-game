@@ -8,6 +8,8 @@ type Props = {
   mode?: 'casual' | 'analyst';
   expanded?: boolean;
   onToggle?: () => void;
+  /** Hero only, when space is short: 1 = smaller text, 2 = also no evidence list */
+  dense?: 0 | 1 | 2;
 };
 
 const LABELS: Record<Insight['type'], string> = {
@@ -69,14 +71,14 @@ function MiniPitch({ zone: z, width }: { zone: Zone; width: number }) {
   );
 }
 
-export function InsightCard({ insight: i, size = 'feed', mode = 'casual', expanded = false, onToggle }: Props) {
+export function InsightCard({ insight: i, size = 'feed', mode = 'casual', expanded = false, onToggle, dense = 0 }: Props) {
   const teams = useTeams();
   const hero = size === 'hero';
   const done = i.phase === 'done';
   const corrected = i.status === 'corrected' && done;
   const fallback = i.status === 'fallback';
   const evidence = i.evidence ?? [];
-  const textSize = hero ? 'text-insight-hero' : 'text-insight';
+  const textSize = hero && !dense ? 'text-insight-hero' : 'text-insight';
   const showPitch = !!i.zone && done && (hero || expanded) && !corrected;
 
   const border = corrected ? 'border border-corrected' : fallback && done ? 'border border-dashed border-fallback' : 'border border-line';
@@ -201,7 +203,7 @@ export function InsightCard({ insight: i, size = 'feed', mode = 'casual', expand
         </footer>
       )}
 
-      {done && (expanded || (hero && !onToggle)) && evidence.length > 0 && (
+      {done && (expanded || (hero && !onToggle && dense < 2)) && evidence.length > 0 && (
         <ul className="flex flex-col border-t border-line">
           {evidence.map((e) => (
             <li key={e} className="flex items-center gap-[10px] border-b border-line py-[9px] font-mono text-evidence text-fg">
