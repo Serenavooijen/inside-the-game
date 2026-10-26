@@ -19,6 +19,7 @@ from app.bus import EventBus
 from app.contracts import Insight, MatchEvent, MatchState, Mode, Overlay, SourceEvent, SourceFrame, Speed, Tick
 from app.moments import FrameIndex, MatchContext, Statistician
 from app.overlays import OverlayComposer
+from app.scout_lane import ScoutLane
 from app.smart_lane import SmartLane
 from app.sources import MatchItem, MatchSource
 from app.stats import StatsEngine
@@ -31,10 +32,11 @@ HOLD_AFTER_INSIGHT_S = 7.0  # keep the finished insight of a key moment on scree
 
 class Simulator:
     def __init__(self, bus: EventBus, sources: dict[str, Callable[[], MatchSource]],
-                 smart_lane: SmartLane | None = None) -> None:
+                 smart_lane: SmartLane | None = None, scout_lane: ScoutLane | None = None) -> None:
         self.bus = bus
         self.sources = sources
         self.smart_lane = smart_lane
+        self.scout_lane = scout_lane            # tactical analysis, only with TACTICS_ENABLED
         self.source: MatchSource | None = None
         self.mode: Mode = "replay"
         self.t = 0.0
@@ -69,7 +71,10 @@ class Simulator:
         if match_id not in self.sources:
             raise KeyError(match_id)
         source = self.sources[match_id]()
-        self._items = [item async for item in source.items(0)]
+        items = [item async for item in source.items(0)]
+        if self.scout_lane:                     # before switching over: the old match keeps running meanwhile
+            await self.scout_lane.load(source.info, source.roster, items)
+        self._items = items
         self.source, self.mode = source, mode
         self._stats = StatsEngine(source.info.home, source.info.away)
         self._overlays = OverlayComposer(source.info, source.roster)
@@ -141,6 +146,8 @@ class Simulator:
     def _reset(self, t: float) -> None:
         if self.smart_lane:
             self.smart_lane.cancel_all()
+        if self.scout_lane:
+            self.scout_lane.cancel_all()
         if self.key_moment_id:
             self.speed = self._speed_before_key
         self.key_moment_id = None
@@ -161,8 +168,10 @@ class Simulator:
             if isinstance(item, SourceFrame):
                 self._frame = item
                 self._publish_overlays(self._overlays.on_frame(item), publish)
+                self._scout(item, publish)
                 continue
             self._history.append(item)
+            self._scout(item, publish)
             overlays = self._overlays.on_event(item)
             event = to_match_event(item, self.source.roster)
             if event:
@@ -175,6 +184,11 @@ class Simulator:
                     self._start_key_moment(event.id)
             self._publish_overlays(overlays, publish)
             self._detect_moment(item)
+
+    def _scout(self, item: MatchItem, publish: bool) -> None:
+        if self.scout_lane:
+            self.scout_lane.on_item(item, publish, self._history, self._stats.agent_snapshot, self.generation,
+                                    self._on_insight)
 
     def _publish_overlays(self, overlays: list[Overlay], publish: bool) -> None:
         if not publish:
@@ -227,6 +241,7 @@ class Simulator:
             duration=self.duration, halftime=self.halftime,
             events=list(self.events), insights=sorted(self.insights.values(), key=lambda i: i.t),
             markers=markers(self._all_events) if self.mode == "replay" else None,
+            scouting=self.scout_lane.report if self.scout_lane else None,
         )
 
     def _publish_tick(self) -> None:

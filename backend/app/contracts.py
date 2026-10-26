@@ -233,7 +233,7 @@ class ScoutingReport(CamelModel):
     home: TeamId
     away: TeamId
     observations: list[TacticalObservation]
-    facts: list[Fact]               # every fact the observations cite (evidence)
+    facts: list[Fact]               # the cup-match facts (ids C1...): the observations cite them, live analyses compare with them
     status: InsightStatus = "checked"
     rejected_claims: list[RejectedClaim] = []
     heatmaps: list[Heatmap] = []

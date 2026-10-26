@@ -221,7 +221,7 @@ export type ScoutingReport = {
   home: TeamId;
   away: TeamId;
   observations: TacticalObservation[];
-  /** every fact the observations cite */
+  /** the cup-match facts (ids C1…): the observations cite them, live analyses compare with them */
   facts: Fact[];
   status: InsightStatus;
   rejectedClaims: { text: string; reason: string; factIds?: string[] }[];

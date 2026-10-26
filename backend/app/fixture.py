@@ -20,6 +20,8 @@ from app.sources import MatchItem, PlayerInfo
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_DIR = Path(os.environ.get("ITG_OUTPUT_DIR", ROOT / "output"))
 SCRIPT_DIR = Path(os.environ.get("ITG_SCRIPT_DIR", ROOT / "script"))
+# The Scout's report on the cup match (tools/build_scouting_report.py); its facts are the live baseline.
+SCOUTING_REPORT = Path(os.environ.get("ITG_SCOUTING_REPORT", ROOT / "fixtures" / "scouting" / "kba-ngr-cup.json"))
 
 MATCH_ID = "kba-ngr"
 SUMMARY = MatchSummary(
