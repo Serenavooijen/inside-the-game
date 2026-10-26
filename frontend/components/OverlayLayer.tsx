@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from 'react';
 import type { MatchEvent, Player, Point } from '@/lib/contracts';
 import type { ActiveOverlay } from '@/lib/useMatchStream';
 import { useTeams } from '@/lib/teams';
@@ -17,6 +18,38 @@ const badge = 'absolute flex items-center whitespace-nowrap rounded-md border bo
 const labelCls = 'font-mono text-label tracking-[.12em] text-[#B8B4AD]';
 const bigNum = 'font-display text-[28px] font-extrabold leading-none';
 
+// Which label stays put when two touch: the name tag, then shot, pass, sprint (data-label = priority).
+const PRIORITY = { tag: 0, shot: 1, pass: 2, sprint: 3 } as const;
+const GAP = 6;
+
+const overlaps = (a: DOMRect, b: DOMRect) =>
+  a.left < b.right + GAP && b.left < a.right + GAP && a.top < b.bottom + GAP && b.top < a.bottom + GAP;
+
+/** Labels that touch move apart vertically (up first, down when there is no room above), measured in the DOM,
+ *  so it holds at every screen size. Runs after every render, because the players keep moving. */
+function useSeparatedLabels(box: React.RefObject<HTMLDivElement | null>, active: boolean) {
+  useLayoutEffect(() => {
+    if (!active || !box.current) return;
+    const bounds = box.current.getBoundingClientRect();
+    const els = [...box.current.querySelectorAll<HTMLElement>('[data-label]')];
+    els.forEach((e) => { e.style.marginTop = '0px'; });
+    els.sort((a, b) => Number(a.dataset.label) - Number(b.dataset.label));
+    const placed: DOMRect[] = [];
+    for (const e of els) {
+      let r = e.getBoundingClientRect();
+      const step = r.height + GAP;
+      for (const k of [-1, 1, -2, 2, -3, 3]) {
+        if (!placed.some((p) => overlaps(p, r))) break;
+        const top = r.top + k * step - Number.parseFloat(e.style.marginTop || '0');
+        if (top < bounds.top || top + r.height > bounds.bottom) continue;
+        e.style.marginTop = `${k * step}px`;
+        r = e.getBoundingClientRect();
+      }
+      placed.push(r);
+    }
+  });
+}
+
 /** Fast lane: white TV graphics on the pitch. No accent colour here. */
 export function OverlayLayer({ overlays, players, positions, events, layer }: Props) {
   const teams = useTeams();
@@ -26,6 +59,8 @@ export function OverlayLayer({ overlays, players, positions, events, layer }: Pr
 
   const lines: React.ReactNode[] = [];
   const html: React.ReactNode[] = [];
+  const box = useRef<HTMLDivElement>(null);
+  useSeparatedLabels(box, layer === 'labels');
 
   for (const o of overlays) {
     const p = byId[o.playerId];
@@ -37,6 +72,7 @@ export function OverlayLayer({ overlays, players, positions, events, layer }: Pr
       html.push(
         <div
           key={o.id}
+          data-label={PRIORITY.tag}
           className="itg-in absolute flex h-[34px] overflow-hidden rounded-sm shadow-[0_4px_12px_rgba(0,0,0,.35)]"
           style={{ left: `calc(${pct(pos).left} ${flip ? '-' : '+'} 26px)`, top: pct(pos).top, transform: `translate(${flip ? '-100%' : '0'}, -50%)` }}
         >
@@ -61,7 +97,7 @@ export function OverlayLayer({ overlays, players, positions, events, layer }: Pr
       const mid = { x: (pos.x + o.to.x) / 2, y: (pos.y + o.to.y) / 2 };
       const q = o.value ?? 0;
       html.push(
-        <div key={`${o.id}-b`} className={`${badge} gap-3`} style={{ ...pct(mid), transform: 'translate(-50%, calc(-50% - 44px))' }}>
+        <div key={`${o.id}-b`} data-label={PRIORITY.pass} className={`${badge} gap-3`} style={{ ...pct(mid), transform: 'translate(-50%, calc(-50% - 44px))' }}>
           <div className="flex flex-col gap-[2px]">
             <div className={labelCls}>PASS QUALITY</div>
             <div className="h-1 w-[84px] rounded-full bg-white/15"><div className="h-full rounded-full bg-chalk" style={{ width: `${Math.round(q * 100)}%` }} /></div>
@@ -76,7 +112,7 @@ export function OverlayLayer({ overlays, players, positions, events, layer }: Pr
         <line key={o.id} className="itg-in" x1={pos.x} y1={pos.y} x2={o.to.x} y2={o.to.y} stroke="#fff" strokeWidth=".4" strokeDasharray="1 .6" strokeLinecap="round" />,
       );
       html.push(
-        <div key={`${o.id}-b`} className={`${badge} gap-[10px]`} style={{ ...pct(pos), transform: 'translate(-50%, calc(-50% - 64px))' }}>
+        <div key={`${o.id}-b`} data-label={PRIORITY.shot} className={`${badge} gap-[10px]`} style={{ ...pct(pos), transform: 'translate(-50%, calc(-50% - 64px))' }}>
           <div className={labelCls}>SHOT · xG</div>
           <div className={bigNum}>{(o.value ?? 0).toFixed(2)}</div>
         </div>,
@@ -98,7 +134,7 @@ export function OverlayLayer({ overlays, players, positions, events, layer }: Pr
       );
       const mid = { x: (pos.x + o.from.x) / 2, y: (pos.y + o.from.y) / 2 };
       html.push(
-        <div key={`${o.id}-b`} className={`${badge} gap-[10px]`} style={{ ...pct(mid), transform: 'translate(-50%, calc(-50% - 52px))' }}>
+        <div key={`${o.id}-b`} data-label={PRIORITY.sprint} className={`${badge} gap-[10px]`} style={{ ...pct(mid), transform: 'translate(-50%, calc(-50% - 52px))' }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ stroke: teams.text(p.team) }} strokeWidth="2" strokeLinecap="round" aria-hidden><path d="M13 4 21 12 13 20M3 8h7M5 12h8M3 16h7" /></svg>
           <div className={labelCls}>SPRINT · {p.n}</div>
           <div className={bigNum}>{(o.value ?? 0).toFixed(1)}<span className="text-[16px] font-bold text-[#B8B4AD]"> km/h</span></div>
@@ -110,5 +146,5 @@ export function OverlayLayer({ overlays, players, positions, events, layer }: Pr
   if (layer === 'lines') {
     return <svg viewBox="-3 -3 111 74" className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden>{lines}</svg>;
   }
-  return <div className="pointer-events-none absolute inset-0">{html}</div>;
+  return <div ref={box} className="pointer-events-none absolute inset-0">{html}</div>;
 }
