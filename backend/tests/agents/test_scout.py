@@ -212,3 +212,8 @@ def test_football_terms_are_no_numbers_but_statistics_are():
     assert ok
     ok, rejected = check_observation(obs(consequence="Their 3 attackers face a back four."), s)
     assert ok is None and rejected[0].reason.endswith(": 3")
+
+
+def test_tactical_vocabulary_passes_the_checks():
+    ok, rejected = check_observation(obs(coach_action="Far-side full-back stays narrow; press with three up front."), sheet())
+    assert ok and ok.coach_action and not rejected

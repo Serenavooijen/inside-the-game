@@ -14,6 +14,7 @@ They use exactly the same instructions and output schemas as the code agents
 
 Every run publishes a new version. The script prints the versions and writes them
 to backend/.env.foundry-agents so you can load them before running the workflow.
+`--only scout` (or `--only analyst,narrator`) publishes just those; the others keep their version.
 """
 
 from __future__ import annotations
@@ -58,20 +59,30 @@ def main() -> int:
         print(f"✓ {name}: version {version.version} (model {model})")
         return str(version.version)
 
-    av = publish(analyst_name, analyst_model, ANALYST_INSTRUCTIONS,
-                 "Inside the Game · Analyst: picks 2–3 claims from the FactSheet, each citing fact ids.", AnalystDraft)
-    nv = publish(narrator_name, narrator_model, NARRATOR_INSTRUCTIONS,
-                 "Inside the Game · Narrator: turns checked claims into 1–3 sentences for fans.")
-    sv = publish(scout_name, scout_model, SCOUT_INSTRUCTIONS,
-                 "Inside the Game · Scout: opposition analyst; 2–3 tactical observations with consequence, citing fact ids.",
-                 ScoutDraft)
-
+    # --only scout: publish just these agents; the others keep the version in .env.foundry-agents.
+    only = set(sys.argv[sys.argv.index("--only") + 1].split(",")) if "--only" in sys.argv else {"analyst", "narrator", "scout"}
     env_path = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".env.foundry-agents"))
+    env = {}
+    if os.path.exists(env_path):
+        env = dict(line.strip().split("=", 1) for line in open(env_path) if "=" in line)
+    env.update(MODEL_PROVIDER="foundry-agents", FOUNDRY_PROJECT_ENDPOINT=endpoint)
+
+    if "analyst" in only:
+        env.update(FOUNDRY_ANALYST_AGENT=analyst_name, FOUNDRY_ANALYST_AGENT_VERSION=publish(
+            analyst_name, analyst_model, ANALYST_INSTRUCTIONS,
+            "Inside the Game · Analyst: picks 2–3 claims from the FactSheet, each citing fact ids.", AnalystDraft))
+    if "narrator" in only:
+        env.update(FOUNDRY_NARRATOR_AGENT=narrator_name, FOUNDRY_NARRATOR_AGENT_VERSION=publish(
+            narrator_name, narrator_model, NARRATOR_INSTRUCTIONS,
+            "Inside the Game · Narrator: turns checked claims into 1–3 sentences for fans."))
+    if "scout" in only:
+        env.update(FOUNDRY_SCOUT_AGENT=scout_name, FOUNDRY_SCOUT_AGENT_VERSION=publish(
+            scout_name, scout_model, SCOUT_INSTRUCTIONS,
+            "Inside the Game · Scout: opposition analyst; 2–3 tactical observations with consequence, citing fact ids.",
+            ScoutDraft))
+
     with open(env_path, "w") as f:
-        f.write(f"MODEL_PROVIDER=foundry-agents\nFOUNDRY_PROJECT_ENDPOINT={endpoint}\n"
-                f"FOUNDRY_ANALYST_AGENT={analyst_name}\nFOUNDRY_ANALYST_AGENT_VERSION={av}\n"
-                f"FOUNDRY_NARRATOR_AGENT={narrator_name}\nFOUNDRY_NARRATOR_AGENT_VERSION={nv}\n"
-                f"FOUNDRY_SCOUT_AGENT={scout_name}\nFOUNDRY_SCOUT_AGENT_VERSION={sv}\n")
+        f.writelines(f"{k}={v}\n" for k, v in env.items())
     print(f"\nWrote {env_path}. Compare both set-ups with:\n"
           f"  uv run python -m app.agents.run_fixtures --compare foundry,foundry-agents")
     return 0

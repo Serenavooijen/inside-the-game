@@ -64,7 +64,12 @@ def concept_terms() -> frozenset[str]:
     for c in concepts().values():
         words.update(w.lower() for w in re.findall(r"[A-Za-z][\w\-]*", c.name))
     # tactical vocabulary that is often capitalised
-    words.update({"ppda", "xg", "gegenpressing", "salida", "lavolpiana", "like-for-like", "6", "8", "10"})
+    words.update({"ppda", "xg", "gegenpressing", "salida", "lavolpiana", "like-for-like", "6", "8", "10",
+                  # hyphenated terms look like double-barrelled names at the start of a sentence
+                  "far-side", "full-back", "full-backs", "centre-back", "centre-backs", "wing-back", "wing-backs",
+                  "half-space", "half-spaces", "counter-press", "counter-pressing", "counter-attack",
+                  "counter-attacks", "one-two", "one-on-one", "man-marking", "man-oriented", "set-piece",
+                  "set-pieces", "box-to-box", "low-block", "high-block", "mid-block", "third-man", "re-press"})
     return frozenset(words)
 
 
