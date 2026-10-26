@@ -158,9 +158,13 @@ def test_today_against_the_cup_baseline_and_a_substitution():
     subs = [e for e in evs if e.type == "substitution" and e.minute == "64"]
     sheet = tac.sheet("substitution", subs[0].t, subs[0].t + 180, evs, subs=subs)
     texts = [f.text for f in sheet.facts]
-    assert texts[0].startswith("Since Halvorsen (18) and Diallo-Kerr (20) came on at 64'")
+    # The game state comes first: at the end of the window and from Northgate's side just before the change
+    assert texts[0] == "At 67': Kingsbridge 1-1 Northgate, 10 v 11 players on the pitch"
+    assert texts[1] == "At 64' Northgate were level at 1-1, 11 v 10"
+    g2 = next(f for f in sheet.facts if f.concept == "G2")
+    assert g2.text.startswith("Since Halvorsen (18) and Diallo-Kerr (20) came on at 64'")
     assert "Northgate changed from a 4-4-2 to a 4-3-3 at 64'" in texts
-    assert sheet.facts[0].concept == "G2" and set(sheet.facts[0].source_event_ids) == {e.event_id for e in subs}
+    assert set(g2.source_event_ids) == {e.event_id for e in subs}
     # Later, with a 6 again: B1 compares with the cup match
     later = tac.sheet("interval", t_at(fs, 65), t_at(fs, 70), evs, prev=(t_at(fs, 60), t_at(fs, 65) - 1))
     b1 = next(f for f in later.facts if f.concept == "B1" and f.team == "ngr")
@@ -192,3 +196,23 @@ def test_block_height_is_measured_with_the_ball_in_midfield():
     sheet = Tactician(info, roster_, fs).sheet("interval", t_at(fs, 5) + 1, t_at(fs, 10), evs)
     d1 = next(f for f in sheet.facts if f.concept == "D1" and f.team == "kba")
     assert "with the ball in midfield" in d1.text
+
+
+def test_fixed_labels_come_from_the_code():
+    from app.tactics import band
+
+    assert band("ppda", 4.5) == "very intense pressing" and band("ppda", 6) == "intense pressing"
+    assert band("ppda", 12) == "moderate pressing" and band("ppda", 48) == "passive pressing"
+    assert band("line_height_m", 20) == "low block" and band("line_height_m", 28) == "mid block"
+    assert band("line_height_m", 37) == "high block"
+    assert band("compactness_m", 24) == "compact" and band("compactness_m", 36) == "stretched"
+    cup_info, cup_roster, cup_fs, cup_evs = match("cup")
+    texts = [f.text for f in Tactician(cup_info, cup_roster, cup_fs).baseline_facts(cup_evs, 0, cup_fs[-1].t)]
+    assert any(t.startswith("Cup match: Northgate's PPDA") and t.endswith("(very intense pressing)") for t in texts)
+    assert any("Northgate's last line" in t and t.endswith("(mid block)") for t in texts)
+
+
+def test_game_state_before_a_formation_change_in_the_cup():
+    info, roster_, fs, evs = match("cup")
+    states = [d.text for d in Tactician(info, roster_, fs).event_states(evs, 0, fs[-1].t)]
+    assert "At 61' Northgate were level at 1-1, 11 v 11" in states      # equalised at 57', not trailing

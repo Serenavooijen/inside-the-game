@@ -151,6 +151,67 @@ def unknown_names(text: str, sheet: Sheet, claims: list[Claim], allowed: frozens
     return list(dict.fromkeys(out))
 
 
+# ---------------------------------------------------------------- game state
+
+_STATE_END = re.compile(r"At [^:]+: (?P<home>.+?) (?P<h>\d+)-(?P<a>\d+) (?P<away>.+?), (?P<mh>\d+) v (?P<ma>\d+)")
+_STATE_TEAM = re.compile(r"At \S+ (?P<team>.+?) were (?P<state>leading|trailing|level at) \d+-\d+, (?P<m1>\d+) v (?P<m2>\d+)")
+# Only unambiguous score words: "behind" and "leads to" also describe space and causes.
+_CLAIMS = [("leading", re.compile(r"\b(?:leading|leads?(?! to\b)(?= \d| by| the| at\b)|in the lead|in front|ahead (?:by|at|on))\b", re.I)),
+           ("trailing", re.compile(r"\b(?:trailing|trails?|chasing the game)\b", re.I)),
+           ("level", re.compile(r"\b(?:tied|drawing|all square|level (?:at|on)|on level terms)\b", re.I))]
+_MEN = re.compile(r"\b(?:(against|versus|vs\.?) )?(\d+) men\b", re.I)    # "against 10 men": the other team
+
+
+def _worlds(sheet: Sheet) -> list[dict[str, tuple[str, int]]]:
+    """Every game state the sheet's facts allow: per team name (lower case), its state and players on the pitch."""
+    names = list(sheet.team_names.values())
+    other = lambda n: next((x for x in names if x != n), "")
+    out = []
+    for f in getattr(sheet, "facts", []):
+        if f.metric != "game_state":
+            continue
+        if m := _STATE_END.search(f.text):
+            h, a = int(m["h"]), int(m["a"])
+            st = ("leading", "trailing") if h > a else ("trailing", "leading") if h < a else ("level", "level")
+            out.append({m["home"].lower(): (st[0], int(m["mh"])), m["away"].lower(): (st[1], int(m["ma"]))})
+        elif m := _STATE_TEAM.search(f.text):
+            st = {"leading": ("leading", "trailing"), "trailing": ("trailing", "leading"), "level at": ("level", "level")}[m["state"]]
+            out.append({m["team"].lower(): (st[0], int(m["m1"])), other(m["team"]).lower(): (st[1], int(m["m2"]))})
+    return out
+
+
+def game_state_errors(text: str, sheet: Sheet) -> list[str]:
+    """Claims about the score or the numbers on the pitch ("Kingsbridge lead 2-1", "Northgate, trailing",
+    "with 10 men") that no game-state fact allows. The subject is the nearest team name before the words."""
+    worlds = _worlds(sheet)
+    if not worlds:
+        return []
+    names = [n.lower() for n in sheet.team_names.values()]
+    errors = []
+    other = lambda n: next((x for x in names if x != n), None)
+    for sentence in re.split(r"(?<=[.;!?])\s+", text):
+        sentence = _words_to_digits(sentence)      # "ten men" -> "10 men"; positions below refer to this text
+        low = sentence.lower()
+
+        def subject(pos: int) -> str | None:
+            seen = [(low.rfind(n, 0, pos), n) for n in names]
+            seen = [(i, n) for i, n in seen if i >= 0]
+            return max(seen)[1] if seen else None
+
+        for state, rx in _CLAIMS:
+            for m in rx.finditer(sentence):
+                team = subject(m.start())
+                if team and not any(w.get(team, (None,))[0] == state for w in worlds):
+                    errors.append(f"{team.title()} {state} ('{m.group()}')")
+        for m in _MEN.finditer(sentence):
+            team = subject(m.start())
+            if team and m.group(1):
+                team = other(team)
+            if team and not any(w.get(team, (None, None))[1] == int(m.group(2)) for w in worlds):
+                errors.append(f"{team.title()} with {m.group(2)} men")
+    return errors
+
+
 def check_text(text: str, sheet: Sheet, fact_ids: list[str]) -> list[float]:
     """Numbers in a free text (the Narrator's) that are not backed by these facts."""
     allowed = _allowed_numbers(sheet, fact_ids)

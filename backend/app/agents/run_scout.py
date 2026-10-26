@@ -17,7 +17,8 @@ import sys
 from pathlib import Path
 
 from app.contracts import SourceEvent, SourceFrame
-from app.fixture import load_generated
+from app.fixture import SCOUTING_REPORT, load_generated
+from app.scout_lane import load_report
 from app.tactics import Tactician
 
 from .llm import model_from_env
@@ -39,8 +40,8 @@ def t_at(frames: list[SourceFrame], minute: int, period: int) -> float:
 
 def sheets():
     """(label, sheet, tactician) for the windows, half time and the 64' substitutions."""
-    c_info, c_roster, c_frames, c_events = load("output/cup", "script/cup/match_script.json", "kba-ngr-cup")
-    baseline = Tactician(c_info, c_roster, c_frames).baseline_facts(c_events, 0, c_frames[-1].t)
+    report = load_report(SCOUTING_REPORT)                 # the same baseline as the app: the report's facts
+    baseline = list(report.facts) if report else []
     info, roster, frames, events = load("output", "script/match_script.json", "kba-ngr")
     tac = Tactician(info, roster, frames, baseline)
     out = []

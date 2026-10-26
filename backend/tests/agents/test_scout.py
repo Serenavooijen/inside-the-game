@@ -236,3 +236,56 @@ def test_the_committed_scouting_report_is_backed_by_its_own_facts():
         ok, _ = check_observation(o, sheet)
         assert ok is not None, o.observation
     assert any(f.metric == "dm_between_pct" and f.team == "ngr" and f.value >= 40 for f in report.facts)
+
+
+def test_the_threshold_filter_never_hides_a_change_from_the_cup():
+    """A 0% dropping 6 is hidden as a plan, unless the cup match showed it: then it is the change."""
+    from app.agents.playbook import template_observations, visible_to_scout
+
+    def b1(text: str, value: float) -> Fact:
+        return Fact(fact_id="T1", text=text, metric="dm_between_pct", value=value, team="ngr", concept="B1")
+
+    changed = b1("Northgate's 6, Duarte (8), dropped between the centre-backs in 0% of 5 build-up phases "
+                 "(cup match: 58%, down 58 points)", 0)
+    never = b1("Northgate's 6, Duarte (8), dropped between the centre-backs in 5% of 9 build-up phases "
+               "(cup match: 8%)", 5)
+    alone = b1("Northgate's 6, Duarte (8), dropped between the centre-backs in 5% of 9 build-up phases", 5)
+    assert visible_to_scout(changed) and not visible_to_scout(never) and not visible_to_scout(alone)
+
+    s = sheet().model_copy(update={"facts": [changed]})
+    [o] = template_observations(s)
+    assert o.fact_ids == ["T1"] and o.compare_to_cup == "changed"
+    assert "change from the cup plan" in o.consequence          # not the playbook's "dropping 6" consequence
+    ok, _ = check_observation(o, s)
+    assert ok is not None
+    assert template_observations(sheet().model_copy(update={"facts": [never]})) == []
+
+
+def test_the_report_tool_uses_the_same_rule():
+    import tools.build_scouting_report as tool
+    from app.agents.playbook import visible_to_scout
+
+    assert tool.visible_to_scout is visible_to_scout
+
+
+def test_claims_about_the_score_must_match_the_game_state_facts():
+    from app.agents.checker import game_state_errors
+
+    s = sheet().model_copy(update={"facts": [
+        Fact(fact_id="T8", text="At 80': Kingsbridge 1-2 Northgate, 10 v 11 players on the pitch", metric="game_state",
+             value="1-2", team="kba", concept="G3"),
+        Fact(fact_id="T9", text="At 61' Northgate were level at 1-1, 11 v 11", metric="game_state", value="1-1",
+             team="ngr", concept="G3"),
+        *sheet().facts,
+    ]})
+    assert game_state_errors("Kingsbridge leads 2-1 with 10 men and press very intensely.", s) == ["Kingsbridge leading ('leads')"]
+    assert game_state_errors("Northgate lead 2-1 against 10 men.", s) == []
+    assert game_state_errors("Kingsbridge, trailing with 10 men, push their line up.", s) == []
+    assert game_state_errors("Northgate changed shape while the game was tied 1-1.", s) == []     # the 61' fact
+    assert game_state_errors("Northgate were trailing when they switched.", s) == ["Northgate trailing ('trailing')"]
+    assert game_state_errors("Kingsbridge play with nine men.", s) == ["Kingsbridge with 9 men"]
+    # space and causes are no score claims
+    assert game_state_errors("Kingsbridge leave space behind; this leads to counters for Northgate.", s) == []
+    ok, rejected = check_observation(obs(observation="Kingsbridge leads 2-1 and Northgate's 6 no longer drops in: 0% of 5 build-up phases.",
+                                         fact_ids=["T8", "T1"]), s)
+    assert ok is None and rejected[0].reason.startswith("Game state does not match the facts")

@@ -197,6 +197,24 @@ The Scout labels each observation:
 4. Consequence and coach response contain **no new numbers and no new names**.
 5. Prefer what **changed** (compared with the previous window or the cup match) over what stayed the same. A coach wants the deviation.
 6. 2–3 observations per analysis. Quality over coverage.
+7. For intensity, height and compactness, use only the fixed labels the facts carry (see **Fixed labels**). Never judge a number yourself: PPDA 4.5 is "very intense pressing" because the code says so.
+8. Say something about the score, the game state or the purpose of a substitution only if it matches the game-state fact, for example "At 61' Northgate were trailing 1-2, 11 v 11".
+
+## Fixed labels
+
+The Stats Engine adds these labels to the facts (`BANDS` in `backend/app/tactics.py`). The lower bound is inclusive, the upper bound exclusive.
+
+| Metric | Label |
+| --- | --- |
+| PPDA (D3) | below 6: very intense pressing · 6 to 10: intense pressing · 10 to 15: moderate pressing · 15 and up: passive pressing |
+| Last line with the opponent's ball in midfield, metres from the own goal (D1) | below 24: low block · 24 to 33: mid block · 33 and up: high block |
+| Depth of the block, deepest to highest outfield player, ball in midfield (D2) | below 27: compact · 27 to 35: medium · 35 and up: stretched |
+
+Block height and compactness are only measured while the opponent has the ball in the middle third (35–70 m from the own goal). Over all frames the line mostly shows where the ball was.
+
+**Game state.** Every analysis carries the score and the players on the pitch: at the end of the window, and just before every substitution or formation change, seen from that team's side.
+
+**Thresholds.** A share below a concept's threshold (B1, B2, B3: 30%; B5: 20%; T1: 35%) means the team did not do it, so it is not shown as a plan. The exception is a cup-match baseline above the threshold: then the absence is the change, for example "0% today, cup match: 58%".
 
 ## Implementation notes for the Stats Engine
 

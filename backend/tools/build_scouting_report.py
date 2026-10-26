@@ -23,7 +23,7 @@ from pathlib import Path
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
 
 from app.agents.llm import model_from_env  # noqa: E402
-from app.agents.playbook import ACTIVE_FROM  # noqa: E402
+from app.agents.playbook import visible_to_scout  # noqa: E402
 from app.agents.scout import check_observation, run_scout  # noqa: E402
 from app.contracts import (  # noqa: E402
     Fact, ScoutingReport, SourceEvent, SourceFrame, TacticalFactSheet, TacticalWindow,
@@ -51,7 +51,7 @@ def cup_sheet() -> tuple[TacticalFactSheet, Tactician, list[SourceFrame]]:
     for e in events:
         if e.type == "substitution":
             subs.setdefault((e.t, e.team), []).append(e)
-    extra = tac.shape_changes(events, 0, end)
+    extra = tac.shape_changes(events, 0, end) + tac.event_states(events, 0, end)
     for group in subs.values():
         extra += [d for d in tac.substitution(group, events, min(end, group[0].t + 600)) if d.change]
     for d in extra:
@@ -82,8 +82,7 @@ async def build(provider: str | None, deadline: float) -> ScoutingReport:
     observations, rejected, statuses = [], [], []
     for team in (sheet.home, sheet.away):
         # The Scout only sees what the team did: a 5% "dropping 6" is not a plan (it stays in the baseline).
-        shown = [f for f in sheet.facts if f.team == team
-                 and not (isinstance(f.value, (int, float)) and f.value < ACTIVE_FROM.get(f.concept or "", -1))]
+        shown = [f for f in sheet.facts if f.team == team and visible_to_scout(f)]
         part = sheet.model_copy(update={"facts": shown})
         part = part.model_copy(update={"concepts_fired": list(dict.fromkeys(f.concept for f in part.facts))})
         insight = await run_scout(part, None, model=model, deadline_s=deadline)

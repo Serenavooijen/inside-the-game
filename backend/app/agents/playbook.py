@@ -93,7 +93,25 @@ def _plain_sentence(text: str, like: str = "") -> str:
 # so the playbook's consequence would describe the wrong thing. Templates skip such facts.
 ACTIVE_FROM = {"B1": 30, "B2": 30, "B3": 30, "B5": 20, "T1": 35}
 # In-between values have no consequence in the playbook (it describes high and low blocks, intense presses).
-IN_BETWEEN = re.compile(r"\b(mid block|was medium|was moderate)\b")
+IN_BETWEEN = re.compile(r"\b(mid block|was medium|moderate pressing)\b")
+_CUP_PCT = re.compile(r"cup match: (\d+(?:\.\d+)?)%")
+
+
+def below_threshold(f: Fact) -> bool:
+    return isinstance(f.value, (int, float)) and f.value < ACTIVE_FROM.get(f.concept or "", -1)
+
+
+def visible_to_scout(f: Fact) -> bool:
+    """A share below its concept's threshold says the team did not do it: hide it, unless the cup baseline was
+    above the threshold. Then the absence is exactly the change the staff wants ("0% today, cup match: 58%")."""
+    if not below_threshold(f):
+        return True
+    m = _CUP_PCT.search(f.text)
+    return bool(m and float(m.group(1)) >= ACTIVE_FROM[f.concept])
+
+
+ABSENT_CONSEQUENCE = "A clear change from the cup plan: the scouted pattern is not there today."
+ABSENT_COACH = "Check whether the plan for this phase still fits what the opponent does today."
 
 
 def compare_from_text(fact: Fact) -> CompareToCup:
@@ -121,19 +139,20 @@ def template_observations(sheet: TacticalFactSheet, n: int = 3) -> list[Tactical
         key = (f.concept, f.team)
         if key in seen:
             continue
-        if isinstance(f.value, (int, float)) and f.value < ACTIVE_FROM.get(f.concept or "", -1):
-            continue
-        if IN_BETWEEN.search(f.text):
+        if not visible_to_scout(f) or IN_BETWEEN.search(f.text) or f.concept == "G3" and f.metric == "game_state":
             continue
         seen.add(key)
         c = concepts().get(f.concept or "")
-        consequence = _plain_sentence(c.consequence, f.text) if c else ""
+        if below_threshold(f):              # visible only because the cup baseline was above the threshold
+            consequence, coach = ABSENT_CONSEQUENCE, ABSENT_COACH
+        else:
+            consequence = _cap(_plain_sentence(c.consequence, f.text)) if c else ""
+            coach = _cap(_plain_sentence(c.coach, f.text)) if c else ""
         if not consequence:
             continue
         out.append(TacticalObservation(
-            observation=f.text.rstrip(".") + ".", fact_ids=[f.fact_id], consequence=_cap(consequence),
-            coach_action=_cap(_plain_sentence(c.coach, f.text)) or None,
-            compare_to_cup=compare_from_text(f), team=f.team,
+            observation=f.text.rstrip(".") + ".", fact_ids=[f.fact_id], consequence=consequence,
+            coach_action=coach or None, compare_to_cup=compare_from_text(f), team=f.team,
         ))
         if len(out) == n:
             break

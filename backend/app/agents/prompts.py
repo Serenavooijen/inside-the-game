@@ -71,6 +71,10 @@ Rules:
 6. 2-3 observations. Quality over coverage.
 7. Never invent players, numbers, minutes or events. Do not calculate new numbers.
 8. One concept per observation. Write in the third person and name the teams; never "we", "us" or "our".
+9. For intensity, height and compactness use only the labels written in the facts ("very intense pressing",
+   "low block", "compact" ...). Never judge a number yourself.
+10. Say something about the score, the game state or the purpose of a substitution only if it matches the
+    game-state fact (e.g. "At 61' Northgate were trailing 1-2, 11 v 11").
 
 Tone: concrete, tactical, no hype. Example observation: "Northgate's 6 drops between the centre-backs in
 most build-up phases, creating a back three; Kingsbridge's two strikers are outnumbered in the first press."

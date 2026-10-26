@@ -5,75 +5,75 @@
  "away": "ngr",
  "observations": [
   {
-   "observation": "Kingsbridge used a 2-3-2-3 build-up shape with the left-back inverting inside 34% of the time, creating a back three in build-up that shifts width to the wingers.",
+   "observation": "Kingsbridge built up in a 2-3-2-3 shape with the left-back inverting inside 34% of the time, creating a box base and shifting width to the wingers.",
    "factIds": [
     "C4",
     "C6"
    ],
-   "consequence": "This structure provides better protection against counters by adding midfield presence, but requires the opposing winger to track inside or concede central pressure.",
-   "coachAction": "Opposing winger tracks inside tightly to exploit space left wide.",
+   "consequence": "This structure provided better counter protection but required wingers to provide width against Northgate.",
+   "coachAction": "Opponents should track inside wingers tightly or accept the 3-2 overload and press centre-backs.",
    "compareToCup": "n/a",
    "team": "kba"
   },
   {
-   "observation": "Kingsbridge balanced attacks down all flanks, with 32% left, 34% centre, and 34% right, but after substituting Marchetti at 71', right flank use dropped from 48% to 26%.",
+   "observation": "Kingsbridge attacked evenly across flanks and centre, with 32% left, 34% centre, and 34% right, isolating far-side wingers in 1v1 after switching play.",
    "factIds": [
     "C7",
     "C8",
-    "C9",
-    "C29"
+    "C9"
    ],
-   "consequence": "The shift reduces right-side threat, allowing defense to focus more on left and centre attacks.",
-   "coachAction": "Adjust defense to reinforce left and central areas while guarding reduced right threat.",
+   "consequence": "This isolation made far-side wingers vulnerable to narrow full-backs and quick defensive shifts.",
+   "coachAction": "Opposition should keep far full-back narrow and shift block quickly to cover isolated winger.",
    "compareToCup": "n/a",
    "team": "kba"
   },
   {
-   "observation": "Kingsbridge maintained a mid-height compact block 30 m deep, with PPDA 5.5 press intensity and 35% counter-press success, but after substitute Marchetti arrival their defensive line dropped 5 m deeper (37 to 32 m).",
+   "observation": "Kingsbridge pressed very intensely (PPDA 5.5) with a high last line 35m from goal, winning balls back fast 35% of the time after losing possession.",
    "factIds": [
     "C10",
-    "C11",
     "C12",
-    "C13",
-    "C30"
+    "C13"
    ],
-   "consequence": "Deeper defensive line may concede more space behind but increases solidity; pressing effectiveness sustained despite deeper position.",
-   "coachAction": "Exploit space behind deep line with long balls or quick transitions.",
+   "consequence": "Such pressing risks space behind but disrupts Northgate's build-up and counters.",
+   "coachAction": "Exploit space behind high block with long or over-the-top balls and prepare for fast turnovers.",
    "compareToCup": "n/a",
    "team": "kba"
   },
   {
-   "observation": "Northgate played with a back three via Duarte (6) dropping between centre-backs in 58% of build-up phases, using a 2-3-5 shape mainly attacking through the centre (54%).",
+   "observation": "Northgate used a back three in build-up with their 6 dropping between centre-backs in 58% of 97 phases, enabling a 2-3-5 shape with 54% attacks centrally, 22% left, 25% right.",
    "factIds": [
     "C14",
     "C19",
-    "C21"
+    "C20",
+    "C21",
+    "C22"
    ],
-   "consequence": "This created a clean first pass and midfield body cost, focusing attacks centrally.",
-   "coachAction": "Press with three forwards or block passes into midfield.",
+   "consequence": "This build-up created a central attacking focus but left midfield space vulnerable to pressing and channel shifts.",
+   "coachAction": "Press with three forwards or block passing lanes to midfield.",
    "compareToCup": "n/a",
    "team": "ngr"
   },
   {
-   "observation": "Northgate defended with a 34 m deep block and last line 28 m from goal, pressing moderately with PPDA 4.5.",
+   "observation": "Northgate played a medium block with last line 28 m from goal, compactness 34 m deep, and applied very intense pressing (PPDA 4.5) during the cup match.",
    "factIds": [
     "C23",
     "C24",
     "C25"
    ],
-   "consequence": "A moderately deep, compact block makes penetrating difficult but concedes some midfield space.",
-   "coachAction": "Attempt to play through lines or switch play to stretch their block.",
+   "consequence": "The medium block and high pressing disrupted opponents but demanded high energy and left areas behind the block to exploit.",
+   "coachAction": "Exploit space behind the block or use long balls to bypass press.",
    "compareToCup": "n/a",
    "team": "ngr"
   },
   {
-   "observation": "At 61 minutes Northgate switched from 4-3-3 to 4-4-2, bringing on Petrov (10), which pulled their defensive line deeper from 29 m to 23 m.",
+   "observation": "At 61', Northgate shifted from 4-3-3 to 4-4-2 and lowered their block from 29 m (mid) to 23 m (low) after substitution, while the game was tied 1-1.",
    "factIds": [
     "C27",
-    "C28"
+    "C28",
+    "C30"
    ],
-   "consequence": "A tactical shift that compressed defensive space and likely aimed to protect a lead or change dynamics.",
-   "coachAction": "Adjust to the new formation and possibly double up on fresh attacking zones.",
+   "consequence": "Lower block and formation change increased defensive solidity but conceded more territory, inviting pressure.",
+   "coachAction": "Increase width and patience in attack; target tired players.",
    "compareToCup": "n/a",
    "team": "ngr"
   }
@@ -171,7 +171,7 @@
   },
   {
    "factId": "C10",
-   "text": "Cup match: Kingsbridge's last line with the ball in midfield 35 m from their own goal",
+   "text": "Cup match: Kingsbridge's last line with the ball in midfield 35 m from their own goal (high block)",
    "metric": "line_height_m",
    "value": 35.0,
    "window": "cup match",
@@ -181,7 +181,7 @@
   },
   {
    "factId": "C11",
-   "text": "Cup match: Kingsbridge's block 30 m deep with the ball in midfield",
+   "text": "Cup match: Kingsbridge's block 30 m deep with the ball in midfield (medium)",
    "metric": "compactness_m",
    "value": 30.0,
    "window": "cup match",
@@ -191,7 +191,7 @@
   },
   {
    "factId": "C12",
-   "text": "Cup match: Kingsbridge's PPDA 5.5",
+   "text": "Cup match: Kingsbridge's PPDA 5.5 (very intense pressing)",
    "metric": "ppda",
    "value": 5.5,
    "window": "cup match",
@@ -301,7 +301,7 @@
   },
   {
    "factId": "C23",
-   "text": "Cup match: Northgate's last line with the ball in midfield 28 m from their own goal",
+   "text": "Cup match: Northgate's last line with the ball in midfield 28 m from their own goal (mid block)",
    "metric": "line_height_m",
    "value": 28.0,
    "window": "cup match",
@@ -311,7 +311,7 @@
   },
   {
    "factId": "C24",
-   "text": "Cup match: Northgate's block 34 m deep with the ball in midfield",
+   "text": "Cup match: Northgate's block 34 m deep with the ball in midfield (medium)",
    "metric": "compactness_m",
    "value": 34.0,
    "window": "cup match",
@@ -321,7 +321,7 @@
   },
   {
    "factId": "C25",
-   "text": "Cup match: Northgate's PPDA 4.5",
+   "text": "Cup match: Northgate's PPDA 4.5 (very intense pressing)",
    "metric": "ppda",
    "value": 4.5,
    "window": "cup match",
@@ -353,7 +353,31 @@
   },
   {
    "factId": "C28",
-   "text": "Cup match: Since Petrov (10) came on at 61', Northgate's last line (ball in midfield) moved back from 29 m to 23 m",
+   "text": "Cup match: At 61' Northgate were level at 1-1, 11 v 11",
+   "metric": "game_state",
+   "value": "1-1",
+   "window": "cup match",
+   "sourceEventIds": [
+    1864
+   ],
+   "team": "ngr",
+   "concept": "G3"
+  },
+  {
+   "factId": "C29",
+   "text": "Cup match: At 71' Kingsbridge were level at 1-1, 11 v 11",
+   "metric": "game_state",
+   "value": "1-1",
+   "window": "cup match",
+   "sourceEventIds": [
+    2140
+   ],
+   "team": "kba",
+   "concept": "G3"
+  },
+  {
+   "factId": "C30",
+   "text": "Cup match: Since Petrov (10) came on at 61', Northgate's last line (ball in midfield) moved back from 29 m (mid block) to 23 m (low block)",
    "metric": "sub_line_height_m",
    "value": 23.0,
    "unit": "m",
@@ -365,7 +389,7 @@
    "concept": "G2"
   },
   {
-   "factId": "C29",
+   "factId": "C31",
    "text": "Cup match: Since Marchetti (18) came on at 71', the share of Kingsbridge's attacks down the right fell from 48% to 26%",
    "metric": "sub_channel_right_pct",
    "value": 26.0,
@@ -378,8 +402,8 @@
    "concept": "G2"
   },
   {
-   "factId": "C30",
-   "text": "Cup match: Since Marchetti (18) came on at 71', Kingsbridge's last line (ball in midfield) moved back from 37 m to 32 m",
+   "factId": "C32",
+   "text": "Cup match: Since Marchetti (18) came on at 71', Kingsbridge's last line (ball in midfield) moved back from 37 m (high block) to 32 m (mid block)",
    "metric": "sub_line_height_m",
    "value": 32.0,
    "unit": "m",

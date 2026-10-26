@@ -46,6 +46,20 @@ COUNTER_S = 10              # T3
 MOVED_M = 10.0              # G1: a player's mean position moved this far
 GRID_COLS, GRID_ROWS = 6, 4  # heatmap
 SUB_BEFORE_S = 600          # G2: compare 10 minutes before a substitution with the time since
+# Fixed qualitative labels, also in the playbook ("Fixed labels"). The Scout uses these words for intensity,
+# height and compactness and never judges a number itself. Per metric: (upper bound, exclusive; label).
+BANDS: dict[str, list[tuple[float, str]]] = {
+    "ppda": [(6.0, "very intense pressing"), (10.0, "intense pressing"), (15.0, "moderate pressing"),
+             (float("inf"), "passive pressing")],
+    "line_height_m": [(24.0, "low block"), (33.0, "mid block"), (float("inf"), "high block")],
+    "compactness_m": [(27.0, "compact"), (35.0, "medium"), (float("inf"), "stretched")],
+}
+
+
+def band(metric: str, value: float) -> str:
+    return next(label for upper, label in BANDS[metric] if value < upper)
+
+
 CORE_STATIC = {"B1", "B2", "B3", "B5", "P1", "D1", "G2", "G3"}  # facts a short window repeats without a change
 FULL_BACKS = ("RB", "LB")
 ROLE_NAMES = {"RB": "right-back", "LB": "left-back"}
@@ -422,7 +436,7 @@ class Draft:
 
 
 def _vs(value: float | None, prev: float | None, base: float | None, unit: str, prev_label: str,
-        min_change: float) -> tuple[str, bool]:
+        min_change: float, metric: str | None = None) -> tuple[str, bool]:
     """' (previous 5 minutes: 41%, down 13 points; cup match: 52%)' and whether it changed enough."""
     parts, changed = [], False
     if value is None:
@@ -432,7 +446,7 @@ def _vs(value: float | None, prev: float | None, base: float | None, unit: str, 
         if ref is None:
             continue
         diff = round(value - ref)
-        part = f"{label}: {ref:g}{unit}"
+        part = f"{label}: {ref:g}{unit}" + (f" ({band(metric, ref)})" if metric else "")
         if abs(diff) >= min_change:
             changed = True
             part += f", {'up' if diff > 0 else 'down'} {abs(diff)}{points}"
@@ -557,30 +571,32 @@ class Tactician:
 
         # D1: block height
         if now.line_m is not None:
-            block = "high" if now.line_m >= 33 else "low" if now.line_m < 24 else "mid"
-            cmp_, changed = _vs(now.line_m, pv("line_m"), self.base(team, "line_height_m"), " m", prev_label, 4)
-            if block != "mid" or changed:
-                out.append(Draft(f"{name} defended in a {block} block: with the ball in midfield, last line {now.line_m:g} m "
+            block = band("line_height_m", now.line_m)
+            cmp_, changed = _vs(now.line_m, pv("line_m"), self.base(team, "line_height_m"), " m", prev_label, 4,
+                                "line_height_m")
+            if block != "mid block" or changed:
+                out.append(Draft(f"{name} defended in a {block}: with the ball in midfield, last line {now.line_m:g} m "
                                  f"from their own goal, first line {now.first_line_m:g} m{cmp_}", "line_height_m", now.line_m,
                                  team, "D1", "m", change=changed))
 
         # D2: compactness
         if now.depth_m is not None:
-            cmp_, changed = _vs(now.depth_m, pv("depth_m"), self.base(team, "compactness_m"), " m", prev_label, 4)
-            if now.depth_m >= 35 or now.depth_m <= 26 or changed:
-                verdict = "stretched" if now.depth_m >= 35 else "compact" if now.depth_m <= 26 else "medium"
+            cmp_, changed = _vs(now.depth_m, pv("depth_m"), self.base(team, "compactness_m"), " m", prev_label, 4,
+                                "compactness_m")
+            verdict = band("compactness_m", now.depth_m)
+            if verdict != "medium" or changed:
                 out.append(Draft(f"{name}'s block with the ball in midfield was {verdict}: {now.depth_m:g} m deep and "
                                  f"{now.width_m:g} m wide{cmp_}", "compactness_m", now.depth_m, team, "D2", "m",
                                  change=changed))
 
         # D3: pressing
         if now.ppda is not None:
-            cmp_, changed = _vs(now.ppda, pv("ppda"), self.base(team, "ppda"), "", prev_label, 4)
-            if now.ppda <= 8 or now.ppda >= 15 or changed or now.high_recoveries >= 2:
-                level = "intense" if now.ppda <= 8 else "passive" if now.ppda >= 15 else "moderate"
+            cmp_, changed = _vs(now.ppda, pv("ppda"), self.base(team, "ppda"), "", prev_label, 4, "ppda")
+            level = band("ppda", now.ppda)
+            if level != "moderate pressing" or changed or now.high_recoveries >= 2:
                 rec = (f", {now.high_recoveries} ball recover{'y' if now.high_recoveries == 1 else 'ies'} in the attacking third"
                        if now.high_recoveries else "")
-                out.append(Draft(f"{name}'s press was {level}: PPDA {now.ppda:g}{rec}{cmp_}", "ppda", now.ppda, team,
+                out.append(Draft(f"{name}'s PPDA {now.ppda:g} ({level}){rec}{cmp_}", "ppda", now.ppda, team,
                                  "D3", src=now.high_recovery_ids[:10], change=changed))
 
         # T1: counter-press
@@ -629,6 +645,38 @@ class Tactician:
                                  e.team, "G1", src=[e.event_id], change=True))
         return out
 
+    def state_at(self, events: list[SourceEvent], t: float) -> tuple[int, int, int, int]:
+        """(home goals, away goals, home players, away players) just after second `t`."""
+        goals = [e for e in events if e.type == "goal" and e.t <= t]
+        reds = [e.team for e in events if e.type == "red_card" and e.t <= t]
+        h, a = (goals[-1].score_home, goals[-1].score_away) if goals else (0, 0)
+        return h, a, 11 - reds.count(self.info.home), 11 - reds.count(self.info.away)
+
+    def state_draft(self, events: list[SourceEvent], t: float, minute: str, team: str | None = None,
+                    src: list[int] | None = None) -> Draft:
+        """G3: the score and the players on the pitch as a fact, e.g. "At 61' Northgate were trailing 1-2, 11 v 11".
+        With a team: from that team's side (a substitution, a formation change); without: the whole match."""
+        h, a, mh, ma = self.state_at(events, t)
+        home, away = self.name(self.info.home), self.name(self.info.away)
+        if team is None:
+            text = f"At {minute}': {home} {h}-{a} {away}, {mh} v {ma} players on the pitch"
+            return Draft(text, "game_state", f"{h}-{a}", self.info.home, "G3", src=src or [])
+        own, opp, m_own, m_opp = (h, a, mh, ma) if team == self.info.home else (a, h, ma, mh)
+        state = "leading" if own > opp else "trailing" if own < opp else "level at"
+        text = f"At {minute}' {self.name(team)} were {state} {own}-{opp}, {m_own} v {m_opp}"
+        return Draft(text, "game_state", f"{own}-{opp}", team, "G3", src=src or [])
+
+    def event_states(self, events: list[SourceEvent], from_t: float, to_t: float) -> list[Draft]:
+        """The state just before every substitution and formation change in the window, from the acting team's side."""
+        out, seen = [], set()
+        for e in events:
+            if from_t <= e.t <= to_t and e.type in ("substitution", "tactical_change") and e.team:
+                if (e.team, e.minute) in seen:
+                    continue
+                seen.add((e.team, e.minute))
+                out.append(self.state_draft(events, e.t - 1, e.minute, e.team, [e.event_id]))
+        return out
+
     def formation_at(self, team: str, t: float) -> str | None:
         fs = self.track.window(max(0.0, t - 5), t)
         return formation_of([a.role for a in fs[-1].team[team]]) if fs else None
@@ -659,7 +707,8 @@ class Tactician:
         if before.line_m is not None and after.line_m is not None and abs(after.line_m - before.line_m) >= 3:
             d = round(after.line_m - before.line_m)
             out.append(Draft(f"{since}, {name}'s last line (ball in midfield) moved {'up' if d > 0 else 'back'} from "
-                             f"{before.line_m:g} m to {after.line_m:g} m", "sub_line_height_m", after.line_m, team, "G2",
+                             f"{before.line_m:g} m ({band('line_height_m', before.line_m)}) to {after.line_m:g} m "
+                             f"({band('line_height_m', after.line_m)})", "sub_line_height_m", after.line_m, team, "G2",
                              "m", src=src, change=True))
         for s in subs:
             pin, pout = s.details.get("player_in_id"), s.player_id
@@ -707,7 +756,7 @@ class Tactician:
                 if len(out_f) >= 3 * MIN_BLOCK_FRAMES:
                     lines[state] = round(mean(mean(sorted(a.x for a in f.team[team] if a.role != "GK")[:4]) for f in out_f))
             if len(lines) >= 2 and max(lines.values()) - min(lines.values()) >= 3:
-                parts = ", ".join(f"{v} m when {k}" for k, v in lines.items())
+                parts = ", ".join(f"{v} m ({band('line_height_m', v)}) when {k}" for k, v in lines.items())
                 out.append(Draft(f"{self.name(team)}'s last line with the ball in midfield so far: {parts}", "line_by_state",
                                  max(lines.values()) - min(lines.values()), team, "G3", "m"))
         return out
@@ -729,6 +778,10 @@ class Tactician:
         if subs:
             drafts += self.substitution(subs, events, to_t)
         drafts += self.shape_changes(events, from_t, to_t)
+        # The score and the numbers: at the end of the window, and before every substitution or formation change.
+        state_from = min([from_t, *(s.t for s in subs or [])])
+        state_facts = [self.state_draft(events, to_t, _clock_minute(self.track.window(from_t, to_t)[-1].clock, up=True))
+                       ] + self.event_states(events, state_from, to_t)
         for team in (self.info.home, self.info.away):
             drafts += self.drafts(now[team], before.get(team), prev_label)
             if team in before and not any(d.concept == "G1" and d.team == team for d in drafts):
@@ -742,10 +795,10 @@ class Tactician:
             drafts = [d for d in drafts if d.change or d.concept in CORE_STATIC]
         if not drafts:
             return None
-        # Substitution and formation facts first, then what changed, then the structure.
+        # Substitution and formation facts first, then what changed, then the structure; the game state always.
         rank = {"G2": 0, "G1": 1}
         drafts.sort(key=lambda d: (rank.get(d.concept, 2), not d.change))
-        drafts = drafts[:max_facts]
+        drafts = state_facts + drafts[:max_facts - len(state_facts)]
         facts = [Fact(fact_id=f"T{i}", text=d.text, metric=d.metric, value=d.value, unit=d.unit, window=label,
                       source_event_ids=d.src, team=team_id(d.team), concept=d.concept)
                  for i, d in enumerate(drafts, start=1)]
@@ -809,10 +862,12 @@ class Tactician:
                 for k, v in p.channels.items():
                     out.append((f"Cup match: {v:g}% of {n}'s attacks went down the {k}", f"channel_{k}_pct", v, team, "P1"))
             if p.line_m is not None:
-                out.append((f"Cup match: {n}'s last line with the ball in midfield {p.line_m:g} m from their own goal", "line_height_m", p.line_m, team, "D1"))
-                out.append((f"Cup match: {n}'s block {p.depth_m:g} m deep with the ball in midfield", "compactness_m", p.depth_m, team, "D2"))
+                out.append((f"Cup match: {n}'s last line with the ball in midfield {p.line_m:g} m from their own goal "
+                            f"({band('line_height_m', p.line_m)})", "line_height_m", p.line_m, team, "D1"))
+                out.append((f"Cup match: {n}'s block {p.depth_m:g} m deep with the ball in midfield "
+                            f"({band('compactness_m', p.depth_m)})", "compactness_m", p.depth_m, team, "D2"))
             if p.ppda is not None:
-                out.append((f"Cup match: {n}'s PPDA {p.ppda:g}", "ppda", p.ppda, team, "D3"))
+                out.append((f"Cup match: {n}'s PPDA {p.ppda:g} ({band('ppda', p.ppda)})", "ppda", p.ppda, team, "D3"))
             if p.regained is not None:
                 out.append((f"Cup match: {n} won the ball back within 5 seconds after {p.regained:g}% of losses", "counterpress_pct", p.regained, team, "T1"))
         return [Fact(fact_id=f"C{i}", text=text, metric=metric, value=value, window="cup match",
