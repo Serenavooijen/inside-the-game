@@ -73,7 +73,7 @@ export function OverlayLayer({ overlays, players, positions, events, layer }: Pr
         <div
           key={o.id}
           data-label={PRIORITY.tag}
-          className="itg-in absolute flex h-[34px] overflow-hidden rounded-sm shadow-[0_4px_12px_rgba(0,0,0,.35)]"
+          className="itg-in absolute flex h-[34px] w-max overflow-hidden whitespace-nowrap rounded-sm shadow-[0_4px_12px_rgba(0,0,0,.35)]"
           style={{ left: `calc(${pct(pos).left} ${flip ? '-' : '+'} 26px)`, top: pct(pos).top, transform: `translate(${flip ? '-100%' : '0'}, -50%)` }}
         >
           <div className="flex w-[34px] items-center justify-center font-display text-[20px] font-extrabold" style={{ background: teams.info(p.team)?.color, color: teams.info(p.team)?.fg }}>{p.n}</div>
@@ -146,5 +146,7 @@ export function OverlayLayer({ overlays, players, positions, events, layer }: Pr
   if (layer === 'lines') {
     return <svg viewBox="-3 -3 111 74" className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden>{lines}</svg>;
   }
+  // Rendered after the player chips (see MatchScreen), so name tags and badges lie above them; no z-index,
+  // so the key-moment layer that follows still covers them.
   return <div ref={box} className="pointer-events-none absolute inset-0">{html}</div>;
 }
