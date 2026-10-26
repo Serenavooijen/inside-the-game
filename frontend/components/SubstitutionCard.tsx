@@ -54,7 +54,7 @@ export function SubstitutionCard({ insight: i, expanded = false, onToggle }: Pro
         <div className="font-display text-card-type font-extrabold uppercase leading-none tracking-[.05em]">Substitution</div>
         <div className="flex items-center gap-[6px] font-mono text-[13px] text-fg-2">
           <span className="inline-block h-3 w-3 rounded-[3px]" style={{ background: teams.color(s.team) }} />
-          {teams.info(s.team)?.short ?? s.team.toUpperCase()}
+          {teams.short(s.team)}
         </div>
         <div className="ml-auto font-display text-[30px] font-extrabold leading-none">{impact ? i.minute : s.minute}&apos;</div>
       </header>

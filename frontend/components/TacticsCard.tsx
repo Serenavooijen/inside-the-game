@@ -70,7 +70,7 @@ export function Observations({ observations }: { observations: TacticalObservati
               {o.team && (
                 <span className="flex items-center gap-[6px] font-mono text-[12px] text-fg-2">
                   <span className="inline-block h-[10px] w-[10px] rounded-[2px]" style={{ background: teams.color(o.team) }} />
-                  {teams.info(o.team)?.short ?? o.team.toUpperCase()}
+                  {teams.short(o.team)}
                 </span>
               )}
               {cmp && (

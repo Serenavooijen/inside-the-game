@@ -27,7 +27,7 @@ MATCH_ID = "kba-ngr"
 SUMMARY = MatchSummary(
     id=MATCH_ID,
     home=TeamInfo(id="kba", name="Kingsbridge Athletic", short="KBA", color="#2F6BFF", fg="#FFFFFF"),
-    away=TeamInfo(id="ngr", name="Northgate Rovers", short="NGR", color="#FFB400", fg="#121212"),
+    away=TeamInfo(id="ngr", name="Northgate Rovers", short="NTG", color="#FFB400", fg="#121212"),
     score="2–2",
     story="Kingsbridge had the ball and the xG (2.48 – 1.52), then lost Brannigan to a second yellow. "
           "Northgate led twice; a substitute’s header made it 2-2.",

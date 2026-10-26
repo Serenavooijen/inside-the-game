@@ -94,7 +94,7 @@ export function InsightCard({ insight: i, size = 'feed', mode = 'casual', expand
         {i.team && (
           <div className="flex items-center gap-[6px] font-mono text-[13px] text-fg-2">
             <span className="inline-block h-3 w-3 rounded-[3px]" style={{ background: teams.color(i.team) }} />
-            {teams.info(i.team)?.short ?? i.team.toUpperCase()}
+            {teams.short(i.team)}
           </div>
         )}
         <div className={`ml-auto font-display font-extrabold leading-none ${hero ? 'text-[40px]' : 'text-[30px]'}`}>{i.minute}&apos;</div>

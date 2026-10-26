@@ -5,7 +5,7 @@ export const MATCHES: MatchSummary[] = [
   {
     id: 'kba-ngr',
     home: { id: 'kba', name: 'Kingsbridge Athletic', short: 'KBA', color: '#2F6BFF', fg: '#FFFFFF' },
-    away: { id: 'ngr', name: 'Northgate Rovers', short: 'NGR', color: '#FFB400', fg: '#121212' },
+    away: { id: 'ngr', name: 'Northgate Rovers', short: 'NTG', color: '#FFB400', fg: '#121212' },
     score: '2–2',
     story: 'Kingsbridge had the ball and the xG (2.48 – 1.52), then lost Brannigan to a second yellow. Northgate led twice; a substitute’s header made it 2-2.',
     meta: '4-3-3 vs 4-4-2 · 4 goals · 1 red card · 1 claim corrected',
