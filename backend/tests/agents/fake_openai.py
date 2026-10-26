@@ -38,7 +38,20 @@ class Handler(BaseHTTPRequestHandler):
         user = next(m for m in reversed(body["messages"]) if m["role"] == "user")
         text = user["content"] if isinstance(user["content"], str) else " ".join(p.get("text", "") for p in user["content"])
 
-        if body.get("response_format"):
+        schema = json.dumps(body.get("response_format") or {})
+        if "observations" in schema:
+            # The Scout: one observation per tactical fact, with a clean consequence
+            # (or, with SCOUT_BAD, a consequence that adds a number and a coach action that adds a name).
+            facts = re.findall(r"\[(T\d+)\] \((\w+), \w+\) (.+)", text)[:STATE.get("scout_n", 2)]
+            obs = [{"observation": t, "fact_ids": [fid], "team": team, "compare_to_cup": "changed",
+                    "consequence": "The opponent has to adjust the press.", "coach_action": "Keep the block compact."}
+                   for fid, team, t in facts]
+            if STATE.get("scout_bad") and obs:
+                obs[0]["consequence"] = "That gives them 4 extra passes per minute."
+                if len(obs) > 1:
+                    obs[1]["coach_action"] = "Put Rasmussen on the 6."
+            content = json.dumps({"observations": obs})
+        elif body.get("response_format"):
             facts = re.findall(r"\[(F\d+)\] (.+)", text)[:2]
             claims = [{"text": t.rstrip(".") + ".", "fact_ids": [fid]} for fid, t in facts]
             if STATE["wrong"] and claims:

@@ -8,13 +8,20 @@ A claim passes when
 
 Numbers are the part an LLM most often gets wrong, and the part a viewer can
 check. Wording is left to the Narrator.
+
+Works on a moment's FactSheet and on the Scout's TacticalFactSheet: both have
+`fact(id)`, team names and a headline (the FactSheet's is on its moment).
 """
 
 from __future__ import annotations
 
 import re
 
+from app.contracts import TacticalFactSheet
+
 from .models import Claim, FactSheet, RejectedClaim
+
+Sheet = FactSheet | TacticalFactSheet
 
 NUM = re.compile(r"(?<![\w.])\d+(?:[.,]\d+)?")
 
@@ -45,7 +52,11 @@ def numbers_in(text: str) -> list[float]:
     return out
 
 
-def _allowed_numbers(sheet: FactSheet, fact_ids: list[str]) -> set[float]:
+def _headline(sheet: Sheet) -> str:
+    return sheet.headline if isinstance(sheet, TacticalFactSheet) else sheet.moment.headline
+
+
+def _allowed_numbers(sheet: Sheet, fact_ids: list[str]) -> set[float]:
     allowed: set[float] = set()
     for fid in fact_ids:
         f = sheet.fact(fid)
@@ -61,10 +72,15 @@ def _allowed_numbers(sheet: FactSheet, fact_ids: list[str]) -> set[float]:
         if f.window:
             allowed.update(numbers_in(f.window))
     # context the claim may always use
-    allowed.update(numbers_in(sheet.moment.headline))
-    allowed.update(numbers_in(sheet.moment.minute))
-    allowed.update(float(x) for x in sheet.match_state.score)
-    allowed.update(float(x) for x in sheet.match_state.players_on_pitch)
+    allowed.update(numbers_in(_headline(sheet)))
+    if isinstance(sheet, TacticalFactSheet):
+        allowed.update(numbers_in(sheet.minute))
+        allowed.update(numbers_in(sheet.window.label))
+    else:
+        allowed.update(numbers_in(sheet.moment.minute))
+    if sheet.match_state:
+        allowed.update(float(x) for x in sheet.match_state.score)
+        allowed.update(float(x) for x in sheet.match_state.players_on_pitch)
     # small counting words that are rarely factual claims
     allowed.update({1.0, 2.0})
     return allowed
@@ -81,7 +97,7 @@ def _matches(n: float, allowed: set[float]) -> bool:
     return any(round(a, d) == round(n, d) for a in allowed)
 
 
-def check_claim(claim: Claim, sheet: FactSheet) -> RejectedClaim | None:
+def check_claim(claim: Claim, sheet: Sheet) -> RejectedClaim | None:
     if not claim.fact_ids:
         return RejectedClaim(text=claim.text, reason="No supporting fact cited", fact_ids=[])
     missing = [fid for fid in claim.fact_ids if sheet.fact(fid) is None]
@@ -95,7 +111,7 @@ def check_claim(claim: Claim, sheet: FactSheet) -> RejectedClaim | None:
     return None
 
 
-def check_claims(claims: list[Claim], sheet: FactSheet) -> tuple[list[Claim], list[RejectedClaim]]:
+def check_claims(claims: list[Claim], sheet: Sheet) -> tuple[list[Claim], list[RejectedClaim]]:
     ok, rejected = [], []
     for c in claims:
         r = check_claim(c, sheet)
@@ -111,11 +127,12 @@ although though because however meanwhile what who why how where which half time
 goal goals xg xgot var tv""".split())
 
 
-def unknown_names(text: str, sheet: FactSheet, claims: list[Claim]) -> list[str]:
+def unknown_names(text: str, sheet: Sheet, claims: list[Claim], allowed: frozenset[str] | set[str] = frozenset()) -> list[str]:
     """Capitalised words (players, teams, places) in the Narrator's text that appear nowhere in
-    the headline, the team names or the accepted claims."""
-    source = " ".join([sheet.moment.headline, *sheet.team_names.values(), *(c.text for c in claims)])
-    known = {w.lower() for w in re.findall(r"[\w\-]+", source)}
+    the headline, the team names or the accepted claims. `allowed`: extra lower-case words that
+    are no names, e.g. the playbook's concept names for the Scout."""
+    source = " ".join([_headline(sheet), *sheet.team_names.values(), *(c.text for c in claims)])
+    known = {w.lower() for w in re.findall(r"[\w\-]+", source)} | set(allowed)
     out = []
     for m in NAME.finditer(text):
         raw = m.group()
@@ -134,7 +151,7 @@ def unknown_names(text: str, sheet: FactSheet, claims: list[Claim]) -> list[str]
     return list(dict.fromkeys(out))
 
 
-def check_text(text: str, sheet: FactSheet, fact_ids: list[str]) -> list[float]:
+def check_text(text: str, sheet: Sheet, fact_ids: list[str]) -> list[float]:
     """Numbers in a free text (the Narrator's) that are not backed by these facts."""
     allowed = _allowed_numbers(sheet, fact_ids)
     return [n for n in numbers_in(text) if not _matches(n, allowed)]
