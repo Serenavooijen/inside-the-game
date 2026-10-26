@@ -25,7 +25,7 @@ from pathlib import Path
 
 from app.agents.deadline import within
 from app.agents.llm import ModelClient
-from app.agents.scout import SCOUT_DEADLINE_S, run_scout
+from app.agents.scout import SCOUT_DEADLINE_S, run_scout, scouting_card, status_card
 from app.contracts import (
     Fact, Insight, MatchInfo, MatchSnapshot, ScoutingReport, SourceEvent, SourceFrame, TacticalObservation,
     TacticalTrigger,
@@ -37,7 +37,7 @@ log = logging.getLogger(__name__)
 
 INTERVAL_MIN = 5
 SUB_DELAY_S = 180
-QUEUE_MAX = 3
+QUEUE_MAX = 6               # a 5-minute card must never be dropped
 SAFETY_MARGIN_S = 3.0
 
 Publish = Callable[[Insight], None]
@@ -144,10 +144,15 @@ class ScoutLane:
 
     @staticmethod
     def _interval_minute(f: SourceFrame) -> int | None:
-        """5, 10, ... at the frame whose clock reads mm:00 (not the second-half kick-off at 45:00, not added time)."""
-        if f.period not in (1, 2) or "+" in f.clock or not f.clock.endswith(":00"):
+        """5, 10, ... 90 at the frame whose clock reads mm:00. 45' and 90' are "45+0:00" and "90+0:00" (the clock
+        runs on into added time); not the second-half kick-off at 45:00."""
+        if f.period not in (1, 2) or not f.clock.endswith(":00"):
             return None
-        mm = int(f.clock.split(":")[0])
+        mm_text = f.clock.split(":")[0]
+        if "+" in mm_text:
+            base, extra = mm_text.split("+")
+            return int(base) if extra == "0" and int(base) == 45 * f.period else None
+        mm = int(mm_text)
         if mm == 0 or mm % INTERVAL_MIN or (f.period == 2 and mm == 45):
             return None
         return mm
@@ -177,7 +182,8 @@ class ScoutLane:
         tac = self.tactician
         sheet = await asyncio.to_thread(tac.sheet, job.trigger, job.from_t, job.to_t, job.events, job.snapshot,
                                         job.prev, job.subs or None)
-        if sheet is None:
+        if sheet is None or all(f.metric == "game_state" for f in sheet.facts):
+            await self._status(job, publish)    # too few facts: still a card, made by the code
             return
         team = (sheet.facts[0].team or sheet.home).upper()
         heatmap, build_up = await asyncio.to_thread(
@@ -190,5 +196,18 @@ class ScoutLane:
             )
             if insight.status != "fallback" and insight.observations:
                 self._previous = list(insight.observations)
+            if not insight.observations:        # nothing new from the Scout: the status card replaces it
+                await self._status(job, publish, insight.rejected_claims)
         except TimeoutError:
             log.warning("Scout safety net hit at %s", job.to_t)
+
+    async def _status(self, job: Job, publish: Publish, rejected: list | None = None) -> None:
+        tac = self.tactician
+        sheet = await asyncio.to_thread(tac.status_sheet, job.trigger, job.from_t, job.to_t, job.events, job.snapshot)
+        team = sheet.home.upper()
+        heatmap = await asyncio.to_thread(tac.heatmap, team, job.from_t, job.to_t)
+        publish(status_card(sheet, job.generation, heatmap, rejected=rejected))
+
+    def kickoff_card(self, generation: int) -> Insight | None:
+        """The scouting report as the first card of the match, or None without a report."""
+        return scouting_card(self.report, generation) if self.report else None

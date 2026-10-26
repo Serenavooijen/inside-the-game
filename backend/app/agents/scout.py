@@ -23,7 +23,7 @@ import os
 import re
 import time
 
-from app.contracts import Heatmap, Player, TacticalFactSheet, TacticalObservation
+from app.contracts import Heatmap, Player, ScoutingReport, TacticalFactSheet, TacticalObservation, TacticalWindow
 
 from .checker import check_claim, check_text, direction_errors, game_state_errors, unknown_names
 from .deadline import within
@@ -174,6 +174,9 @@ async def run_scout(
             raise LookupError(f"model {getattr(model, 'name', '?')} has no Scout")
         draft, used = await scout(sheet, scout_prompt(sheet, previous))
         tokens += used or 0
+        if not draft.observations:
+            # Nothing new to say: no observations (the Scout lane shows the status card made by the code)
+            return _done(base, sheet, [], status="checked", text=NO_CHANGE)
         accepted, rejected = check_observations(draft.observations, sheet, previous)
         if not accepted:
             raise NoUsableObservations(rejected)
@@ -197,6 +200,50 @@ async def run_scout(
     insight = insight.model_copy(update={"latency_ms": round((time.perf_counter() - start) * 1000), "tokens": tokens or None})
     await _emit(on_update, insight)
     return insight
+
+
+NO_CHANGE = "No tactical change"
+
+
+def status_card(sheet: TacticalFactSheet, generation: int = 0, heatmap: Heatmap | None = None,
+                build_up: list[Player] | None = None, rejected: list[RejectedClaim] | None = None) -> Insight:
+    """The card when the Scout has nothing new or the window has too few facts: made by the code, no model.
+    Per team its block label and shape, straight from the facts, plus the game state."""
+    state = [f for f in sheet.facts if f.metric == "game_state"]
+    observations = []
+    for team in (sheet.home, sheet.away):
+        facts = [f for f in sheet.facts if f.team == team and f.metric != "game_state"]
+        if not facts:
+            continue
+        o = TacticalObservation(observation="; ".join(f.text for f in facts) + ".",
+                                fact_ids=[f.fact_id for f in facts] + [f.fact_id for f in state],
+                                consequence=f"{NO_CHANGE} in this window.", compare_to_cup="n/a", team=team)
+        ok, _ = check_observation(o, sheet)          # built from the facts, so it passes; checked all the same
+        if ok:
+            observations.append(ok)
+    ids = list(dict.fromkeys([*(f.fact_id for f in state), *(fid for o in observations for fid in o.fact_ids)]))
+    return Insight(
+        id=insight_id(sheet), t=sheet.window.to_t, minute=sheet.minute, type="tactics", trigger=sheet.trigger,
+        window=sheet.window, text=NO_CHANGE, status="checked", phase="done", generation=generation,
+        observations=observations, evidence=[sheet.fact(i).text for i in ids][:MAX_EVIDENCE], cited_fact_ids=ids,
+        heatmap=heatmap, build_up=build_up or None, rejected_claims=rejected or [], latency_ms=0,
+    )
+
+
+SCOUTING_ID = "i-tac-scouting"
+
+
+def scouting_card(report: ScoutingReport, generation: int = 0) -> Insight:
+    """The scouting report on the cup match as the first card of the match (t = 0)."""
+    cited = list(dict.fromkeys(fid for o in report.observations for fid in o.fact_ids))
+    by_id = {f.fact_id: f for f in report.facts}
+    return Insight(
+        id=SCOUTING_ID, t=0, minute="0", type="tactics", trigger="scouting",
+        window=TacticalWindow(from_t=0, to_t=0, label="cup match"), text=report.title, status=report.status,
+        phase="done", generation=generation, observations=report.observations,
+        evidence=[by_id[i].text for i in cited if i in by_id][:MAX_EVIDENCE], cited_fact_ids=cited,
+        heatmap=report.heatmaps[0] if report.heatmaps else None, rejected_claims=report.rejected_claims,
+    )
 
 
 class NoUsableObservations(Exception):

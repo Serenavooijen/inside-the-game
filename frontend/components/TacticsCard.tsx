@@ -7,6 +7,8 @@ const TRIGGER: Record<NonNullable<Insight['trigger']>, string> = {
   interval: 'Every 5 minutes', half_time: 'Half time', substitution: 'After the substitution', scouting: 'Cup match',
 };
 
+const NO_CHANGE = 'No tactical change';
+
 const COMPARE: Record<TacticalObservation['compareToCup'], string | null> = {
   same: 'As in the cup', changed: 'Changed since the cup', 'n/a': null,
 };
@@ -155,20 +157,23 @@ type Props = { insight: Insight; expanded?: boolean; onToggle?: () => void };
 export function TacticsCard({ insight: i, expanded = false, onToggle }: Props) {
   const done = i.phase === 'done';
   const fallback = i.status === 'fallback';
+  const scouting = i.trigger === 'scouting';
+  /** Status card made by the code when the Scout had nothing new (backend: scout.NO_CHANGE) */
+  const noChange = i.text === NO_CHANGE;
   const evidence = i.evidence ?? [];
   const border = i.status === 'corrected' && done ? 'border border-corrected' : fallback && done ? 'border border-dashed border-fallback' : 'border border-line';
   return (
     <article className={`box-border flex w-full flex-col gap-[14px] rounded-lg bg-surface px-[22px] py-5 ${border}`}>
       <header className="flex items-center gap-3">
         <div className="flex h-9 w-9 flex-none items-center justify-center rounded-md bg-surface-2 text-fg"><TacticsIcon /></div>
-        <div className="font-display text-card-type font-extrabold uppercase leading-none tracking-[.05em]">Tactics</div>
-        {i.window && <div className="font-mono text-[13px] text-fg-2">{i.window.label}</div>}
-        <div className="ml-auto font-display text-[30px] font-extrabold leading-none">{i.minute}&apos;</div>
+        <div className="font-display text-card-type font-extrabold uppercase leading-none tracking-[.05em]">{scouting ? 'Scouting report (cup)' : 'Tactics'}</div>
+        {i.window && !scouting && <div className="font-mono text-[13px] text-fg-2">{i.window.label}</div>}
+        <div className="ml-auto font-display text-[30px] font-extrabold leading-none">{scouting ? 'KO' : `${i.minute}'`}</div>
       </header>
 
       <div className={`flex items-center gap-2 font-mono text-label font-medium uppercase tracking-[.12em] ${fallback ? 'text-fallback' : 'text-accent-text'}`}>
         <span className="inline-block h-2 w-2 rounded-[2px]" style={{ background: fallback ? 'var(--itg-fallback)' : 'var(--itg-accent)' }} />
-        {fallback ? 'Facts + playbook' : 'Scout · AI analysis'}
+        {fallback ? 'Facts + playbook' : noChange ? 'Measured by the code' : 'Scout · AI analysis'}
         {i.trigger && <span className="text-fg-3">· {TRIGGER[i.trigger]}</span>}
       </div>
 
@@ -185,9 +190,10 @@ export function TacticsCard({ insight: i, expanded = false, onToggle }: Props) {
 
       {done && (
         <>
+          {noChange && <div className="font-display text-[22px] font-extrabold uppercase tracking-[.06em] text-fg-2">No tactical change</div>}
           <Observations observations={i.observations ?? []} />
           <HeatPitch heatmap={i.heatmap} buildUp={i.buildUp} width={300} />
-          {i.status === 'corrected' && <LeftOut items={i.rejectedClaims ?? []} />}
+          {(i.rejectedClaims?.length ?? 0) > 0 && <LeftOut items={i.rejectedClaims ?? []} />}
           <footer className="flex flex-wrap items-center gap-3">
             <StatusPill status={i.status} reason={i.fallbackReason} />
             {onToggle && evidence.length > 0 && (

@@ -186,3 +186,58 @@ def test_the_lane_gives_the_scout_its_previous_analysis_and_forgets_it_on_seek()
     first, after_seek, *later = RecordingScout.prompts
     assert "Your previous analysis" not in first and "Your previous analysis" not in after_seek
     assert any("Your previous analysis" in p for p in later)
+
+
+def test_45_and_90_are_five_minute_moments():
+    frame = lambda clock, period: SourceFrame(t=0, period=period, clock=clock, players=[], ball={"x": 0, "y": 0, "live": True})
+    assert ScoutLane._interval_minute(frame("45+0:00", 1)) == 45
+    assert ScoutLane._interval_minute(frame("90+0:00", 2)) == 90
+    assert ScoutLane._interval_minute(frame("45:00", 2)) is None          # second-half kick-off
+    assert ScoutLane._interval_minute(frame("45+1:00", 1)) is None
+    assert ScoutLane._interval_minute(frame("50:00", 2)) == 50
+
+
+def test_a_whole_match_has_18_five_minute_cards_and_starts_with_the_scouting_report():
+    from app.fixture import SCOUTING_REPORT
+
+    async def scenario(sim, lane, q):
+        sim.seek(0)
+        while not sim.state().finished:
+            sim.step(1.0)                  # 10 match seconds per step at 10x (1 s during key moments)
+            await lane.wait()
+        await lane.wait()
+        return sim.state()
+
+    state = run(scenario, report_path=SCOUTING_REPORT)
+    tactics = sorted((i for i in state.insights if i.type == "tactics"), key=lambda i: i.t)
+    intervals = [i for i in tactics if i.trigger == "interval"]
+    assert len(intervals) == 18
+    assert [i.window.label.split("–")[1] for i in intervals] == [f"{m}'" for m in range(5, 95, 5)]
+    assert tactics[0].id == "i-tac-scouting" and tactics[0].t == 0 and tactics[0].observations
+    assert all(i.phase == "done" and i.status in ("checked", "corrected") for i in intervals)
+
+
+class SilentScout(OfflineModel):
+    """A Scout with nothing new to say."""
+
+    async def scout(self, sheet, prompt):
+        from app.agents.models import ScoutDraft
+        return ScoutDraft(observations=[]), None
+
+
+def test_no_new_observations_gives_a_status_card_from_the_code():
+    async def scenario(sim, lane, q):
+        sim.seek(t_clock("09:58", 1))
+        drain(q)
+        sim.step(0.4)
+        await lane.wait()
+        return drain(q)
+
+    cards = tactics(run(scenario, model=SilentScout()))
+    card = cards[-1]
+    assert card["text"] == "No tactical change" and card["status"] == "checked"
+    assert card["window"]["label"] == "5'–10'" and card["citedFactIds"]
+    assert {o["team"] for o in card["observations"]} == {"kba", "ngr"}
+    blocks = " ".join(o["observation"] for o in card["observations"])
+    assert "high block" in blocks and "low block" in blocks       # the labels from the facts
+    assert all(o["consequence"] == "No tactical change in this window." for o in card["observations"])

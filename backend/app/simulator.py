@@ -164,6 +164,8 @@ class Simulator:
         self._overlays.reset()
         self._cursor, self._frame, self.events, self.insights, self._history = 0, None, [], {}, []
         self.t = t
+        if self.scout_lane and (card := self.scout_lane.kickoff_card(self.generation)):
+            self.insights[card.id] = card       # the scouting report is the first card of the match (t = 0)
         self._advance(t, publish=False)
         self._last_second = int(t)
 

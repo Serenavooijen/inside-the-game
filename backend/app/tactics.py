@@ -122,10 +122,12 @@ class Track:
 
 
 def _clock_minute(clock: str, up: bool) -> str:
-    """'60:00' -> '60', '64:59' -> '65' (up), '45+1:30' -> '45+2' (up) or '45+1'."""
+    """'60:00' -> '60', '64:59' -> '65' (up), '45+1:30' -> '45+2' (up) or '45+1', '45+0:00' -> '45'."""
     mm, ss = clock.split(":")
     base, _, extra = mm.partition("+")
     n = int(extra or base) + (1 if up and int(ss) > 0 else 0)
+    if extra and n == 0:
+        return str(int(base))
     return f"{int(base)}+{n}" if extra else str(n)
 
 
@@ -833,6 +835,36 @@ class Tactician:
             home=home, away=away, team_names={home: self.name(self.info.home), away: self.name(self.info.away)},
             match_state=snapshot, facts=facts, baseline=baseline,
             concepts_fired=list(dict.fromkeys(f.concept for f in facts)),
+        )
+
+    def status_sheet(self, trigger: TacticalTrigger, from_t: float, to_t: float, events: list[SourceEvent],
+                     snapshot: MatchSnapshot | None = None) -> TacticalFactSheet:
+        """The state of play without thresholds: game state, block label and shape per team. For the status card
+        when the window has no meaningful change (code only, no model)."""
+        events = [e for e in events if e.t <= to_t]
+        frames = self.track.window(from_t, to_t)
+        label = self.label(from_t, to_t)
+        now = self.prints(from_t, to_t, events)
+        drafts = [self.state_draft(events, to_t, _clock_minute(frames[-1].clock, up=True))] if frames else []
+        for team in (self.info.home, self.info.away):
+            p, name = now[team], self.name(team)
+            if p.line_m is not None:
+                drafts.append(Draft(f"{name} defended in a {band('line_height_m', p.line_m)}: with the ball in midfield, "
+                                    f"last line {p.line_m:g} m from their own goal", "line_height_m", p.line_m, team, "D1", "m"))
+            if p.shape:
+                drafts.append(Draft(f"{name}'s build-up shape: {p.shape}", "buildup_shape", p.shape, team, "B6"))
+            elif formation := self.formation_at(team, to_t):
+                drafts.append(Draft(f"{name}'s formation: {formation}", "formation", formation, team, "G1"))
+        home, away = team_id(self.info.home), team_id(self.info.away)
+        return TacticalFactSheet(
+            window=TacticalWindow(from_t=from_t, to_t=to_t, label=label), trigger=trigger,
+            minute=minute_from_clock(frames[-1].clock) if frames else "", headline=f"Tactics {label}",
+            home=home, away=away, team_names={home: self.name(self.info.home), away: self.name(self.info.away)},
+            match_state=snapshot,
+            facts=[Fact(fact_id=f"T{i}", text=d.text, metric=d.metric, value=d.value, unit=d.unit, window=label,
+                        source_event_ids=d.src, team=team_id(d.team), concept=d.concept)
+                   for i, d in enumerate(drafts, start=1)],
+            concepts_fired=list(dict.fromkeys(d.concept for d in drafts)),
         )
 
     # ------------------------------------------------------------------ for the frontend and the scouting report
