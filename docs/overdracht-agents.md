@@ -185,7 +185,8 @@ De Scout analyseert de bestaande wedstrijd: seed 8002, Kingsbridge – Northgate
 
 | Wanneer | Wat | Waar |
 | --- | --- | --- |
-| elke 5 minuten speeltijd, bij de rust, 3 minuten na de wissel(s) van een team | tactische feiten (code) → Scout (LLM) → controle → `insight` van type `"tactics"` | `app/tactics.py`, `app/scout_lane.py`, `app/agents/scout.py` |
+| elke 5 minuten speeltijd en bij de rust | tactische feiten (code) → Scout (LLM) → controle → `insight` van type `"tactics"` | `app/tactics.py`, `app/scout_lane.py`, `app/agents/scout.py` |
+| bij elke wissel (één kaart per wisselmoment) | "what to watch" (code, zonder model) direct, en "impact" (Scout) 8 minuten later → `insight` van type `"substitution"` | `Tactician.substitution_sheet`, `scout.watch_card` |
 | elke wedstrijdminuut | minuutfeiten (code) → Narrator (één zin, ≤ 25 woorden) → controle → `commentary` | `app/commentary_lane.py`, `app/agents/commentary.py` |
 | bij het laden van de wedstrijd | het scoutingrapport over de beker inlezen; de feiten daarvan zijn de baseline | `fixtures/scouting/kba-ngr-cup.json` |
 
@@ -224,6 +225,23 @@ Voor beide lanes geldt:
 - uitspraken over de stand die geen standfeit toelaat ("Kingsbridge leads 1-2");
 - vergelijkende woorden die de feiten tegenspreken ("less compact" waar de feiten "more compact" zeggen);
 - een advies voor de trainer dat de vorige analyse herhaalt.
+
+**Wissels.** Per wisselmoment maakt `Tactician.substitution_sheet()` een `SubstitutionFactSheet`:
+- wie eruit gaat en wie erin komt, met hun rol uit de opstelling ("striker → centre-back"), de stand en het aantal spelers op het veld;
+- het type wissel, een label uit de code:
+  - *shape change*: de formatie verandert binnen 5 minuten;
+  - *like-for-like*: zelfde rol, en de gemiddelde posities liggen minder dan 10 m uit elkaar;
+  - *positional*: alle andere gevallen;
+- waarom, voor zover de data het laat zien: de sprints en high-speed-meters van de speler die eruit gaat in zijn laatste 15 minuten tegenover zijn eerste 15 ("intensity dropped"), zijn balcontacten en duels tegenover het teamgemiddelde ("low involvement"), en een gele kaart.
+
+De impactkaart komt 8 minuten later en voegt toe:
+- waar de invaller speelt ten opzichte van de speler die hij verving;
+- zijn eerste actie die ertoe doet;
+- het team voor en na de wissel: balbezit, xG, flankgebruik, linie en PPDA met hun labels, en de opbouwvorm;
+- wat de tegenstander in dezelfde periode deed, neutraal geformuleerd, met de minuut en een eventuele rode kaart;
+- de vergelijking met de beker.
+
+De kaart "what to watch" krijgt een of twee aandachtspunten die de code maakt uit dezelfde waarden als de feiten. De frontend toont beide kaarten als `SubstitutionCard` in beide modi, met chips in de teamkleur en twee mini-velden. De oude kaart 3 minuten na de wissel is vervallen.
 
 **De vorige analyse:** de Scout krijgt zijn laatste gecontroleerde analyse mee, alleen als context. Instructie: geef alleen nieuw of veranderd advies. Een seek wist de vorige analyse.
 

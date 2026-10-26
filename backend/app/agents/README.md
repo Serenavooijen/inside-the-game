@@ -137,7 +137,7 @@ Tactician (code, app/tactics.py)  →  Scout (LLM)  →  Fact-checker (code)
   - `compareToCup` wordt `n/a` als geen geciteerd feit de beker noemt.
 - **De vorige analyse** gaat mee als context. De instructie is: alleen nieuw of veranderd advies.
 - **Harde deadlines:** alle model-aanroepen, ook die voor de momentkaarten, lopen via `deadline.within()`. Die komt op tijd terug, ook als een geannuleerde aanroep blijft hangen.
-- **Wanneer:** elke 5 minuten speeltijd, bij de rust, en 3 minuten na de wissel(s) van een team (`app/scout_lane.py`). Er draait er hoogstens één tegelijk, met een eigen deadline van 15 s. Een seek gooit alles weg. Bij een timeout of fout komen er template-observaties uit feiten plus playbook, met status `fallback`.
+- **Wanneer:** elke 5 minuten speeltijd en bij de rust (`app/scout_lane.py`). Bij elke wissel komen twee kaarten van type `"substitution"`: direct "what to watch" (code, zonder model), en 8 minuten later "impact" (de Scout op de `SubstitutionFactSheet` van `Tactician.substitution_sheet()`). Er draait er hoogstens één tegelijk, met een eigen deadline van 15 s. Een seek gooit alles weg. Bij een timeout of fout komen er template-observaties uit feiten plus playbook, met status `fallback`.
 - **Scoutingrapport:** `tools/build_scouting_report.py` laat de Scout vooraf de bekerwedstrijd (`script/cup/`, `output/cup/`) beschrijven en schrijft `fixtures/scouting/kba-ngr-cup.json`.
   - De feiten C1 … C30 zijn tegelijk de baseline voor elke live analyse.
   - De backend laadt het rapport bij de wedstrijd en stuurt het mee als `MatchState.scouting`.
