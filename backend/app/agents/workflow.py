@@ -12,13 +12,13 @@ The smart lane: Statistician (code, upstream) → Analyst (LLM) → Fact-checker
 
 from __future__ import annotations
 
-import asyncio
 import inspect
 import os
 import time
 from typing import Awaitable, Callable
 
 from .checker import check_claims, check_text, unknown_names
+from .deadline import within
 from .llm import ModelClient, model_from_env
 from .models import Claim, FactSheet, Insight, Moment, RejectedClaim
 from .prompts import analyst_prompt, narrator_prompt
@@ -152,8 +152,9 @@ async def run_workflow(
         })
 
     try:
-        insight = await asyncio.wait_for(pipeline(), timeout=deadline_s or DEADLINE_S)
-    except asyncio.TimeoutError:
+        # within(): the deadline holds even when a cancelled model call takes long to unwind
+        insight = await within(pipeline(), deadline_s or DEADLINE_S)
+    except TimeoutError:
         insight = _fallback(base, factsheet, f"Model timed out after {deadline_s or DEADLINE_S:g} s")
     except NoUsableClaims as e:
         insight = _fallback(base, factsheet, "No claim passed the fact-check", e.rejected)

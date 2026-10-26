@@ -10,6 +10,7 @@ import logging
 from collections.abc import Callable
 
 from app.agents import run_workflow
+from app.agents.deadline import within
 from app.agents.llm import ModelClient
 from app.agents.workflow import INSIGHT_TYPE, template_text
 from app.contracts import FactSheet, Insight, Moment
@@ -56,10 +57,9 @@ class SmartLane:
     async def _run(self, moment: Moment, sheet: FactSheet, generation: int, publish: Publish) -> None:
         async with self._slots:
             try:
-                await asyncio.wait_for(
-                    run_workflow(moment, sheet, publish, generation=generation, model=self.model),
-                    timeout=self.safety_net_s,
-                )
+                # within(): returns at the safety net even when the model call is slow to unwind its cancellation
+                await within(run_workflow(moment, sheet, publish, generation=generation, model=self.model),
+                             self.safety_net_s)
             except TimeoutError:
                 publish(_safety_fallback(moment, sheet, generation, self.safety_net_s))
 

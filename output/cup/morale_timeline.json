@@ -1,0 +1,637 @@
+{
+ "note": "Modelled team confidence (1.0 = neutral). Drives pass accuracy, foul risk and tempo. Model output, not a measurement.",
+ "per_minute": [
+  {
+   "period": 1,
+   "minute": "1",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "2",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "3",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "4",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "5",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "6",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "7",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "8",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "9",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "10",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "11",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "12",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "13",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "14",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "15",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "16",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "17",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "18",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "19",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "20",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "21",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "22",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "23",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "24",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "25",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "26",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "27",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "28",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "29",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "30",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "31",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "32",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "33",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "34",
+   "home": 1.0,
+   "away": 1.0
+  },
+  {
+   "period": 1,
+   "minute": "35",
+   "home": 1.068,
+   "away": 0.919
+  },
+  {
+   "period": 1,
+   "minute": "36",
+   "home": 1.064,
+   "away": 0.923
+  },
+  {
+   "period": 1,
+   "minute": "37",
+   "home": 1.061,
+   "away": 0.927
+  },
+  {
+   "period": 1,
+   "minute": "38",
+   "home": 1.058,
+   "away": 0.93
+  },
+  {
+   "period": 1,
+   "minute": "39",
+   "home": 1.055,
+   "away": 0.934
+  },
+  {
+   "period": 1,
+   "minute": "40",
+   "home": 1.053,
+   "away": 0.937
+  },
+  {
+   "period": 1,
+   "minute": "41",
+   "home": 1.05,
+   "away": 0.94
+  },
+  {
+   "period": 1,
+   "minute": "42",
+   "home": 1.048,
+   "away": 0.943
+  },
+  {
+   "period": 1,
+   "minute": "43",
+   "home": 1.045,
+   "away": 0.946
+  },
+  {
+   "period": 1,
+   "minute": "44",
+   "home": 1.043,
+   "away": 0.948
+  },
+  {
+   "period": 1,
+   "minute": "45",
+   "home": 1.041,
+   "away": 0.951
+  },
+  {
+   "period": 1,
+   "minute": "45+1",
+   "home": 1.039,
+   "away": 0.953
+  },
+  {
+   "period": 1,
+   "minute": "45+2",
+   "home": 1.037,
+   "away": 0.955
+  },
+  {
+   "period": 2,
+   "minute": "46",
+   "home": 1.037,
+   "away": 0.955
+  },
+  {
+   "period": 2,
+   "minute": "47",
+   "home": 1.035,
+   "away": 0.958
+  },
+  {
+   "period": 2,
+   "minute": "48",
+   "home": 1.034,
+   "away": 0.96
+  },
+  {
+   "period": 2,
+   "minute": "49",
+   "home": 1.032,
+   "away": 0.962
+  },
+  {
+   "period": 2,
+   "minute": "50",
+   "home": 1.03,
+   "away": 0.964
+  },
+  {
+   "period": 2,
+   "minute": "51",
+   "home": 1.029,
+   "away": 0.965
+  },
+  {
+   "period": 2,
+   "minute": "52",
+   "home": 1.027,
+   "away": 0.967
+  },
+  {
+   "period": 2,
+   "minute": "53",
+   "home": 1.026,
+   "away": 0.969
+  },
+  {
+   "period": 2,
+   "minute": "54",
+   "home": 1.025,
+   "away": 0.97
+  },
+  {
+   "period": 2,
+   "minute": "55",
+   "home": 1.024,
+   "away": 0.972
+  },
+  {
+   "period": 2,
+   "minute": "56",
+   "home": 1.022,
+   "away": 0.973
+  },
+  {
+   "period": 2,
+   "minute": "57",
+   "home": 1.021,
+   "away": 0.974
+  },
+  {
+   "period": 2,
+   "minute": "58",
+   "home": 0.968,
+   "away": 1.044
+  },
+  {
+   "period": 2,
+   "minute": "59",
+   "home": 0.969,
+   "away": 1.042
+  },
+  {
+   "period": 2,
+   "minute": "60",
+   "home": 0.971,
+   "away": 1.04
+  },
+  {
+   "period": 2,
+   "minute": "61",
+   "home": 0.972,
+   "away": 1.038
+  },
+  {
+   "period": 2,
+   "minute": "62",
+   "home": 0.974,
+   "away": 1.036
+  },
+  {
+   "period": 2,
+   "minute": "63",
+   "home": 0.975,
+   "away": 1.034
+  },
+  {
+   "period": 2,
+   "minute": "64",
+   "home": 0.976,
+   "away": 1.032
+  },
+  {
+   "period": 2,
+   "minute": "65",
+   "home": 0.977,
+   "away": 1.031
+  },
+  {
+   "period": 2,
+   "minute": "66",
+   "home": 0.978,
+   "away": 1.029
+  },
+  {
+   "period": 2,
+   "minute": "67",
+   "home": 0.979,
+   "away": 1.028
+  },
+  {
+   "period": 2,
+   "minute": "68",
+   "home": 0.98,
+   "away": 1.027
+  },
+  {
+   "period": 2,
+   "minute": "69",
+   "home": 0.981,
+   "away": 1.025
+  },
+  {
+   "period": 2,
+   "minute": "70",
+   "home": 0.982,
+   "away": 1.024
+  },
+  {
+   "period": 2,
+   "minute": "71",
+   "home": 0.983,
+   "away": 1.023
+  },
+  {
+   "period": 2,
+   "minute": "72",
+   "home": 0.984,
+   "away": 1.022
+  },
+  {
+   "period": 2,
+   "minute": "73",
+   "home": 0.985,
+   "away": 1.021
+  },
+  {
+   "period": 2,
+   "minute": "74",
+   "home": 0.986,
+   "away": 1.02
+  },
+  {
+   "period": 2,
+   "minute": "75",
+   "home": 0.986,
+   "away": 1.019
+  },
+  {
+   "period": 2,
+   "minute": "76",
+   "home": 0.987,
+   "away": 1.018
+  },
+  {
+   "period": 2,
+   "minute": "77",
+   "home": 0.988,
+   "away": 1.017
+  },
+  {
+   "period": 2,
+   "minute": "78",
+   "home": 0.988,
+   "away": 1.016
+  },
+  {
+   "period": 2,
+   "minute": "79",
+   "home": 0.989,
+   "away": 1.015
+  },
+  {
+   "period": 2,
+   "minute": "80",
+   "home": 0.989,
+   "away": 1.015
+  },
+  {
+   "period": 2,
+   "minute": "81",
+   "home": 1.059,
+   "away": 0.931
+  },
+  {
+   "period": 2,
+   "minute": "82",
+   "home": 1.056,
+   "away": 0.934
+  },
+  {
+   "period": 2,
+   "minute": "83",
+   "home": 1.053,
+   "away": 0.938
+  },
+  {
+   "period": 2,
+   "minute": "84",
+   "home": 1.051,
+   "away": 0.941
+  },
+  {
+   "period": 2,
+   "minute": "85",
+   "home": 1.048,
+   "away": 0.943
+  },
+  {
+   "period": 2,
+   "minute": "86",
+   "home": 1.046,
+   "away": 0.946
+  },
+  {
+   "period": 2,
+   "minute": "87",
+   "home": 1.044,
+   "away": 0.949
+  },
+  {
+   "period": 2,
+   "minute": "88",
+   "home": 1.041,
+   "away": 0.951
+  },
+  {
+   "period": 2,
+   "minute": "89",
+   "home": 1.039,
+   "away": 0.954
+  },
+  {
+   "period": 2,
+   "minute": "90",
+   "home": 1.038,
+   "away": 0.956
+  },
+  {
+   "period": 2,
+   "minute": "90+1",
+   "home": 1.036,
+   "away": 0.958
+  },
+  {
+   "period": 2,
+   "minute": "90+2",
+   "home": 1.034,
+   "away": 0.96
+  },
+  {
+   "period": 2,
+   "minute": "90+3",
+   "home": 1.032,
+   "away": 0.962
+  },
+  {
+   "period": 2,
+   "minute": "90+4",
+   "home": 1.031,
+   "away": 0.964
+  },
+  {
+   "period": 2,
+   "minute": "90+5",
+   "home": 1.029,
+   "away": 0.966
+  }
+ ],
+ "events": [
+  {
+   "period": 1,
+   "clock": "33:20",
+   "team": "KBA",
+   "delta": 0.07,
+   "morale": 1.07,
+   "reason": "goal scored"
+  },
+  {
+   "period": 1,
+   "clock": "33:20",
+   "team": "NGR",
+   "delta": -0.084,
+   "morale": 0.916,
+   "reason": "goal conceded"
+  },
+  {
+   "period": 2,
+   "clock": "56:30",
+   "team": "NGR",
+   "delta": 0.07,
+   "morale": 1.045,
+   "reason": "goal scored"
+  },
+  {
+   "period": 2,
+   "clock": "56:30",
+   "team": "KBA",
+   "delta": -0.054,
+   "morale": 0.967,
+   "reason": "goal conceded"
+  },
+  {
+   "period": 2,
+   "clock": "79:45",
+   "team": "KBA",
+   "delta": 0.07,
+   "morale": 1.06,
+   "reason": "goal scored"
+  },
+  {
+   "period": 2,
+   "clock": "79:45",
+   "team": "NGR",
+   "delta": -0.084,
+   "morale": 0.93,
+   "reason": "goal conceded"
+  }
+ ]
+}

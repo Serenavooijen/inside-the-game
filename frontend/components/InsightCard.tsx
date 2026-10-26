@@ -8,10 +8,12 @@ type Props = {
   mode?: 'casual' | 'analyst';
   expanded?: boolean;
   onToggle?: () => void;
+  /** Hero only, when space is short: 1 = smaller text, 2 = also no evidence list */
+  dense?: 0 | 1 | 2;
 };
 
 const LABELS: Record<Insight['type'], string> = {
-  goal: 'Goal', bigchance: 'Big chance', card: 'Card', momentum: 'Momentum', update: '5-min update', fulltime: 'Full time',
+  goal: 'Goal', bigchance: 'Big chance', card: 'Card', momentum: 'Momentum', update: '5-min update', fulltime: 'Full time', tactics: 'Tactics', substitution: 'Substitution',
 };
 
 
@@ -31,38 +33,52 @@ function TypeIcon({ type, card }: { type: Insight['type']; card?: Insight['card'
   return <Stopwatch size={22} strokeWidth={1.5} />;
 }
 
+/** Pitch lines for the mini pitches (viewBox -3 -3 111 74, metres). */
+export function PitchMarkings() {
+  return (
+    <g fill="none" stroke="#fff" strokeOpacity=".75" strokeWidth=".7">
+      <rect x="0" y="0" width="105" height="68" />
+      <line x1="52.5" y1="0" x2="52.5" y2="68" />
+      <circle cx="52.5" cy="34" r="9.15" />
+      <rect x="0" y="13.84" width="16.5" height="40.32" />
+      <rect x="88.5" y="13.84" width="16.5" height="40.32" />
+    </g>
+  );
+}
+
+/** Attacking direction of the team the mini pitch is about. */
+export function AttackArrow({ dir }: { dir: 1 | -1 }) {
+  return (
+    <path
+      d={dir === 1 ? 'M40 60 L100 60 M94 55 L100 60 L94 65' : 'M65 60 L5 60 M11 55 L5 60 L11 65'}
+      fill="none" stroke="#fff" strokeWidth="1.2" strokeOpacity=".6"
+    />
+  );
+}
+
 function MiniPitch({ zone: z, width }: { zone: Zone; width: number }) {
   const dir = z.dir ?? 1;
   return (
     <div className="flex flex-none flex-col gap-[6px]" style={{ width }}>
       <svg viewBox="-3 -3 111 74" className="block w-full rounded-md" style={{ background: 'var(--itg-grass-a)' }} aria-label={z.label}>
         <rect x={z.x} y={z.y} width={z.w} height={z.h} fill="#D4FF3F" fillOpacity=".42" stroke="#D4FF3F" strokeWidth=".8" />
-        <g fill="none" stroke="#fff" strokeOpacity=".75" strokeWidth=".7">
-          <rect x="0" y="0" width="105" height="68" />
-          <line x1="52.5" y1="0" x2="52.5" y2="68" />
-          <circle cx="52.5" cy="34" r="9.15" />
-          <rect x="0" y="13.84" width="16.5" height="40.32" />
-          <rect x="88.5" y="13.84" width="16.5" height="40.32" />
-        </g>
+        <PitchMarkings />
         {z.line !== undefined && <line x1={z.line} y1="-2" x2={z.line} y2="70" stroke="#fff" strokeWidth="1" strokeDasharray="2 1.5" />}
-        <path
-          d={dir === 1 ? 'M40 60 L100 60 M94 55 L100 60 L94 65' : 'M65 60 L5 60 M11 55 L5 60 L11 65'}
-          fill="none" stroke="#fff" strokeWidth="1.2" strokeOpacity=".6"
-        />
+        <AttackArrow dir={dir} />
       </svg>
       <div className="font-mono text-label text-fg-3">{z.label}</div>
     </div>
   );
 }
 
-export function InsightCard({ insight: i, size = 'feed', mode = 'casual', expanded = false, onToggle }: Props) {
+export function InsightCard({ insight: i, size = 'feed', mode = 'casual', expanded = false, onToggle, dense = 0 }: Props) {
   const teams = useTeams();
   const hero = size === 'hero';
   const done = i.phase === 'done';
   const corrected = i.status === 'corrected' && done;
   const fallback = i.status === 'fallback';
   const evidence = i.evidence ?? [];
-  const textSize = hero ? 'text-insight-hero' : 'text-insight';
+  const textSize = hero && !dense ? 'text-insight-hero' : 'text-insight';
   const showPitch = !!i.zone && done && (hero || expanded) && !corrected;
 
   const border = corrected ? 'border border-corrected' : fallback && done ? 'border border-dashed border-fallback' : 'border border-line';
@@ -78,7 +94,7 @@ export function InsightCard({ insight: i, size = 'feed', mode = 'casual', expand
         {i.team && (
           <div className="flex items-center gap-[6px] font-mono text-[13px] text-fg-2">
             <span className="inline-block h-3 w-3 rounded-[3px]" style={{ background: teams.color(i.team) }} />
-            {teams.info(i.team)?.short ?? i.team.toUpperCase()}
+            {teams.short(i.team)}
           </div>
         )}
         <div className={`ml-auto font-display font-extrabold leading-none ${hero ? 'text-[40px]' : 'text-[30px]'}`}>{i.minute}&apos;</div>
@@ -187,7 +203,7 @@ export function InsightCard({ insight: i, size = 'feed', mode = 'casual', expand
         </footer>
       )}
 
-      {done && (expanded || (hero && !onToggle)) && evidence.length > 0 && (
+      {done && (expanded || (hero && !onToggle && dense < 2)) && evidence.length > 0 && (
         <ul className="flex flex-col border-t border-line">
           {evidence.map((e) => (
             <li key={e} className="flex items-center gap-[10px] border-b border-line py-[9px] font-mono text-evidence text-fg">

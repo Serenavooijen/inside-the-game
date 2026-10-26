@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useReducer, useRef } from 'react';
 import type {
-  Insight, Marker, MatchEvent, MatchState, Mode, Overlay, OverlaySlot, Speed, Tick,
+  Commentary, Insight, Marker, MatchEvent, MatchState, Mode, Overlay, OverlaySlot, ScoutingReport, Speed, Tick,
 } from './contracts';
 
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL || '/api/mock').replace(/\/$/, '');
@@ -20,6 +20,10 @@ export type StreamState = {
   insights: Insight[];
   overlays: Partial<Record<OverlaySlot, ActiveOverlay>>;
   markers?: Marker[];
+  /** The Scout's cup-match report (backend with TACTICS_ENABLED=1) */
+  scouting?: ScoutingReport;
+  /** Newest line of the Narrator per minute (backend with TACTICS_ENABLED=1) */
+  commentary: Commentary | null;
   /** Last frame of the match and first frame of the second half */
   duration: number;
   halftime: number;
@@ -36,11 +40,12 @@ type Action =
   | { type: 'expire'; slot: OverlaySlot; id: string }
   | { type: 'event'; data: MatchEvent }
   | { type: 'insight'; data: Insight }
+  | { type: 'commentary'; data: Commentary }
   | { type: 'connection'; value: Connection }
   | { type: 'error'; value: string | null };
 
 const initial: StreamState = {
-  tick: null, mode: 'live', events: [], insights: [], overlays: {}, duration: 5400, halftime: 2700, connection: 'connecting', tickAt: 0, error: null,
+  tick: null, mode: 'live', events: [], insights: [], overlays: {}, commentary: null, duration: 5400, halftime: 2700, connection: 'connecting', tickAt: 0, error: null,
 };
 
 function reducer(s: StreamState, a: Action): StreamState {
@@ -55,9 +60,11 @@ function reducer(s: StreamState, a: Action): StreamState {
         events: a.data.events,
         insights: a.data.insights,
         markers: a.data.markers,
+        scouting: a.data.scouting,
         duration: a.data.duration,
         halftime: a.data.halftime,
         overlays: {},
+        commentary: a.data.generation === gen ? s.commentary : null,
       };
     case 'tick': {
       // A new generation means a seek happened: clear what belongs to the old one.
@@ -67,6 +74,7 @@ function reducer(s: StreamState, a: Action): StreamState {
         tick: a.data,
         tickAt: performance.now(),
         overlays: newGen ? {} : s.overlays,
+        commentary: newGen ? null : s.commentary,
         events: newGen ? s.events.filter((e) => e.t <= a.data.t) : s.events,
       };
     }
@@ -85,6 +93,9 @@ function reducer(s: StreamState, a: Action): StreamState {
       const insights = i === -1 ? [...s.insights, a.data] : s.insights.map((x, j) => (j === i ? a.data : x));
       return { ...s, insights };
     }
+    case 'commentary':
+      if (a.data.generation < gen) return s;
+      return { ...s, commentary: a.data };
     case 'connection':
       return { ...s, connection: a.value };
     case 'error':
@@ -114,7 +125,12 @@ export function useMatchStream(matchId: string, mode: Mode) {
     let cancelled = false;
     const resync = async () => {
       try {
-        const res = await fetch(`${API_URL}/state`, { cache: 'no-store' });
+        let res = await fetch(`${API_URL}/state`, { cache: 'no-store' });
+        if (res.status === 409 && !cancelled) {
+          // The backend has no match loaded (restarted, or opened before it was ready): load it ourselves.
+          await post('/match/load', { match_id: matchId, mode });
+          res = await fetch(`${API_URL}/state`, { cache: 'no-store' });
+        }
         if (res.ok && !cancelled) dispatch({ type: 'state', data: await res.json() });
       } catch { /* the stream will send state too */ }
     };
@@ -135,6 +151,7 @@ export function useMatchStream(matchId: string, mode: Mode) {
       on<Tick>('tick', (d) => dispatch({ type: 'tick', data: d }));
       on<MatchEvent>('event', (d) => dispatch({ type: 'event', data: d }));
       on<Insight>('insight', (d) => dispatch({ type: 'insight', data: d }));
+      on<Commentary>('commentary', (d) => dispatch({ type: 'commentary', data: d }));
       on<Overlay>('overlay', (d) => {
         dispatch({ type: 'overlay', data: d });
         const h = setTimeout(() => { timers.current.delete(h); dispatch({ type: 'expire', slot: d.slot, id: d.id }); }, OVERLAY_MS);

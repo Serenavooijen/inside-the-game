@@ -1,0 +1,82 @@
+[
+ {
+  "clock": "00:00",
+  "period": 1,
+  "team": "KBA",
+  "formation": "4-3-3",
+  "players_on_pitch": 11,
+  "roles": {
+   "KBA-01": "GK",
+   "KBA-02": "RB",
+   "KBA-05": "RCB",
+   "KBA-04": "LCB",
+   "KBA-03": "LB",
+   "KBA-06": "DM",
+   "KBA-08": "RCM",
+   "KBA-10": "LCM",
+   "KBA-07": "RW",
+   "KBA-09": "ST",
+   "KBA-11": "LW"
+  }
+ },
+ {
+  "clock": "00:00",
+  "period": 1,
+  "team": "NGR",
+  "formation": "4-3-3",
+  "players_on_pitch": 11,
+  "roles": {
+   "NGR-01": "GK",
+   "NGR-02": "RB",
+   "NGR-04": "RCB",
+   "NGR-05": "LCB",
+   "NGR-03": "LB",
+   "NGR-07": "RW",
+   "NGR-06": "RCM",
+   "NGR-08": "DM",
+   "NGR-11": "LW",
+   "NGR-09": "ST",
+   "NGR-18": "LCM"
+  }
+ },
+ {
+  "clock": "60:00",
+  "period": 2,
+  "team": "NGR",
+  "formation": "4-4-2",
+  "players_on_pitch": 11,
+  "roles": {
+   "NGR-01": "GK",
+   "NGR-02": "RB",
+   "NGR-04": "RCB",
+   "NGR-05": "LCB",
+   "NGR-03": "LB",
+   "NGR-07": "RM",
+   "NGR-06": "RCM",
+   "NGR-08": "LCM",
+   "NGR-11": "LM",
+   "NGR-09": "RS",
+   "NGR-10": "LS"
+  }
+ },
+ {
+  "clock": "70:00",
+  "period": 2,
+  "team": "KBA",
+  "formation": "4-3-3",
+  "players_on_pitch": 11,
+  "roles": {
+   "KBA-01": "GK",
+   "KBA-02": "RB",
+   "KBA-05": "RCB",
+   "KBA-04": "LCB",
+   "KBA-06": "DM",
+   "KBA-08": "RCM",
+   "KBA-10": "LCM",
+   "KBA-07": "RW",
+   "KBA-09": "ST",
+   "KBA-11": "LW",
+   "KBA-18": "LB"
+  }
+ }
+]

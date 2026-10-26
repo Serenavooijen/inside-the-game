@@ -41,6 +41,8 @@ export function useTeams() {
       color: (id?: TeamId) => (side(id) === 'away' ? 'var(--itg-away)' : side(id) === 'home' ? 'var(--itg-home)' : 'var(--itg-fg-3)'),
       /** Readable text colour on the page background */
       text: (id?: TeamId) => (side(id) === 'away' ? 'var(--itg-away-text)' : side(id) === 'home' ? 'var(--itg-home-text)' : 'var(--itg-fg)'),
+      /** Abbreviation on screen, e.g. "NTG": always the team's `short`, never derived from the team id */
+      short: (id?: TeamId) => info(id)?.short ?? '',
       /** Short display name for TV bars, e.g. "Kingsbridge" */
       label: (id?: TeamId) => info(id)?.name.split(' ')[0] ?? '',
     };

@@ -389,7 +389,7 @@ fixture = {
     "id": "kba-ngr",
     "source": "generate_match.py, seed " + str(script["meta"].get("seed")),
     "home": {"id": "kba", "name": script["teams"]["home"]["name"], "short": "KBA"},
-    "away": {"id": "ngr", "name": script["teams"]["away"]["name"], "short": "NGR"},
+    "away": {"id": "ngr", "name": script["teams"]["away"]["name"], "short": "NTG"},
     "duration": duration,
     "halftime": halftime,
     "roster": roster,

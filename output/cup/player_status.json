@@ -1,0 +1,27 @@
+[
+ {
+  "clock": "41:10",
+  "period": 1,
+  "player_id": "NGR-06",
+  "change": "yellow_card",
+  "modifiers": {
+   "aggression": 0.7,
+   "foul_rate": 0.6
+  },
+  "effect": "Brouwer is more careful in duels."
+ },
+ {
+  "clock": "60:00",
+  "period": 2,
+  "player_id": "NGR-10",
+  "change": "substituted_on",
+  "replaces": "NGR-18"
+ },
+ {
+  "clock": "70:00",
+  "period": 2,
+  "player_id": "KBA-18",
+  "change": "substituted_on",
+  "replaces": "KBA-03"
+ }
+]

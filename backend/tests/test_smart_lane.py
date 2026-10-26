@@ -150,3 +150,50 @@ def test_safety_net_sends_template_text_when_the_workflow_hangs():
     done = [d for n, d in msgs if n == "insight" and d.get("phase") == "done"][-1]
     assert done["status"] == "fallback" and "0.2 s" in done["fallbackReason"]
     assert done["text"].startswith("Goal Northgate: Adeyemi-Clarke (9)")
+
+
+class StuckModel:
+    """A model call stuck in its client: it ignores the deadline and unwinds slowly when cancelled."""
+    name = "stuck"
+
+    async def draft(self, sheet, prompt):
+        try:
+            await asyncio.sleep(30)
+        except asyncio.CancelledError:
+            await asyncio.sleep(2)
+            raise
+
+    async def narrate(self, sheet, claims, prompt):
+        yield ""
+
+
+def test_a_stuck_model_call_does_not_hold_the_deadline():
+    """The workflow's own deadline returns the template text on time, not after the call has unwound."""
+    import time
+
+    from app.agents.workflow import run_workflow
+
+    s = all_fact_sheets()[0]
+
+    async def main():
+        t0 = time.perf_counter()
+        insight = await run_workflow(s.moment, s, None, model=StuckModel(), deadline_s=0.2)
+        return insight, time.perf_counter() - t0
+
+    insight, took = asyncio.run(main())
+    assert insight.status == "fallback" and "timed out" in insight.fallback_reason
+    assert took < 1.0
+
+
+def test_the_safety_net_holds_against_a_stuck_call():
+    async def scenario(sim, lane, q):
+        sim.seek(FIRST_GOAL_T - 1)
+        sim.step(0.2)
+        t0 = asyncio.get_running_loop().time()
+        await lane.wait()
+        return drain(q), asyncio.get_running_loop().time() - t0
+
+    msgs, took = run_scenario(StuckModel(), scenario, safety_net_s=0.2)
+    done = [d for n, d in msgs if n == "insight" and d.get("phase") == "done"]
+    assert done and done[-1]["status"] == "fallback"
+    assert took < 1.0                      # the published fallback does not wait for the stuck call

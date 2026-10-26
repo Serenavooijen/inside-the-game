@@ -8,6 +8,7 @@ A fully synthetic, scripted football match for the *Inside the Game* hackathon, 
 | `docs/MATCH_ANALYSIS.md` | Analysis: attacking, defending, transitions, tactics, players, physical/mental, set pieces, advanced stats (xG, xGA, xGOT, PPDA, field tilt, progressive passes, deep completions, big chances, xT, set-piece xG), match-ups, context, coaching |
 | `script/match_script.json` | The script as data (source of truth for the match) |
 | `script/pre_match_context.json` | Pre-match context as data |
+| `script/cup/match_script.json` | The earlier cup match between the same teams (seed 4417), the Scout's baseline → `output/cup/`, `fixtures/scouting/` |
 | `generator/generate_match.py` | 1 Hz match simulator that follows the script |
 | `generator/analyze_match.py` | Computes all analysis metrics → `output/analysis.json` + figures |
 | `generator/render_analysis.py` / `render_draaiboek.py` | Build the two Markdown documents in `docs/` |
@@ -44,6 +45,30 @@ The backend replays the reference match from `output/` and streams it over SSE i
 | `app/overlays.py` | Overlay Composer (fast lane): shot, pass, sprint and tag overlays, per event and frame |
 | `app/moments.py` | Statistician: recognises moments (goals, cards, half and full time) and builds their FactSheet |
 | `app/smart_lane.py` | Runs the agent workflow per moment: at most 2 at once, 8 s safety net, cancelled on seek |
+| `app/tactics.py` | Tactician: tactical facts per window, one detector per concept in `agents/knowledge/tactics_playbook.md` |
+| `app/scout_lane.py` | Runs the Scout every 5 minutes, at half time and after substitutions (`TACTICS_ENABLED=1`) |
+| `app/commentary_lane.py` | One checked line of commentary per minute, SSE `commentary` (`TACTICS_ENABLED=1`) |
+
+### Tactical analysis (`TACTICS_ENABLED=1`)
+
+With `TACTICS_ENABLED=1` the backend adds the **Scout**, a third agent: an opposition analyst for the staff.
+
+- **When:** every 5 minutes of match time, at half time, and 3 minutes after a team's substitution(s).
+- **How:**
+  1. The code measures tactical facts in `app/tactics.py`, one detector per concept in `app/agents/knowledge/tactics_playbook.md`, compared with the earlier cup match.
+  2. The Scout writes 2–3 observations, each with a consequence and advice for the coach.
+  3. The checker rejects numbers, names, score claims and directions that the facts do not back.
+- **Output:** the result is sent as an `insight` of type `"tactics"`. The scouting report on the cup match (`fixtures/scouting/kba-ngr-cup.json`) is sent in `state.scouting`.
+- **Commentary:** every match minute the Narrator writes one checked line (≤ 25 words), sent as the new SSE message **`commentary`** `{ t, minute, text, sourceInsightId, generation }`.
+- **The match itself:** the live match is unchanged (seed 8002, 2-2, xG 2.48–1.52). The cup match (`script/cup/`) is only the baseline.
+
+Container App settings for it (all of them in `docs/overdracht-agents.md`, section 5):
+
+| Setting | Value |
+|---|---|
+| `TACTICS_ENABLED` | `1` |
+| `FOUNDRY_SCOUT_AGENT` / `FOUNDRY_SCOUT_AGENT_VERSION` | `itg-scout` / `3` (publish with `tools/create_foundry_agents.py --only scout`) |
+| `SCOUT_DEADLINE_S`, `COMMENTARY_DEADLINE_S` | optional, default 15 and 5 |
 
 ### Docker and Azure Container Apps
 

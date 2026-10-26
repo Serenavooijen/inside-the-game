@@ -20,12 +20,14 @@ from app.sources import MatchItem, PlayerInfo
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_DIR = Path(os.environ.get("ITG_OUTPUT_DIR", ROOT / "output"))
 SCRIPT_DIR = Path(os.environ.get("ITG_SCRIPT_DIR", ROOT / "script"))
+# The Scout's report on the cup match (tools/build_scouting_report.py); its facts are the live baseline.
+SCOUTING_REPORT = Path(os.environ.get("ITG_SCOUTING_REPORT", ROOT / "fixtures" / "scouting" / "kba-ngr-cup.json"))
 
 MATCH_ID = "kba-ngr"
 SUMMARY = MatchSummary(
     id=MATCH_ID,
     home=TeamInfo(id="kba", name="Kingsbridge Athletic", short="KBA", color="#2F6BFF", fg="#FFFFFF"),
-    away=TeamInfo(id="ngr", name="Northgate Rovers", short="NGR", color="#FFB400", fg="#121212"),
+    away=TeamInfo(id="ngr", name="Northgate Rovers", short="NTG", color="#FFB400", fg="#121212"),
     score="2–2",
     story="Kingsbridge had the ball and the xG (2.48 – 1.52), then lost Brannigan to a second yellow. "
           "Northgate led twice; a substitute’s header made it 2-2.",
@@ -67,9 +69,14 @@ def _read_frames(path: Path) -> list[SourceFrame]:
 
 @lru_cache(maxsize=1)
 def _load() -> tuple[MatchInfo, dict[str, PlayerInfo], list[MatchItem]]:
-    script = json.loads((SCRIPT_DIR / "match_script.json").read_text(encoding="utf-8"))
-    rows = json.loads((OUTPUT_DIR / "events.json").read_text(encoding="utf-8"))
-    frames = _read_frames(OUTPUT_DIR / "tracking.csv")
+    return load_generated(OUTPUT_DIR, SCRIPT_DIR / "match_script.json", MATCH_ID)
+
+
+def load_generated(output_dir: Path, script_path: Path, match_id: str) -> tuple[MatchInfo, dict[str, PlayerInfo], list[MatchItem]]:
+    """Any generator run: its script plus the events.json and tracking.csv it wrote (e.g. the cup match)."""
+    script = json.loads(script_path.read_text(encoding="utf-8"))
+    rows = json.loads((output_dir / "events.json").read_text(encoding="utf-8"))
+    frames = _read_frames(output_dir / "tracking.csv")
 
     home, away = script["teams"]["home"], script["teams"]["away"]
     roster = {}
@@ -81,7 +88,7 @@ def _load() -> tuple[MatchInfo, dict[str, PlayerInfo], list[MatchItem]]:
                 name=f"{first[0]}. {' '.join(rest)}" if rest else p["name"],
                 surname=" ".join(rest) or p["name"],
             )
-    info = MatchInfo(match_id=MATCH_ID, title=script["meta"]["title"], home=home["id"], away=away["id"],
+    info = MatchInfo(match_id=match_id, title=script["meta"]["title"], home=home["id"], away=away["id"],
                      team_names={t["id"]: t["short"] for t in (home, away)},
                      mode="replay", duration_s=frames[-1].t)
     # Frame before the events of the same second: events then see the positions they happened in.

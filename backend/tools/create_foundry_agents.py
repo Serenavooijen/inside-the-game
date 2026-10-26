@@ -1,7 +1,7 @@
 """
-Creates (or updates) the Analyst and Narrator as prompt agents in Foundry Agent Service.
+Creates (or updates) the Analyst, the Narrator and the Scout as prompt agents in Foundry Agent Service.
 
-They use exactly the same instructions and output schema as the code agents
+They use exactly the same instructions and output schemas as the code agents
 (app/agents/prompts.py, app/agents/models.py), so a comparison is fair.
 
     cd backend
@@ -9,10 +9,12 @@ They use exactly the same instructions and output schema as the code agents
     $env:FOUNDRY_PROJECT_ENDPOINT = "https://<resource>.services.ai.azure.com/api/projects/<project>"
     $env:MODEL_ANALYST = "gpt-4.1-mini"     # deployment names in your project
     $env:MODEL_NARRATOR = "gpt-4.1-mini"
+    $env:MODEL_SCOUT = "gpt-4.1-mini"
     uv run python tools/create_foundry_agents.py
 
 Every run publishes a new version. The script prints the versions and writes them
 to backend/.env.foundry-agents so you can load them before running the workflow.
+`--only scout` (or `--only analyst,narrator`) publishes just those; the others keep their version.
 """
 
 from __future__ import annotations
@@ -23,8 +25,8 @@ import warnings
 
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
 
-from app.agents.models import AnalystDraft  # noqa: E402
-from app.agents.prompts import ANALYST_INSTRUCTIONS, NARRATOR_INSTRUCTIONS  # noqa: E402
+from app.agents.models import AnalystDraft, ScoutDraft  # noqa: E402
+from app.agents.prompts import ANALYST_INSTRUCTIONS, NARRATOR_INSTRUCTIONS, SCOUT_INSTRUCTIONS  # noqa: E402
 
 
 def main() -> int:
@@ -36,6 +38,8 @@ def main() -> int:
     narrator_model = os.getenv("MODEL_NARRATOR", "gpt-4.1-mini")
     analyst_name = os.getenv("FOUNDRY_ANALYST_AGENT", "itg-analyst")
     narrator_name = os.getenv("FOUNDRY_NARRATOR_AGENT", "itg-narrator")
+    scout_model = os.getenv("MODEL_SCOUT", analyst_model)
+    scout_name = os.getenv("FOUNDRY_SCOUT_AGENT", "itg-scout")
 
     from agent_framework import Agent
     from agent_framework.foundry import FoundryChatClient, to_prompt_agent
@@ -55,16 +59,30 @@ def main() -> int:
         print(f"✓ {name}: version {version.version} (model {model})")
         return str(version.version)
 
-    av = publish(analyst_name, analyst_model, ANALYST_INSTRUCTIONS,
-                 "Inside the Game · Analyst: picks 2–3 claims from the FactSheet, each citing fact ids.", AnalystDraft)
-    nv = publish(narrator_name, narrator_model, NARRATOR_INSTRUCTIONS,
-                 "Inside the Game · Narrator: turns checked claims into 1–3 sentences for fans.")
-
+    # --only scout: publish just these agents; the others keep the version in .env.foundry-agents.
+    only = set(sys.argv[sys.argv.index("--only") + 1].split(",")) if "--only" in sys.argv else {"analyst", "narrator", "scout"}
     env_path = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".env.foundry-agents"))
+    env = {}
+    if os.path.exists(env_path):
+        env = dict(line.strip().split("=", 1) for line in open(env_path) if "=" in line)
+    env.update(MODEL_PROVIDER="foundry-agents", FOUNDRY_PROJECT_ENDPOINT=endpoint)
+
+    if "analyst" in only:
+        env.update(FOUNDRY_ANALYST_AGENT=analyst_name, FOUNDRY_ANALYST_AGENT_VERSION=publish(
+            analyst_name, analyst_model, ANALYST_INSTRUCTIONS,
+            "Inside the Game · Analyst: picks 2–3 claims from the FactSheet, each citing fact ids.", AnalystDraft))
+    if "narrator" in only:
+        env.update(FOUNDRY_NARRATOR_AGENT=narrator_name, FOUNDRY_NARRATOR_AGENT_VERSION=publish(
+            narrator_name, narrator_model, NARRATOR_INSTRUCTIONS,
+            "Inside the Game · Narrator: turns checked claims into 1–3 sentences for fans."))
+    if "scout" in only:
+        env.update(FOUNDRY_SCOUT_AGENT=scout_name, FOUNDRY_SCOUT_AGENT_VERSION=publish(
+            scout_name, scout_model, SCOUT_INSTRUCTIONS,
+            "Inside the Game · Scout: opposition analyst; 2–3 tactical observations with consequence, citing fact ids.",
+            ScoutDraft))
+
     with open(env_path, "w") as f:
-        f.write(f"MODEL_PROVIDER=foundry-agents\nFOUNDRY_PROJECT_ENDPOINT={endpoint}\n"
-                f"FOUNDRY_ANALYST_AGENT={analyst_name}\nFOUNDRY_ANALYST_AGENT_VERSION={av}\n"
-                f"FOUNDRY_NARRATOR_AGENT={narrator_name}\nFOUNDRY_NARRATOR_AGENT_VERSION={nv}\n")
+        f.writelines(f"{k}={v}\n" for k, v in env.items())
     print(f"\nWrote {env_path}. Compare both set-ups with:\n"
           f"  uv run python -m app.agents.run_fixtures --compare foundry,foundry-agents")
     return 0

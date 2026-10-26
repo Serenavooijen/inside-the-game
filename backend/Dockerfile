@@ -32,6 +32,7 @@ COPY backend/pyproject.toml backend/uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 COPY backend/app/ ./app/
 COPY script/match_script.json /app/script/
+COPY fixtures/scouting/ /app/fixtures/scouting/
 COPY --from=match /app/output/events.json /app/output/tracking.csv /app/output/
 
 RUN useradd --no-create-home --shell /usr/sbin/nologin itg
