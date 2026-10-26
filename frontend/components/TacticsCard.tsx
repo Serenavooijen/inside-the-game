@@ -13,7 +13,7 @@ const COMPARE: Record<TacticalObservation['compareToCup'], string | null> = {
   same: 'As in the cup', changed: 'Changed since the cup', 'n/a': null,
 };
 
-function TacticsIcon() {
+export function TacticsIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <rect x="2.5" y="4" width="19" height="16" rx="1.5" />
@@ -25,14 +25,14 @@ function TacticsIcon() {
 }
 
 /** Heatmap of the window plus the mean build-up positions (shows where the 6 stands). */
-function HeatPitch({ heatmap, buildUp, width }: { heatmap?: Heatmap; buildUp?: Player[]; width: number }) {
+export function HeatPitch({ heatmap, buildUp, width, caption }: { heatmap?: Heatmap; buildUp?: Player[]; width: number | string; caption?: string }) {
   const teams = useTeams();
   if (!heatmap && !buildUp?.length) return null;
   const cols = heatmap?.grid[0]?.length ?? 6;
   const rows = heatmap?.grid.length ?? 4;
   const max = Math.max(1, ...(heatmap?.grid.flat() ?? [1]));
   const team = heatmap?.team ?? buildUp?.[0]?.team;
-  const label = [heatmap && 'Presence', buildUp?.length && 'mean build-up positions'].filter(Boolean).join(' · ');
+  const label = caption ?? [heatmap && 'Presence', buildUp?.length && 'mean build-up positions'].filter(Boolean).join(' · ');
   return (
     <div className="flex flex-none flex-col gap-[6px]" style={{ width }}>
       <svg viewBox="-3 -3 111 74" className="block w-full rounded-md" style={{ background: 'var(--itg-grass-a)' }} aria-label={label}>
@@ -49,9 +49,9 @@ function HeatPitch({ heatmap, buildUp, width }: { heatmap?: Heatmap; buildUp?: P
         ))}
         {heatmap && <AttackArrow dir={heatmap.dir} />}
       </svg>
-      <div className="flex items-center gap-[6px] font-mono text-label text-fg-3">
+      <div className="flex min-w-0 items-center gap-[6px] font-mono text-label text-fg-3">
         {team && <span className="inline-block h-[10px] w-[10px] rounded-[2px]" style={{ background: teams.color(team) }} />}
-        {label}
+        <span className="truncate" title={label}>{label}</span>
       </div>
     </div>
   );
@@ -99,7 +99,7 @@ export function Observations({ observations }: { observations: TacticalObservati
   );
 }
 
-function LeftOut({ items }: { items: { text: string; reason: string }[] }) {
+export function LeftOut({ items }: { items: { text: string; reason: string }[] }) {
   if (!items.length) return null;
   return (
     <div className="flex flex-col gap-2 rounded-md bg-corrected-soft px-[14px] py-[10px]">
@@ -117,7 +117,7 @@ function LeftOut({ items }: { items: { text: string; reason: string }[] }) {
   );
 }
 
-function StatusPill({ status, reason }: { status: Insight['status']; reason?: string }) {
+export function StatusPill({ status, reason }: { status: Insight['status']; reason?: string }) {
   if (status === 'checked') return (
     <div className="flex items-center gap-[6px] rounded-full bg-checked-soft py-[5px] pl-2 pr-[10px] text-[14px] font-semibold text-checked">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M20 6 9 17l-5-5" /></svg>
@@ -138,7 +138,7 @@ function StatusPill({ status, reason }: { status: Insight['status']; reason?: st
   );
 }
 
-function Evidence({ items }: { items: string[] }) {
+export function Evidence({ items }: { items: string[] }) {
   return (
     <ul className="flex flex-col border-t border-line">
       {items.map((e) => (

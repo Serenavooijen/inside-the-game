@@ -75,7 +75,7 @@ export function MatchScreen({ matchId, mode }: { matchId: string; mode: Mode }) 
 
   const t = tick?.t ?? 0;
   const markers: Marker[] = useMemo(
-    () => s.markers ?? markersFrom(s.events, s.insights.filter((i) => i.phase === 'done' && i.type !== 'tactics')),
+    () => s.markers ?? markersFrom(s.events, s.insights.filter((i) => i.phase === 'done' && i.type !== 'tactics' && i.type !== 'substitution')),
     [s.markers, s.events, s.insights],
   );
   const period = !tick ? '' : tick.finished ? 'FULL TIME' : PERIOD[tick.period] ?? '';

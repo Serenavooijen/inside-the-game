@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Insight, ScoutingReport } from '@/lib/contracts';
 import { InsightCard } from './InsightCard';
+import { SubstitutionCard } from './SubstitutionCard';
 import { ScoutingReportPanel, TacticsCard } from './TacticsCard';
 
 type Props = {
@@ -90,10 +91,12 @@ export function ProducerFeed({ insights, mode, onMode, arrivingId, focusId, scou
             const isOpen = open[i.id] ?? i.id === newest;
             const toggle = () => setOpen((o) => ({ ...o, [i.id]: !isOpen }));
             return (
-              <div key={i.id} ref={(el) => { refs.current[i.id] = el; }} className={i.id === arrivingId ? 'itg-arrive' : i.type === 'tactics' ? 'itg-in' : undefined}>
+              <div key={i.id} ref={(el) => { refs.current[i.id] = el; }} className={i.id === arrivingId ? 'itg-arrive' : i.type === 'tactics' || i.type === 'substitution' ? 'itg-in' : undefined}>
                 {i.type === 'tactics'
                   ? <TacticsCard insight={i} expanded={isOpen} onToggle={toggle} />
-                  : <InsightCard insight={i} mode={mode} expanded={isOpen} onToggle={toggle} />}
+                  : i.type === 'substitution'
+                    ? <SubstitutionCard insight={i} expanded={isOpen} onToggle={toggle} />
+                    : <InsightCard insight={i} mode={mode} expanded={isOpen} onToggle={toggle} />}
               </div>
             );
           })}
