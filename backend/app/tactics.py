@@ -13,14 +13,15 @@ runs it in a worker thread so the fast lane never waits.
 """
 from __future__ import annotations
 
+import re
 from bisect import bisect_left, bisect_right
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from statistics import mean
 
 from app.contracts import (
-    Fact, Heatmap, MatchInfo, MatchSnapshot, Player, SourceEvent, SourceFrame, TacticalFactSheet,
-    TacticalTrigger, TacticalWindow,
+    Fact, Heatmap, MatchInfo, MatchSnapshot, Player, SourceEvent, SourceFrame, SubPlayer, SubstitutionFactSheet,
+    SubstitutionInfo, SubstitutionKind, SubstitutionStage, TacticalFactSheet, TacticalTrigger, TacticalWindow,
 )
 from app.sources import PlayerInfo
 from app.wire import minute_from_clock, team_id
@@ -64,6 +65,47 @@ def band(metric: str, value: float) -> str:
 CORE_STATIC = {"B1", "B2", "B3", "B5", "P1", "D1", "G2", "G3"}  # facts a short window repeats without a change
 FULL_BACKS = ("RB", "LB")
 ROLE_NAMES = {"RB": "right-back", "LB": "left-back"}
+# Substitutions (G2, G4)
+ROLE_LABEL = {"GK": "goalkeeper", "RB": "full-back", "LB": "full-back", "RWB": "wing-back", "LWB": "wing-back",
+              "RCB": "centre-back", "CB": "centre-back", "LCB": "centre-back", "DM": "defensive midfielder",
+              "RCM": "central midfielder", "LCM": "central midfielder", "CM": "central midfielder",
+              "AM": "attacking midfielder", "RM": "wide midfielder", "LM": "wide midfielder", "RW": "winger",
+              "LW": "winger", "ST": "striker", "RS": "striker", "LS": "striker"}
+# Calibrated on this synthetic tracking (99th percentile of outfield speed is about 6.2 m/s).
+SPRINT_MS = 6.0             # a sprint starts at 6.0 m/s (21.6 km/h)
+HSR_MS = 5.0                # high-speed running from 5.0 m/s (18 km/h)
+SUB_FORM_S = 15 * 60        # the player who goes off: his last 15 minutes against his first 15
+LIKE_FOR_LIKE_M = 10.0      # like-for-like: same role and mean positions less than this apart
+CONTACT_TYPES = {"pass", "ball_receipt", "take_on", "shot", "cross", "dispossessed", "tackle", "interception",
+                 "ball_recovery", "clearance", "foul_won"}
+DUEL_TYPES = {"tackle", "take_on", "foul", "foul_won", "dispossessed"}
+
+
+def _key_action(e: SourceEvent) -> str | None:
+    """A first action that matters: a goal, a shot, a key pass, a recovery."""
+    if e.type == "goal":
+        return "a goal"
+    if e.type == "shot":
+        return "a shot"
+    if e.type == "pass" and e.details.get("pass_type") == "through_ball":
+        return "a through ball"
+    if e.type == "cross":
+        return "a cross"
+    if e.type in ("ball_recovery", "interception"):
+        return "a ball recovery"
+    if e.type == "tackle" and e.outcome == "won":
+        return "a tackle won"
+    return None
+
+
+def _n(count: int, word: str) -> str:
+    """'1 sprint', '3 sprints', '1 pass', '6 passes'."""
+    return f"{count} {word}" + ("" if count == 1 else "es" if word.endswith("s") else "s")
+
+
+def _minute_number(label: str) -> int:
+    base, _, extra = label.partition("+")
+    return int(base) + int(extra or 0)
 
 
 # ============================================================================ tracking, team-relative
@@ -75,6 +117,7 @@ class At:
     role: str
     x: float
     y: float
+    speed: float = 0.0          # m/s
 
 
 @dataclass
@@ -105,7 +148,7 @@ class Track:
             for side in (info.home, info.away):
                 rel_ball[side] = self.rel(side, f.period, f.ball.x, f.ball.y)
                 ps = [p for p in f.players if p.team == side]
-                rel_team[side] = [At(p.id, p.role, *self.rel(side, f.period, p.x, p.y)) for p in ps]
+                rel_team[side] = [At(p.id, p.role, *self.rel(side, f.period, p.x, p.y), p.speed) for p in ps]
                 abs_team[side] = [(p.id, p.x, p.y) for p in ps if p.role != "GK"]
             self.frames.append(FrameRel(f.t, f.period, f.clock, f.ball.live, poss, rel_ball, rel_team, abs_team))
         self.ts = [f.t for f in self.frames]
@@ -836,6 +879,303 @@ class Tactician:
             match_state=snapshot, facts=facts, baseline=baseline,
             concepts_fired=list(dict.fromkeys(f.concept for f in facts)),
         )
+
+    # ------------------------------------------------------------------ substitutions (G2, G4)
+
+    def role_at(self, team: str, pid: str, t: float, after: bool = False) -> str | None:
+        """The player's role in the last frame up to `t` (or, after=True, the first frame from `t` on)."""
+        fs = self.track.window(t, t + 60) if after else list(reversed(self.track.window(max(0.0, t - 60), t)))
+        return next((a.role for f in fs for a in f.team[team] if a.id == pid), None)
+
+    def player_frames(self, team: str, pid: str, from_t: float, to_t: float) -> list[tuple[float, At]]:
+        return [(f.t, a) for f in self.track.window(from_t, to_t) for a in f.team[team] if a.id == pid]
+
+    def player_load(self, team: str, pid: str, from_t: float, to_t: float) -> tuple[int, int, int]:
+        """(seconds on the pitch, sprints, high-speed metres) in [from_t, to_t]; 1 Hz, so m/s = m per frame."""
+        seen = self.player_frames(team, pid, from_t, to_t)
+        sprints, hsr, fast = 0, 0.0, False
+        for _, a in seen:
+            if a.speed >= SPRINT_MS and not fast:
+                sprints += 1
+            fast = a.speed >= SPRINT_MS
+            if a.speed >= HSR_MS:
+                hsr += a.speed
+        return len(seen), sprints, round(hsr)
+
+    def player_mean(self, team: str, pid: str, from_t: float, to_t: float) -> tuple[float, float] | None:
+        seen = self.player_frames(team, pid, from_t, to_t)
+        if len(seen) < MIN_FRAMES:
+            return None
+        return mean(a.x for _, a in seen), mean(a.y for _, a in seen)
+
+    def player_heatmap(self, team: str, pid: str | None, from_t: float, to_t: float) -> Heatmap | None:
+        """Team-relative heatmap (dir 1) of one player, or of the team's outfield players when pid is None."""
+        grid = [[0.0] * GRID_COLS for _ in range(GRID_ROWS)]
+        n = 0
+        for f in self.track.window(from_t, to_t):
+            for a in f.team[team]:
+                if (pid and a.id != pid) or (not pid and a.role == "GK"):
+                    continue
+                c = min(GRID_COLS - 1, max(0, int(a.x / (L / GRID_COLS))))
+                r = min(GRID_ROWS - 1, max(0, int(a.y / (W / GRID_ROWS))))
+                grid[r][c] += 1
+                n += 1
+        if n < MIN_FRAMES:
+            return None
+        return Heatmap(team=team_id(team), grid=[[round(100 * v / n, 1) for v in row] for row in grid], dir=1)
+
+    def next_change(self, team: str, events: list[SourceEvent], after_t: float) -> float | None:
+        """The next substitution, formation change or red card of the team after `after_t`."""
+        return next((e.t for e in events if e.t > after_t and e.team == team
+                     and e.type in ("substitution", "tactical_change", "red_card")), None)
+
+    def substitution_sheet(self, subs: list[SourceEvent], events: list[SourceEvent], now_t: float,
+                           stage: SubstitutionStage, snapshot: MatchSnapshot | None = None) -> SubstitutionFactSheet:
+        """The facts of one substitution moment (all substitutions of one team at the same second).
+
+        stage "watch": who, roles, kind, game state and why the player went off (only the past).
+        stage "impact" (about 8 minutes later): also the substitute's first minutes, the effect on the team,
+        the opponent's reaction and the cup match. A fact only when there is enough data."""
+        events = [e for e in events if e.t <= now_t]
+        sub, team = subs[0], subs[0].team
+        t0, minute, name = sub.t, sub.minute, self.name(team)
+        opp = self.info.away if team == self.info.home else self.info.home
+        pairs = [(s.player_id, s.details.get("player_in_id")) for s in subs]
+        src = [s.event_id for s in subs]
+        drafts: list[Draft] = [self.state_draft(events, t0 - 1, minute, team, src)]
+
+        # Who: roles from the line-up just before and just after the change
+        off_role = {o: self.role_at(team, o, t0 - 1) for o, _ in pairs}
+        on_role = {i: self.role_at(team, i, t0 + 1, after=True) for _, i in pairs}
+        label = lambda r: ROLE_LABEL.get(r or "", (r or "player").lower())
+        for o, i in pairs:
+            drafts.append(Draft(f"{self.who(o)}, {label(off_role[o])}, off; {self.who(i)}, {label(on_role[i])}, on at "
+                                f"{minute}': {label(off_role[o])} → {label(on_role[i])}", "sub_who",
+                                f"{label(off_role[o])} → {label(on_role[i])}", team, "G2", src=src))
+
+        # Kind: a different shape within 5 minutes beats the per-player comparison
+        before_shape = self.formation_at(team, t0 - 1)
+        after_shape = self.formation_at(team, min(now_t, t0 + 300))
+        if before_shape and after_shape and before_shape != after_shape:
+            kind: SubstitutionKind = "shape change"
+            drafts.append(Draft(f"{name} changed from a {before_shape} to a {after_shape} with the change at {minute}'",
+                                "sub_kind", kind, team, "G1", src=src))
+        else:
+            same_role = all(label(off_role[o]) == label(on_role[i]) for o, i in pairs)
+            distances = []
+            if stage == "impact":
+                for o, i in pairs:
+                    a, b = self.player_mean(team, i, t0, now_t), self.player_mean(team, o, t0 - SUB_FORM_S, t0 - 1)
+                    if a and b:
+                        distances.append(((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5)
+            close = all(d < LIKE_FOR_LIKE_M for d in distances)
+            kind = "like-for-like" if same_role and close else "positional"
+            why = ("same role" + (", mean positions less than 10 m apart" if distances else "") if kind == "like-for-like"
+                   else "a different role" if not same_role else "the same role in a different zone")
+            drafts.append(Draft(f"Type of change: {kind} ({why})", "sub_kind", kind, team, "G2", src=src))
+
+        # Why, as far as the data shows: the player who went off, his last 15 minutes
+        reasons: dict[str, str] = {}
+        for o, _ in pairs:
+            on_since = next((f.t for f in self.track.frames if any(a.id == o for a in f.team[team])), 0.0)
+            late_n, late_sp, late_hsr = self.player_load(team, o, max(on_since, t0 - SUB_FORM_S), t0 - 1)
+            early_n, early_sp, early_hsr = self.player_load(team, o, on_since, on_since + SUB_FORM_S)
+            if late_n >= 5 * 60 and early_n >= 5 * 60 and on_since + SUB_FORM_S <= t0 - SUB_FORM_S:
+                drop = round(100 * (early_hsr - late_hsr) / early_hsr) if early_hsr else 0
+                verdict = f"; intensity dropped by {drop}%" if drop >= 25 else ""
+                if verdict:
+                    reasons.setdefault(o, f"{self.who(o)}'s high-speed running dropped by {drop}% before the change.")
+                drafts.append(Draft(f"{self.who(o)} in the 15 minutes before going off: {_n(late_sp, 'sprint')} and {late_hsr} m "
+                                    f"at high speed, against {_n(early_sp, 'sprint')} and {early_hsr} m in the first 15 minutes"
+                                    f"{verdict}", "sub_off_intensity", drop, team, "G4"))
+            last = [e for e in events if t0 - SUB_FORM_S <= e.t < t0]
+            contacts = [e for e in last if e.player_id == o and e.type in CONTACT_TYPES]
+            duels = [e for e in last if e.player_id == o and e.type in DUEL_TYPES]
+            team_players = {e.player_id for e in last if e.team == team and e.type in CONTACT_TYPES and e.player_id}
+            per_player = sum(1 for e in last if e.team == team and e.type in CONTACT_TYPES) / max(1, len(team_players))
+            low = len(contacts) < 0.6 * per_player
+            if low:
+                reasons.setdefault(o, f"{self.who(o)} had only {_n(len(contacts), 'ball contact')} in the last 15 minutes.")
+            drafts.append(Draft(f"{self.who(o)} had {_n(len(contacts), 'ball contact')} and {_n(len(duels), 'duel')} in the 15 minutes "
+                                f"before going off (team average {round(per_player)} contacts per player)"
+                                + ("; low involvement" if low else ""), "sub_off_involvement", len(contacts), team, "G2",
+                                src=[e.event_id for e in contacts][:10]))
+            yellow = next((e for e in events if e.type == "yellow_card" and e.player_id == o and e.t < t0), None)
+            if yellow:
+                reasons[o] = f"{self.who(o)} went off on a yellow card from {yellow.minute}'."   # the strongest reason
+                drafts.append(Draft(f"{self.who(o)} went off on a yellow card from {yellow.minute}'", "sub_off_yellow",
+                                    yellow.minute, team, "G2", src=[yellow.event_id]))
+
+        heatmaps, heatmap_labels = [], []
+        if stage == "impact":
+            end = min(now_t, self.next_change(team, events, t0) or now_t)
+            mins = max(1, round((end - t0) / 60))
+            # The substitute against the player he replaced
+            for o, i in pairs:
+                a, b = self.player_mean(team, i, t0, end), self.player_mean(team, o, t0 - SUB_FORM_S, t0 - 1)
+                if a and b:
+                    dx, dc = round(a[0] - b[0]), round(abs(b[1] - W / 2) - abs(a[1] - W / 2))
+                    parts = []
+                    if abs(dx) >= 3:
+                        parts.append(f"{abs(dx)} m {'higher' if dx > 0 else 'deeper'}")
+                    if abs(dc) >= 3:
+                        parts.append(f"{abs(dc)} m {'more central' if dc > 0 else 'wider'}")
+                    if parts:
+                        drafts.append(Draft(f"{self.who(i)} plays {' and '.join(parts)} than {self.who(o)} did",
+                                            "sub_on_position", dx, team, "G2"))
+                mine = [e for e in events if t0 <= e.t <= end and e.player_id == i]
+                n_on, sp_on, _ = self.player_load(team, i, t0, end)
+                if n_on >= 120:
+                    drafts.append(Draft(f"{self.who(i)} in the first {mins} minutes: "
+                                        f"{_n(sum(1 for e in mine if e.type in CONTACT_TYPES), 'ball contact')}, "
+                                        f"{_n(sum(1 for e in mine if e.type == 'pass'), 'pass')}, {_n(sp_on, 'sprint')}",
+                                        "sub_on_involvement", len(mine), team, "G2", src=[e.event_id for e in mine][:10]))
+                key = next((e for e in mine if _key_action(e)), None)
+                if key:
+                    drafts.append(Draft(f"{self.who(i)}'s first telling action: {_key_action(key)} at {key.minute}'",
+                                        "sub_on_first_action", key.minute, team, "G2", src=[key.event_id]))
+            if len(pairs) == 1:
+                o, i = pairs[0]
+                hm = [self.player_heatmap(team, o, t0 - SUB_FORM_S, t0 - 1), self.player_heatmap(team, i, t0, end)]
+                labels = [f"{self.who(o)}, 15 minutes before", f"{self.who(i)}, first {mins} minutes"]
+            else:
+                hm = [self.player_heatmap(team, None, t0 - SUB_BEFORE_S, t0 - 1), self.player_heatmap(team, None, t0, end)]
+                labels = [f"{name}, 10 minutes before", f"{name}, {mins} minutes after"]
+            if all(hm):
+                heatmaps, heatmap_labels = hm, labels
+
+            # The effect on the team: 10 minutes before against the time since
+            before = self.prints(max(0.0, t0 - SUB_BEFORE_S), t0 - 1, events)
+            after = self.prints(t0, end, events)
+            b, a = before[team], after[team]
+            since = f"Since the change at {minute}'"
+            if b.possession is not None and a.possession is not None:
+                d = round(a.possession - b.possession)
+                trend = f"{'up' if d > 0 else 'down'} from {b.possession:g}% to {a.possession:g}%" if d else f"unchanged at {a.possession:g}%"
+                drafts.append(Draft(f"{since}, {name}'s possession is {trend}", "sub_possession", a.possession, team, "G2", "%"))
+            drafts.append(Draft(f"{since}, {name}'s xG is {a.xg:.2f} in {mins} minutes, against {b.xg:.2f} in the 10 minutes before",
+                                "sub_xg", a.xg, team, "G2"))
+            if b.channels and a.channels:
+                k, d = max(((k, a.channels[k] - b.channels[k]) for k in a.channels), key=lambda kv: abs(kv[1]))
+                if abs(d) >= 8:
+                    side = "centre" if k == "centre" else f"{k}-flank"
+                    drafts.append(Draft(f"{since}, {name}'s {side} share of attacks is {'up' if d > 0 else 'down'} from "
+                                        f"{b.channels[k]:g}% to {a.channels[k]:g}%", f"sub_channel_{k}_pct", a.channels[k],
+                                        team, "G2", "%"))
+            if b.line_m is not None and a.line_m is not None:
+                d = round(a.line_m - b.line_m)
+                move = f"{abs(d)} m {'higher' if d > 0 else 'deeper'}" if abs(d) >= 3 else "about the same"
+                drafts.append(Draft(f"{since}, {name}'s last line with the ball in midfield is {move}: {a.line_m:g} m "
+                                    f"({band('line_height_m', a.line_m)}), before {b.line_m:g} m ({band('line_height_m', b.line_m)})",
+                                    "sub_line_height_m", a.line_m, team, "D1", "m"))
+            if b.ppda is not None and a.ppda is not None:
+                drafts.append(Draft(f"{since}, {name}'s PPDA is {a.ppda:g} ({band('ppda', a.ppda)}), before {b.ppda:g} "
+                                    f"({band('ppda', b.ppda)})", "sub_ppda", a.ppda, team, "D3"))
+            if b.shape and a.shape and b.shape != a.shape:
+                drafts.append(Draft(f"{since}, {name}'s build-up shape is {a.shape}, before {b.shape}", "sub_shape",
+                                    a.shape, team, "B6"))
+
+            # The opponent's reaction
+            ob, oa = before[opp], after[opp]
+            oname = self.name(opp)
+            o_before, o_after = self.formation_at(opp, t0 - 1), self.formation_at(opp, end)
+            if o_before and o_after and o_before != o_after:
+                # The code cannot know why; it says when, and whether a red card came first.
+                change = next((e for e in events if e.team == opp and t0 < e.t <= end
+                               and e.type in ("substitution", "tactical_change")), None)
+                red = next((e for e in events if e.team == opp and e.type == "red_card" and t0 < e.t <= end), None)
+                when = f" at {change.minute}'" if change else ""
+                cause = f", after a red card at {red.minute}'" if red else ""
+                drafts.append(Draft(f"In the same period {oname} changed from a {o_before} to a {o_after}{when}{cause}",
+                                    "opp_shape", o_after, opp, "G1", src=[e.event_id for e in (change, red) if e]))
+            if ob.line_m is not None and oa.line_m is not None and abs(oa.line_m - ob.line_m) >= 3:
+                d = round(oa.line_m - ob.line_m)
+                drafts.append(Draft(f"{oname}'s last line moved {abs(d)} m {'higher' if d > 0 else 'deeper'} after the "
+                                    f"change ({ob.line_m:g} m → {oa.line_m:g} m, {band('line_height_m', oa.line_m)})",
+                                    "opp_line_m", oa.line_m, opp, "D1", "m"))
+            if ob.channels and oa.channels:
+                k, d = max(((k, oa.channels[k] - ob.channels[k]) for k in oa.channels), key=lambda kv: abs(kv[1]))
+                if abs(d) >= 8:
+                    side = "centre" if k == "centre" else f"{k}-flank"
+                    drafts.append(Draft(f"{oname}'s {side} share of attacks is {'up' if d > 0 else 'down'} from "
+                                        f"{ob.channels[k]:g}% to {oa.channels[k]:g}% since the change", f"opp_channel_{k}_pct",
+                                        oa.channels[k], opp, "P1", "%"))
+            answer = [e for e in events if e.type == "substitution" and e.team == opp and t0 < e.t <= t0 + 300]
+            if answer:
+                drafts.append(Draft(f"{oname} made a substitution of their own within 5 minutes, at {answer[0].minute}': "
+                                    f"{self.who(answer[0].details.get('player_in_id'))} for {self.who(answer[0].player_id)}",
+                                    "opp_sub", answer[0].minute, opp, "G2", src=[e.event_id for e in answer]))
+
+            # The cup match: did this team change at a similar moment?
+            cup = []
+            for f in self.baseline:
+                m = re.search(r"at (\d+)'", f.text)
+                if f.team == team_id(team) and f.concept in ("G1", "G2") and m:
+                    cup.append((abs(int(m.group(1)) - _minute_number(minute)), int(m.group(1)), f))
+            if cup:
+                gap, cm, f = min(cup, key=lambda c: c[0])
+                text = f.text.removeprefix("Cup match: ")
+                drafts.append(Draft(f"In the cup match {name} " + (f"also changed at a similar moment, {cm}': {text}" if gap <= 10
+                                    else f"made their change at {cm}': {text}"), "sub_cup", cm, team, "G2"))
+
+        watch = self.watch_points(team, minute, kind, before_shape, after_shape, pairs, off_role, on_role,
+                                  self.state_at(events, t0 - 1), reasons)
+        facts = [Fact(fact_id=f"T{n}", text=d.text, metric=d.metric, value=d.value, unit=d.unit, window=f"{minute}'",
+                      source_event_ids=d.src, team=team_id(d.team), concept=d.concept)
+                 for n, d in enumerate(drafts, start=1)]
+        cited = {(f.team, f.metric) for f in facts}
+        info = SubstitutionInfo(
+            team=team_id(team), minute=minute, stage=stage, kind=kind, watch=watch,
+            off=[self.sub_player(o, off_role[o]) for o, _ in pairs], on=[self.sub_player(i, on_role[i]) for _, i in pairs],
+            heatmaps=heatmaps, heatmap_labels=heatmap_labels,
+        )
+        home, away = team_id(self.info.home), team_id(self.info.away)
+        frames = self.track.window(t0, now_t)
+        label_ = f"{minute}'" if stage == "watch" else self.label(t0, now_t)
+        return SubstitutionFactSheet(
+            window=TacticalWindow(from_t=t0, to_t=now_t, label=label_), trigger="substitution",
+            minute=minute_from_clock(frames[-1].clock) if frames else minute,
+            headline=f"Substitution {name} at {minute}'", home=home, away=away,
+            team_names={home: self.name(self.info.home), away: self.name(self.info.away)}, match_state=snapshot,
+            facts=facts, baseline=[f for f in self.baseline if (f.team, f.metric) in cited],
+            concepts_fired=list(dict.fromkeys(f.concept for f in facts)), substitution=info,
+        )
+
+    def watch_points(self, team: str, minute: str, kind: str, before_shape: str | None, after_shape: str | None,
+                     pairs: list[tuple[str, str]], off_role: dict, on_role: dict, state: tuple[int, int, int, int],
+                     reasons: dict[str, str]) -> list[str]:
+        """One or two things to watch, made by the code from the same values as the facts (no model)."""
+        name, label = self.name(team), (lambda r: ROLE_LABEL.get(r or "", (r or "player").lower()))
+        h, a, mh, ma = state
+        own, opp, m_own, m_opp = (h, a, mh, ma) if team == self.info.home else (a, h, ma, mh)
+        how = "leading" if own > opp else "trailing" if own < opp else "level at"
+        while_ = f"while {how} {own}-{opp}" + (f", {m_own} v {m_opp}" if m_own != m_opp else "")
+        out = []
+        if kind == "shape change" and before_shape and after_shape:
+            b, a_ = [int(x) for x in before_shape.split("-")], [int(x) for x in after_shape.split("-")]
+            focus = ("an extra defender" if a_[0] > b[0] else f"a front {('one', 'two', 'three')[a_[-1] - 1]}" if a_[-1] > b[-1]
+                     else "an extra body in midfield" if a_[1] > b[1] else f"the {after_shape}")
+            out.append(f"{name} switch from a {before_shape} to a {after_shape} at {minute}' {while_}: watch for {focus}.")
+        else:
+            o, i = next(((o, i) for o, i in pairs if label(off_role[o]) != label(on_role[i])), pairs[0])
+            if label(off_role[o]) == label(on_role[i]):
+                out.append(f"{name} bring on {self.who(i)} for {self.who(o)} {while_}: fresh legs in the same role, "
+                           f"{label(on_role[i])}.")
+            else:
+                expect = {"striker": "an extra striker", "centre-back": "an extra defender", "winger": "more width",
+                          "wide midfielder": "more width", "central midfielder": "more control in midfield",
+                          "defensive midfielder": "more protection in front of the defence"}.get(label(on_role[i]),
+                                                                                                 "a new role")
+                out.append(f"{name} bring on a {label(on_role[i])} for a {label(off_role[o])} {while_}: watch for {expect}.")
+        reason = next((reasons[o] for o, _ in pairs if o in reasons), None)
+        if reason:
+            out.append(reason)
+        return out[:2]
+
+    def sub_player(self, pid: str, role: str | None) -> SubPlayer:
+        p = self.roster.get(pid)
+        return SubPlayer(player_id=pid, n=p.n if p else 0, name=p.name if p else pid,
+                         role=ROLE_LABEL.get(role or "", (role or "player").lower()))
 
     def status_sheet(self, trigger: TacticalTrigger, from_t: float, to_t: float, events: list[SourceEvent],
                      snapshot: MatchSnapshot | None = None) -> TacticalFactSheet:
