@@ -53,7 +53,8 @@ whose detectors fired, and baseline facts from the previous meeting of these tea
 Write 2 or 3 observations, most important first. Each has:
 - observation: what happens on the pitch. Start with the structure (build-up, lines, flanks, press),
   then what changed. Use numbers only exactly as written in the facts. At most 35 words.
-- fact_ids: the ids of the facts it uses, e.g. ["T2","C4"].
+- fact_ids: the ids of the facts it uses, at most 3, e.g. ["T2","C4"]. Fact ids start with T or C;
+  B1, D1, G2 ... are concept ids, never fact ids.
 - consequence: what this means for the match. No numbers and no player names. At most 25 words.
 - coach_action: what the opposing staff would adjust, or "" when nothing. No numbers, no player names. At most 20 words.
 - compare_to_cup: "changed" when a cited fact gives a different cup-match value, "same" when it gives
@@ -69,6 +70,7 @@ Rules:
 5. Prefer what changed (against the previous window or the cup match) over what stayed the same.
 6. 2-3 observations. Quality over coverage.
 7. Never invent players, numbers, minutes or events. Do not calculate new numbers.
+8. One concept per observation. Write in the third person and name the teams; never "we", "us" or "our".
 
 Tone: concrete, tactical, no hype. Example observation: "Northgate's 6 drops between the centre-backs in
 most build-up phases, creating a back three; Kingsbridge's two strikers are outnumbered in the first press."
@@ -91,8 +93,8 @@ def scout_prompt(sheet: TacticalFactSheet) -> str:
     lines.append("Concepts found:")
     lines += [f"- {one_liner(c)}" for c in sheet.concepts_fired if one_liner(c)]
     lines.append("Facts:")
-    lines += [f"[{f.fact_id}] ({f.team}, {f.concept}) {f.text}" for f in sheet.facts]
+    lines += [f"[{f.fact_id}] {f.text} (team {f.team}, concept {f.concept})" for f in sheet.facts]
     if sheet.baseline:
         lines.append("Cup-match baseline:")
-        lines += [f"[{f.fact_id}] ({f.team}, {f.concept}) {f.text}" for f in sheet.baseline]
+        lines += [f"[{f.fact_id}] {f.text} (team {f.team}, concept {f.concept})" for f in sheet.baseline]
     return "\n".join(lines)

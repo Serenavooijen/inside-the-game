@@ -42,7 +42,7 @@ class Handler(BaseHTTPRequestHandler):
         if "observations" in schema:
             # The Scout: one observation per tactical fact, with a clean consequence
             # (or, with SCOUT_BAD, a consequence that adds a number and a coach action that adds a name).
-            facts = re.findall(r"\[(T\d+)\] \((\w+), \w+\) (.+)", text)[:STATE.get("scout_n", 2)]
+            facts = [(fid, team, t) for fid, t, team in re.findall(r"\[(T\d+)\] (.+) \(team (\w+), concept \w+\)", text)][:STATE.get("scout_n", 2)]
             obs = [{"observation": t, "fact_ids": [fid], "team": team, "compare_to_cup": "changed",
                     "consequence": "The opponent has to adjust the press.", "coach_action": "Keep the block compact."}
                    for fid, team, t in facts]

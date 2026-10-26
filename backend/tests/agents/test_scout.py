@@ -61,7 +61,7 @@ def test_the_prompt_has_only_the_fired_concepts():
     p = scout_prompt(sheet())
     assert "B1 Back three" in p and "D1 Block height" in p and "P1 Overload" in p
     assert "B5" not in p and "Rules for the Scout" not in p
-    assert "[T1] (ngr, B1)" in p and "[C14] (ngr, B1)" in p and "10 v 11" in p
+    assert "(team ngr, concept B1)" in p and "[C14] Cup match" in p and "10 v 11" in p
 
 
 # ---------------------------------------------------------------- checker
@@ -204,3 +204,11 @@ def test_hosted_scout_is_built_only_with_a_version(monkeypatch):
     assert model_from_env("foundry-agents").scout_agent is None      # the rest keeps working without it
     monkeypatch.setenv("FOUNDRY_SCOUT_AGENT_VERSION", "3")
     assert isinstance(model_from_env("foundry-agents").scout_agent, FoundryAgent)
+
+
+def test_football_terms_are_no_numbers_but_statistics_are():
+    s = sheet()
+    ok, _ = check_observation(obs(consequence="Without the 6 in the last line there is no back three, so a two-man press works."), s)
+    assert ok
+    ok, rejected = check_observation(obs(consequence="Their 3 attackers face a back four."), s)
+    assert ok is None and rejected[0].reason.endswith(": 3")

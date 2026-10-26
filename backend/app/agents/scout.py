@@ -35,12 +35,16 @@ from .workflow import OnUpdate, _emit, default_model
 SCOUT_DEADLINE_S = float(os.getenv("SCOUT_DEADLINE_S", "15"))
 MAX_OBSERVATIONS = 3
 MAX_EVIDENCE = 6
-# "the 6", "their 8s": a role, not a statistic. Hidden from the number check only.
+# "the 6", "their 8s", "a back three", "three at the back": football terms, not statistics.
+# Hidden from the number check only.
 ROLE = re.compile(r"\b(the|a|an|their|our|its|his|her|both|two|new|opposing|own)( \w+)? (6|8|10)s?\b", re.I)
+LINE_TERM = re.compile(r"\b(back|front) (two|three|four|five)\b|\b(two|three|four|five) at the back\b"
+                       r"|\b(two|three|four|five)-man\b", re.I)
 
 
 def _roles_out(text: str) -> str:
-    return ROLE.sub(lambda m: f"{m.group(1)}{m.group(2) or ''} role", text)
+    text = ROLE.sub(lambda m: f"{m.group(1)}{m.group(2) or ''} role", text)
+    return LINE_TERM.sub("line-term", text)
 
 
 def insight_id(sheet: TacticalFactSheet) -> str:
