@@ -92,7 +92,7 @@ class MatchEvent(CamelModel):
     key: bool | None = None         # key moment: slow to 1x and show the hero card
 
 
-InsightType = Literal["goal", "bigchance", "card", "momentum", "update", "fulltime", "tactics"]
+InsightType = Literal["goal", "bigchance", "card", "momentum", "update", "fulltime", "tactics", "substitution"]
 InsightStatus = Literal["checked", "corrected", "fallback"]
 InsightPhase = Literal["analysing", "streaming", "done"]
 
@@ -156,6 +156,37 @@ class Heatmap(CamelModel):
     dir: Literal[1, -1] = 1
 
 
+SubstitutionKind = Literal["like-for-like", "positional", "shape change"]
+SubstitutionStage = Literal["watch", "impact"]
+
+
+class SubPlayer(CamelModel):
+    """One player in a substitution, with the role from the line-up ("winger", "striker")."""
+    player_id: str
+    n: int
+    name: str
+    role: str
+
+
+class SubstitutionInfo(CamelModel):
+    """A substitution moment of one team (one or more substitutions at the same time) for the substitution card.
+
+    stage "watch": made by the code at the moment itself, with one or two things to watch.
+    stage "impact": the Scout's analysis about 8 minutes later, with two heatmaps
+    (the player who went off against the substitute, or the team before against after).
+    Substitution heatmaps are team-relative: dir 1, the team attacks towards x 105.
+    """
+    team: TeamId
+    minute: str
+    stage: SubstitutionStage
+    kind: SubstitutionKind
+    off: list[SubPlayer]
+    on: list[SubPlayer]
+    watch: list[str] = []
+    heatmaps: list[Heatmap] = []
+    heatmap_labels: list[str] = []
+
+
 class Insight(CamelModel):
     """Smart lane: output of run_workflow, sent as SSE `insight` (updated by id)."""
     id: str
@@ -181,6 +212,8 @@ class Insight(CamelModel):
     observations: list[TacticalObservation] | None = None
     heatmap: Heatmap | None = None
     build_up: list[Player] | None = None  # mean positions in build-up phases (shows where the 6 stands)
+    # type "substitution": who goes off and comes on, the kind of change, what to watch or the impact
+    substitution: SubstitutionInfo | None = None
     # Traceability (not shown in the UI yet)
     cited_fact_ids: list[str] = []
     rejected_claims: list[RejectedClaim] = []
@@ -460,5 +493,10 @@ class MatchInfo(BaseModel):
 
 
 # ScoutingReport (wire layer) refers to Fact (agents layer), defined further down.
+class SubstitutionFactSheet(TacticalFactSheet):
+    """The facts of one substitution moment: who, why (as far as the data shows), and what changed after it."""
+    substitution: SubstitutionInfo
+
+
 ScoutingReport.model_rebuild()
 MatchState.model_rebuild()

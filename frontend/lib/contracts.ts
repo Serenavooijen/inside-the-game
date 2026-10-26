@@ -73,7 +73,7 @@ export type MatchEvent = {
 };
 
 /** Smart lane: agent output, checked against event data. */
-export type InsightType = 'goal' | 'bigchance' | 'card' | 'momentum' | 'update' | 'fulltime' | 'tactics';
+export type InsightType = 'goal' | 'bigchance' | 'card' | 'momentum' | 'update' | 'fulltime' | 'tactics' | 'substitution';
 export type InsightStatus = 'checked' | 'corrected' | 'fallback';
 export type InsightPhase = 'analysing' | 'streaming' | 'done';
 /** Area highlighted on the mini pitch (metres, absolute). */
@@ -120,6 +120,22 @@ export type TacticalObservation = {
  *  grid[row][col], rows along y (0 → 68), columns along x (0 → 105). */
 export type Heatmap = { team: TeamId; grid: number[][]; dir: 1 | -1 };
 
+export type SubPlayer = { playerId: string; n: number; name: string; role: string };
+
+/** A substitution moment of one team. stage 'watch': made by the code at the moment itself;
+ *  'impact': the Scout's analysis about 8 minutes later. Substitution heatmaps are team-relative (dir 1). */
+export type SubstitutionInfo = {
+  team: TeamId;
+  minute: string;
+  stage: 'watch' | 'impact';
+  kind: 'like-for-like' | 'positional' | 'shape change';
+  off: SubPlayer[];
+  on: SubPlayer[];
+  watch: string[];
+  heatmaps: Heatmap[];
+  heatmapLabels: string[];
+};
+
 export type Insight = {
   id: string;
   t: number;
@@ -151,6 +167,8 @@ export type Insight = {
   heatmap?: Heatmap;
   /** mean positions in build-up phases (shows where the 6 stands) */
   buildUp?: Player[];
+  /** type 'substitution': who goes off and comes on, the kind of change, what to watch or the impact */
+  substitution?: SubstitutionInfo;
   /** Traceability from the agents (optional) */
   rejectedClaims?: { text: string; reason: string; factIds?: string[] }[];
   citedFactIds?: string[];
