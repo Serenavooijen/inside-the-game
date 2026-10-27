@@ -281,15 +281,23 @@ _VEINTI = dict(zip("veintiuno veintidós veintitrés veinticuatro veinticinco ve
                    "veintinueve".split(), range(21, 30)))
 # "les deux côtés", "los dos equipos": both. Such a 2 may stand for a 2 of the source, but is never a new number.
 _BOTH = re.compile(r"\b(?:les|des|aux|los|las) (?:deux|dos)\b", re.I)
+# The penalty area in Dutch: "16-metergebied", "zestienmetergebied", "(hun|de) zestien". Like "les deux": such a 16
+# may stand for a 16 of the source, but is never a new number. "De zestien passes" (a noun after it) is a count.
+_BOX_NL = re.compile(r"(?<![\w-])(?:16|zestien)-?meter\w*"
+                     r"|\b(?:de|het|hun|zijn|haar|onze|eigen) zestien\b(?!\s+[^\W\d_]+(?:en|s)\b)", re.I)
 
 
 def _translated_numbers(text: str, lang: str | None) -> tuple[set[float], set[float]]:
-    """(numbers, numbers that only an idiom for "both" gives) in a translation."""
+    """(numbers, numbers that only an idiom gives: "les deux" for both, "de zestien" for the box) in a translation."""
     words = {**_TARGET_WORDS.get(lang or "", {}), **({_ZERO[lang]: 0} if lang in _ZERO else {}),
              **(_VEINTI if lang == "es" else {})}
     both = {2.0} if lang in ("fr", "es") and _BOTH.search(text) else set()
+    if both:
+        text = _BOTH.sub(" ", text)
+    if lang == "nl" and _BOX_NL.search(text):
+        both, text = both | {16.0}, _BOX_NL.sub(" ", text)
     found = set()
-    for token in re.findall(r"[^\W\d_]+(?:-[^\W\d_]+)*", _BOTH.sub(" ", text.lower()) if both else text.lower()):
+    for token in re.findall(r"[^\W\d_]+(?:-[^\W\d_]+)*", text.lower()):
         parts = token.split("-")
         if token in words:                      # also "dix-sept" as a whole
             found.add(float(words[token]))
@@ -324,6 +332,11 @@ def _new_names(text: str, known: set[str]) -> list[str]:
         if low in known or low in _COMMON or (low.endswith("s") and low[:-1] in known):   # Dutch genitive: Brouwers
             continue
         if all(part in known for part in low.split("-")):
+            continue
+        # A name of the source plus a plain word: "Northgate-blok", "Kingsbridge-verdediging", "Adeyemi-Clarke-doelpunt"
+        parts = word.split("-")
+        named = [p for p in parts if p[:1].isupper()]
+        if 0 < len(named) < len(parts) and parts[:len(named)] == named and all(p.lower() in known for p in named):
             continue
         out.append(word)
     return list(dict.fromkeys(out))

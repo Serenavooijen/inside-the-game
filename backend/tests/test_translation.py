@@ -337,6 +337,51 @@ def test_real_french_translation_with_les_deux_passes_and_a_wrong_number_in_it_s
     assert check_translation("Kingsbridge pressed.", "Kingsbridge a pressé avec deux attaquants.", NAMES, "fr")
 
 
+# ------------------------------------------------------------------ Dutch: the box and name compounds (production logs, itg-backend)
+
+NL_PRODUCTION = [
+    ("Kingsbridge built up in a 2-3-2-3 shape with the left-back inverting inside 34% of the time, creating a box base "
+     "and shifting width to the wingers.",
+     "Kingsbridge bouwde op in een 2-3-2-3 formatie waarbij de linksback 34% van de tijd naar binnen trok, wat een basis "
+     "in de zestien creëerde en de breedte naar de vleugelspelers verlengde."),                 # was "new number(s) 16"
+    ("Kingsbridge encounters a deeper Northgate block with very intense pressing, making direct penetration harder and "
+     "space behind the defense reduced.",
+     "Kingsbridge ondervindt een dieper staand Northgate-blok met zeer intensief pressen, waardoor directe penetratie "
+     "moeilijker wordt en de ruimte achter de verdediging verminderd is."),                     # was "Northgate-blok"
+    ("Their deeper low block and narrower shape protect their box effectively but concede midfield territory.",
+     "Hun dieper gelegen lage blok en smallere vorm beschermen hun 16-metergebied effectief, maar geven terrein in het "
+     "middenveld prijs."),                                                                      # was "new number(s) 16"
+    ("Kingsbridge dominates possession with a high defensive line 5 meters higher than the cup, while Northgate defends "
+     "deeper, conceding space but protecting their box.",
+     "Kingsbridge domineert balbezit met een hoge verdedigingslijn 5 meter hoger dan de cup, terwijl Northgate dieper "
+     "verdedigt, ruimte prijsgeeft maar hun zestien beschermt."),                               # was "new number(s) 16"
+]
+
+
+def test_real_dutch_translations_with_the_box_and_a_name_compound_pass():
+    for en, nl in NL_PRODUCTION:
+        assert check_translation(en, nl, NAMES, "nl") is None, nl
+    assert check_translation("Kingsbridge's defending was compact.", "De Kingsbridge-verdediging was compact.", NAMES, "nl") is None
+
+
+def test_the_box_idiom_is_never_a_new_number_but_a_real_16_still_counts():
+    box_en, box_nl = NL_PRODUCTION[2]
+    # another number in the same idiom is still new
+    assert "17" in check_translation(box_en, box_nl.replace("16-metergebied", "17-metergebied"), NAMES, "nl")
+    # a 16 of the source must still be there, and a count is no idiom
+    assert check_translation("Northgate made 16 passes.", "Northgate gaf 16 passes.", NAMES, "nl") is None
+    assert "16" in check_translation("Northgate made 16 passes.", "Northgate gaf 15 passes.", NAMES, "nl")
+    assert "16" in check_translation("Northgate made passes.", "Northgate gaf de zestien passes.", NAMES, "nl")
+    assert "16" in check_translation("Northgate pressed.", "Northgate drukte met 16 spelers.", NAMES, "nl")
+
+
+def test_a_new_player_name_in_a_compound_or_alone_is_still_rejected():
+    en, nl = NL_PRODUCTION[1]
+    assert "Rasmussen" in check_translation(en, nl.replace("Northgate-blok", "Northgate-blok van Rasmussen"), NAMES, "nl")
+    assert "Rasmussen-blok" in check_translation(en, nl.replace("Northgate-blok", "Northgate-blok en Rasmussen-blok"), NAMES, "nl")
+    assert "Northgate-Rasmussen" in check_translation(en, nl.replace("Northgate-blok", "Northgate-Rasmussen"), NAMES, "nl")
+
+
 def test_a_translation_that_leaves_a_sentence_out_stays_rejected():
     en = ("Kingsbridge builds attacks predominantly down the left flank, increasing to 60% from 27%, over double the "
           "cup-match's 32%. Their block remains a slightly deeper high block, 38 m last line, 5 m deeper, more compact.")
