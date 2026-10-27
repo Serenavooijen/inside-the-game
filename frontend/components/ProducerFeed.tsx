@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Insight, ScoutingReport } from '@/lib/contracts';
 import type { Corner } from '@/lib/lineups';
+import { feedItems } from '@/lib/feed';
 import { useTeams } from '@/lib/teams';
 import { CornerCard } from './Corners';
 import { InsightCard } from './InsightCard';
@@ -31,19 +32,12 @@ type Props = {
 
 export type FeedTab = 'feed' | 'scouting' | 'lineups';
 
-type Item = { kind: 'insight'; t: number; insight: Insight } | { kind: 'corner'; t: number; corner: Corner };
-
 /** Smart lane: newest first, newest card open. Tactics cards only in Analyst mode. */
 export function ProducerFeed({ insights, mode, onMode, arrivingId, focusId, scouting, tab, onTab, corners = [], lineups, player }: Props) {
   const teams = useTeams();
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const refs = useRef<Record<string, HTMLDivElement | null>>({});
-  const list: Item[] = [
-    ...insights.filter((i) => mode === 'analyst' || i.type !== 'tactics').map((i) => ({ kind: 'insight' as const, t: i.t, insight: i })),
-    ...corners.map((c) => ({ kind: 'corner' as const, t: c.t, corner: c })),
-  ]
-    .sort((a, b) => b.t - a.t)
-    .slice(0, 14);
+  const list = feedItems(insights, corners, mode);
   const newest = list.flatMap((x) => (x.kind === 'insight' ? [x.insight.id] : []))[0];
 
   useEffect(() => {
