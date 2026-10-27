@@ -36,7 +36,7 @@ export function Scorebar({ stats, clock, period, mode, events, players }: Props)
   const [possH, possA] = stats.possession;
   const [xgH, xgA] = stats.xg;
   return (
-    <header className={`grid h-[104px] flex-none items-center gap-8 border-b border-line bg-bg px-10 ${players ? 'grid-cols-[minmax(0,1fr)_auto_auto] min-[1600px]:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]' : 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]'}`}>
+    <header className={`grid h-[104px] flex-none items-center gap-8 border-b border-line bg-bg px-10 ${players ? 'grid-cols-[auto_auto_auto] justify-between min-[1600px]:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]' : 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]'}`}>
       <div className="flex min-w-0 items-center gap-3">
         <a href="/" className="flex flex-none items-center gap-[10px] whitespace-nowrap" aria-label="Inside the Game, back to the match list">
           <Logo />
@@ -64,7 +64,7 @@ export function Scorebar({ stats, clock, period, mode, events, players }: Props)
       </div>
 
       <div className={`flex flex-col items-center ${isMyClub(teams.home.id) || isMyClub(teams.away.id) ? 'gap-[16px]' : 'gap-[6px]'}`}>
-        <div className="flex h-[60px] items-stretch rounded-md bg-surface-2 shadow-[0_4px_12px_rgba(0,0,0,.25)]">
+        <div className="flex h-[60px] flex-none items-stretch whitespace-nowrap rounded-md bg-surface-2 shadow-[0_4px_12px_rgba(0,0,0,.25)]">
           <div className="relative flex items-center gap-3 rounded-l-md border-b-[5px] border-home pl-[14px] pr-[18px]">
             {clubTab(teams.home.id, teams.home.fg)}
             <HomeCrest color={teams.home.color} fg={teams.home.fg} />
@@ -88,7 +88,7 @@ export function Scorebar({ stats, clock, period, mode, events, players }: Props)
             <span className="mt-1 font-mono text-[11px] tracking-[.12em] text-fg-3">{period}</span>
           </div>
         </div>
-        <div className="flex h-[18px] items-center gap-[18px] text-[13px] text-fg-2">
+        <div className={`flex h-[18px] items-center gap-[18px] text-[13px] text-fg-2 ${players ? 'w-0 min-w-full justify-center whitespace-nowrap' : ''}`}>
           {recent.map((e) => (
             <div key={e.id} className="flex items-center gap-[6px]">
               {e.kind === 'goal' && <SmallBall />}

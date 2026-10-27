@@ -68,7 +68,7 @@ export function PlayerStrip({ data, t, onOpen }: { data: Lineups; t: number; onO
             <div className="text-[14px] text-fg-2">{tr('stripBench')}</div>
           ) : (
             <div className="grid grid-cols-4 gap-px overflow-hidden rounded-md border border-line bg-line">
-              <Num k={tr('touches')} v={stats ? String(stats.touches) : '–'} />
+              <Num k={tr('tileTouches')} v={stats ? String(stats.touches) : '–'} />
               <Num k={tr('passes')} v={stats ? `${stats.passes}/${stats.attempts}` : '–'} />
               <Num k={tr('sprints')} v={stats ? String(stats.sprints) : '–'} />
               <Num k={tr('km')} v={km} />
