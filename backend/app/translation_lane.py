@@ -8,6 +8,9 @@ comes back after a seek is not translated again.
 
 The scouting report is translated in advance, at load (`prepare`): it is made before kick-off, so it gets a
 longer deadline and keeps running through a seek.
+
+The live agents go first: a translation waits while a moment (Analyst, Narrator) is being analysed, up to
+YIELD_MAX_S, so it never takes model capacity from a goal that has a 6 s deadline.
 """
 import asyncio
 import logging
@@ -22,14 +25,16 @@ log = logging.getLogger(__name__)
 
 CONCURRENCY = 3
 PREPARE_DEADLINE_S = float(os.getenv("SCOUTING_TRANSLATE_DEADLINE_S", "30"))   # before kick-off, not live
+YIELD_MAX_S = 10.0
 
 Publish = Callable[[dict[str, Translation]], None]
 
 
 class TranslationLane:
     def __init__(self, model: ModelClient, langs: list[str] | None = None, concurrency: int = CONCURRENCY,
-                 deadline_s: float | None = None) -> None:
+                 deadline_s: float | None = None, busy: Callable[[], bool] | None = None) -> None:
         self.model = model
+        self.busy = busy or (lambda: False)       # True while a live moment is being analysed: wait for it
         self.langs = languages() if langs is None else langs
         self.deadline_s = deadline_s
         self.cache = TranslationCache()
@@ -85,6 +90,10 @@ class TranslationLane:
             await self._translate(item, publish, deadline_s)
 
     async def _translate(self, item: Insight | Commentary, publish: Publish, deadline_s: float | None) -> None:
+        waited = 0.0
+        while self.busy() and waited < YIELD_MAX_S:
+            await asyncio.sleep(0.25)
+            waited += 0.25
         try:
             result = await translate(item, self.names, model=self.model, cache=self.cache, langs=self.langs,
                                      deadline_s=deadline_s or self.deadline_s)

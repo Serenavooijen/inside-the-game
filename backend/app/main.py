@@ -30,7 +30,7 @@ smart_lane = SmartLane(model_from_env())    # MODEL_PROVIDER: offline (default),
 scout_lane = ScoutLane(smart_lane.model, SCOUTING_REPORT) if tactics_enabled() else None
 commentary_lane = CommentaryLane(smart_lane.model) if tactics_enabled() else None   # a checked line per minute
 # ITG_LANGUAGES=nl,es,fr (default): every checked card is translated afterwards and checked again; "" turns it off
-translation_lane = TranslationLane(smart_lane.model)
+translation_lane = TranslationLane(smart_lane.model, busy=lambda: smart_lane.busy)   # the live moment goes first
 simulator = Simulator(bus, {MATCH_ID: GeneratorSource}, smart_lane, scout_lane, commentary_lane, translation_lane)
 
 

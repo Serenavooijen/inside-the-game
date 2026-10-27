@@ -16,6 +16,7 @@ not after a seek. Timeouts and model errors are not cached: the next time it is 
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 import time
 
@@ -26,8 +27,10 @@ from .deadline import within
 from .llm import ModelClient
 from .prompts import translator_prompt
 
+log = logging.getLogger(__name__)
+
 TRANSLATE_DEADLINE_S = float(os.getenv("TRANSLATE_DEADLINE_S", "6"))
-CHUNK = 4                   # texts per Translator call; the chunks of a card run in parallel
+CHUNK = 3                   # texts per Translator call; the chunks of a card run in parallel
 DEFAULT_LANGUAGES = "nl,es,fr"
 RTL = {"ar", "he", "fa", "ur"}      # right-to-left: needs layout work first
 
@@ -141,7 +144,10 @@ async def translate_one(item: Item, lang: str, names: set[str], *, model: ModelC
                 continue
             for source, translated in zip(chunk, draft.texts):       # what came back is checked and cached
                 translated = " ".join(translated.split())
-                cache.put(lang, source, translated, check_translation(source, translated, names, lang))
+                reason = check_translation(source, translated, names, lang)
+                if reason:
+                    log.warning("Translation rejected (%s): %s\n  EN: %s\n  %s: %s", lang, reason, source, lang.upper(), translated)
+                cache.put(lang, source, translated, reason)
         if failure:
             return Translation(status="rejected", reason=failure, latency_ms=ms(), tokens=tokens)
     return _result(item, lang, texts, [cache.get(lang, t) for t in texts], ms(), tokens)

@@ -233,8 +233,8 @@ def test_a_long_card_goes_to_the_translator_in_parallel_chunks():
     card = Insight(id="i-tac", t=600, minute="10", type="tactics", text="", status="checked", observations=obs)
     model = Phrasebook()
     out = run(translate(card, NAMES, model=model, cache=TranslationCache(), langs=["nl"]))
-    # 9 texts, 5 different ones (the consequence and the advice repeat): chunks of 4 and 1
-    assert [len(texts) for _, texts in model.calls] == [4, 1]
+    # 9 texts, 5 different ones (the consequence and the advice repeat): chunks of 3 and 2
+    assert [len(texts) for _, texts in model.calls] == [3, 2]
     assert out["nl"].status == "checked" and out["nl"].tokens == 240
     assert [o.observation for o in out["nl"].observations] == [f"[nl] Kingsbridge press {k} times." for k in range(3, 6)]
 
@@ -285,3 +285,37 @@ def test_the_check_knows_the_target_language():
            ("nl", "Kingsbridge press.", "Kingsbridge zet druk tegen Northgate.")]
     for lang, en, tr in bad:
         assert check_translation(en, tr, names, lang), (lang, tr)
+
+
+def test_a_translation_waits_while_a_live_moment_is_analysed():
+    busy = {"on": True}
+    model = Phrasebook()
+    lane = TranslationLane(model, langs=["nl"], busy=lambda: busy["on"])
+    got = []
+
+    async def main():
+        lane.submit(goal(), got.append)
+        await asyncio.sleep(0.6)
+        assert model.calls == []                 # the Analyst and the Narrator go first
+        busy["on"] = False
+        await lane.wait()
+
+    run(main())
+    assert len(model.calls) == 1 and got[0]["nl"].status == "checked"
+
+
+def test_number_words_in_compounds():
+    assert check_translation("A three-action move.", "Een drie-actiespel.", NAMES, "nl") is None
+    assert check_translation("17 passes.", "Dix-sept passes.", NAMES, "fr") is None
+    assert check_translation("Kingsbridge stay level.", "Kingsbridge houdt het op 0-0.", NAMES, "nl")
+
+
+def test_numbers_that_english_words_imply_and_names_in_compounds():
+    """Also seen with itg-translator: correct translations that the first check rejected."""
+    assert check_translation("The score remains deadlocked at nil-nil.", "De stand blijft 0-0.", NAMES, "nl") is None
+    assert check_translation("Neither side has scored yet.", "Ninguno de los dos equipos ha marcado.", NAMES, "es") is None
+    assert check_translation("Neither side has scored yet.", "Aucune des deux équipes n'a marqué.", NAMES, "fr") is None
+    assert check_translation("Kingsbridge attacks are balanced.", "Kingsbridge-aanvallen zijn evenwichtig.", NAMES, "nl") is None
+    # but a 0 or a 2 out of nowhere still fails
+    assert check_translation("Kingsbridge attack down the left.", "Kingsbridge valt aan over links, 0-0.", NAMES, "nl")
+    assert check_translation("Kingsbridge attack down the left.", "Kingsbridge ataca por la izquierda con dos delanteros.", NAMES, "es")

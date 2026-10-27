@@ -45,6 +45,11 @@ class SmartLane:
         self._tasks.add(task)
         task.add_done_callback(self._tasks.discard)
 
+    @property
+    def busy(self) -> bool:
+        """A moment is being analysed (the translation lane waits for it)."""
+        return bool(self._tasks)
+
     def cancel_all(self) -> None:
         for task in list(self._tasks):
             task.cancel()

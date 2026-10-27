@@ -266,6 +266,10 @@ _TARGET_WORDS: dict[str, dict[str, int]] = {
                    [*range(2, 21), 30, 40, 50])),
 }
 _ORDINALS = dict(zip("first second third fourth fifth sixth seventh eighth ninth tenth".split(), range(1, 11)))
+# English words that carry a number another language may write out: "nil-nil" is 0-0, "neither side" is
+# "ninguno de los dos". The number may come back, it need not.
+_IMPLIED = [(re.compile(r"\b(?:nil|goalless|scoreless)\b", re.I), 0.0),
+            (re.compile(r"\b(?:both|neither|either)\b", re.I), 2.0)]
 
 
 def _digits(text: str) -> set[float]:
@@ -274,7 +278,12 @@ def _digits(text: str) -> set[float]:
 
 def _translated_numbers(text: str, lang: str | None) -> set[float]:
     words = _TARGET_WORDS.get(lang or "", {})
-    found = {float(words[w.lower()]) for w in re.findall(r"[^\W\d_]+(?:-[^\W\d_]+)*", text) if w.lower() in words}
+    found = set()
+    for token in re.findall(r"[^\W\d_]+(?:-[^\W\d_]+)*", text.lower()):
+        if token in words:                      # also "dix-sept" as a whole
+            found.add(float(words[token]))
+        elif (head := token.split("-")[0]) in words and "-" in token:   # "drie-actiespel"
+            found.add(float(words[head]))
     return _digits(text) | found
 
 
@@ -294,8 +303,9 @@ def _new_names(text: str, known: set[str]) -> list[str]:
         word = re.sub(r"[’'][\w]+$", "", raw)
         before = text[: m.start()].rstrip()
         # The first word of a sentence is capitalised anyway; it only looks like a name with a possessive 's
-        # or a hyphen ("Zo'n" and "L'équipe" are no names).
-        if (not before or before[-1] in _SENTENCE_START) and "-" not in word and not re.search(r"[’']s$", raw):
+        # or as a double-barrelled name ("Zo'n", "L'équipe" and "Dix-sept" are no names; Adeyemi-Clarke is).
+        double = "-" in word and all(part[:1].isupper() for part in word.split("-"))
+        if (not before or before[-1] in _SENTENCE_START) and not double and not re.search(r"[’']s$", raw):
             continue
         low = word.lower()
         if low in known or low in _COMMON or (low.endswith("s") and low[:-1] in known):   # Dutch genitive: Brouwers
@@ -322,6 +332,7 @@ def check_translation(source: str, translated: str, names: set[str] | frozenset[
         return "Empty translation"
     required = {round(n, 2) for n in numbers_in(source)}
     optional = {float(v) for w, v in _ORDINALS.items() if re.search(rf"\b{w}\b", source, re.I)}
+    optional |= {n for rx, n in _IMPLIED if rx.search(source)}
     if 1.0 in required and 1.0 not in _digits(source):
         required.discard(1.0)
         optional.add(1.0)
@@ -331,9 +342,10 @@ def check_translation(source: str, translated: str, names: set[str] | frozenset[
         show = lambda xs: ", ".join(f"{n:g}" for n in sorted(xs))  # noqa: E731
         parts = ([f"new number(s) {show(new)}"] if new else []) + ([f"missing {show(lost)}"] if lost else [])
         return f"Numbers differ from the English source: {'; '.join(parts)}"
+    # In the translation a name may get a genitive s (Brouwers) or start a compound (Kingsbridge-aanvallen).
     missing = [n for n in sorted(names, key=len, reverse=True)
                if re.search(rf"(?<![\w-]){re.escape(n)}(?![\w-])", source)
-               and not re.search(rf"(?<![\w-]){re.escape(n)}(?:[’']?s)?(?![\w-])", translated)]
+               and not re.search(rf"(?<![\w-]){re.escape(n)}(?:[’']?s)?(?!\w)", translated)]
     if missing:
         return f"Name(s) missing from the translation: {', '.join(missing)}"
     # Only the source: a player of the squad who is not in the checked English text is a new name too.
