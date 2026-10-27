@@ -319,3 +319,57 @@ def test_numbers_that_english_words_imply_and_names_in_compounds():
     # but a 0 or a 2 out of nowhere still fails
     assert check_translation("Kingsbridge attack down the left.", "Kingsbridge valt aan over links, 0-0.", NAMES, "nl")
     assert check_translation("Kingsbridge attack down the left.", "Kingsbridge ataca por la izquierda con dos delanteros.", NAMES, "es")
+
+
+# ------------------------------------------------------------------ French and Spanish notation (run to 30', itg-translator v3)
+
+SCOUT_EN = ("Kingsbridge attacked evenly across flanks and centre, with 32% left, 34% centre, and 34% right, "
+            "isolating far-side wingers in 1v1 after switching play.")
+SCOUT_FR = ("Kingsbridge attaque de manière équilibrée les deux côtés et le centre, avec 32% à gauche, 34% au centre "
+            "et 34% à droite, isolant les ailiers côté opposé en 1v1 après un changement de jeu.")
+
+
+def test_real_french_translation_with_les_deux_passes_and_a_wrong_number_in_it_still_fails():
+    assert check_translation(SCOUT_EN, SCOUT_FR, NAMES, "fr") is None              # rejected before: "new number(s) 2"
+    wrong = SCOUT_FR.replace("34% au centre", "43% au centre")                      # injected on purpose
+    assert "43" in check_translation(SCOUT_EN, wrong, NAMES, "fr")
+    # "deux" outside the idiom is still a number
+    assert check_translation("Kingsbridge pressed.", "Kingsbridge a pressé avec deux attaquants.", NAMES, "fr")
+
+
+def test_a_translation_that_leaves_a_sentence_out_stays_rejected():
+    en = ("Kingsbridge builds attacks predominantly down the left flank, increasing to 60% from 27%, over double the "
+          "cup-match's 32%. Their block remains a slightly deeper high block, 38 m last line, 5 m deeper, more compact.")
+    nl = ("Kingsbridge bouwt aanvallen voornamelijk op de linkerflank, toename naar 60% van 27%, ruim het dubbele van "
+          "de 32% in de bekerwedstrijd.")
+    assert check_translation(en, nl, NAMES, "nl") == "Numbers differ from the English source: missing 5, 38"
+
+
+def test_french_and_spanish_notations_pass_and_wrong_numbers_fail():
+    nb, nnb = " ", " "
+    ok = [("fr", "Northgate kept 18% of the ball.", f"Northgate a gardé 18{nnb}% du ballon."),
+          ("es", "The last line sits at 43 m.", f"La última línea está a 43{nb}m."),
+          ("fr", "Shot xG 0.41 from 10.9 m.", "Tir xG 0,41 à 10,9 m."),
+          ("es", "Kingsbridge built up in a 2-3-5 and defended in a 2-2-4-2.", "Kingsbridge salió en 2-3-5 y defendió en 2-2-4-2."),
+          ("fr", "Kingsbridge had zero shots on target.", "Kingsbridge a eu zéro tir cadré."),
+          ("es", "Kingsbridge had zero shots on target.", "Kingsbridge tuvo cero tiros a puerta."),
+          ("fr", "Eight passes in the build-up.", "Huit passes dans la relance."),
+          ("fr", "Twenty-four passes.", "Vingt-quatre passes."),
+          ("es", "Twenty-four passes.", "Veinticuatro pases."),
+          ("fr", "The coach should press Kingsbridge's full-back.", "L'entraîneur doit presser le latéral d'Kingsbridge."),
+          ("fr", "In the window 10'–15' Northgate pressed.", "Dans la fenêtre 10'–15', Northgate a pressé.")]
+    for lang, en, tr in ok:
+        assert check_translation(en, " ".join(tr.split()), NAMES, lang) is None, (lang, tr)
+    bad = [("fr", "Northgate kept 18% of the ball.", f"Northgate a gardé 19{nnb}% du ballon."),
+           ("es", "Kingsbridge built up in a 2-3-5.", "Kingsbridge salió en 3-3-4."),
+           ("fr", "Kingsbridge had zero shots on target.", "Kingsbridge a eu deux tirs cadrés."),
+           ("fr", "Twenty-four passes.", "Vingt-cinq passes."),
+           ("es", "Kingsbridge attacked down the left.", "Kingsbridge atacó por la izquierda con Rasmussen.")]
+    for lang, en, tr in bad:
+        assert check_translation(en, " ".join(tr.split()), NAMES, lang), (lang, tr)
+
+
+def test_non_breaking_spaces_become_plain_spaces_before_the_check():
+    model = Phrasebook({SOURCE: DUTCH.replace("0,41 xG", "0,41 xG")})
+    out = run(translate(goal(), NAMES, model=model, cache=TranslationCache(), langs=["nl"]))
+    assert out["nl"].status == "checked" and " " not in out["nl"].text

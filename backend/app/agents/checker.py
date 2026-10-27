@@ -276,15 +276,28 @@ def _digits(text: str) -> set[float]:
     return {round(float(m.replace(",", ".")), 2) for m in NUM.findall(text)}
 
 
-def _translated_numbers(text: str, lang: str | None) -> set[float]:
-    words = _TARGET_WORDS.get(lang or "", {})
+_ZERO = {"nl": "nul", "es": "cero", "fr": "zéro"}
+_VEINTI = dict(zip("veintiuno veintidós veintitrés veinticuatro veinticinco veintiséis veintisiete veintiocho "
+                   "veintinueve".split(), range(21, 30)))
+# "les deux côtés", "los dos equipos": both. Such a 2 may stand for a 2 of the source, but is never a new number.
+_BOTH = re.compile(r"\b(?:les|des|aux|los|las) (?:deux|dos)\b", re.I)
+
+
+def _translated_numbers(text: str, lang: str | None) -> tuple[set[float], set[float]]:
+    """(numbers, numbers that only an idiom for "both" gives) in a translation."""
+    words = {**_TARGET_WORDS.get(lang or "", {}), **({_ZERO[lang]: 0} if lang in _ZERO else {}),
+             **(_VEINTI if lang == "es" else {})}
+    both = {2.0} if lang in ("fr", "es") and _BOTH.search(text) else set()
     found = set()
-    for token in re.findall(r"[^\W\d_]+(?:-[^\W\d_]+)*", text.lower()):
+    for token in re.findall(r"[^\W\d_]+(?:-[^\W\d_]+)*", _BOTH.sub(" ", text.lower()) if both else text.lower()):
+        parts = token.split("-")
         if token in words:                      # also "dix-sept" as a whole
             found.add(float(words[token]))
-        elif (head := token.split("-")[0]) in words and "-" in token:   # "drie-actiespel"
-            found.add(float(words[head]))
-    return _digits(text) | found
+        elif len(parts) == 2 and words.get(parts[0], 0) >= 20 and 0 < words.get(parts[1], 0) < 10:   # "vingt-quatre"
+            found.add(float(words[parts[0]] + words[parts[1]]))
+        elif parts[0] in words and "-" in token:   # "drie-actiespel"
+            found.add(float(words[parts[0]]))
+    return _digits(text) | found, both
 
 
 _NAME_IN_TRANSLATION = re.compile(r"\b[A-Z][\w\-]*(?:[’'][\w]+)?")
@@ -336,8 +349,8 @@ def check_translation(source: str, translated: str, names: set[str] | frozenset[
     if 1.0 in required and 1.0 not in _digits(source):
         required.discard(1.0)
         optional.add(1.0)
-    out = _translated_numbers(translated, lang)
-    lost, new = required - out, out - required - optional
+    out, both = _translated_numbers(translated, lang)
+    lost, new = required - out - both, out - required - optional
     if lost or new:
         show = lambda xs: ", ".join(f"{n:g}" for n in sorted(xs))  # noqa: E731
         parts = ([f"new number(s) {show(new)}"] if new else []) + ([f"missing {show(lost)}"] if lost else [])
