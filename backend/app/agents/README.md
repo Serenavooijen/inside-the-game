@@ -147,6 +147,7 @@ Tactician (code, app/tactics.py)  →  Scout (LLM)  →  Fact-checker (code)
 - De Narrator maakt daar één zin van, maximaal 25 woorden.
 - De zin gaat door `check_text` en `unknown_names` en daarna als SSE-bericht `commentary` naar de frontend.
 - Afgekeurd, te lang of later dan 5 s: dan blijft de minuut stil.
+- **Bekende beperking:** op Foundry en 10× snelheid blijven de meeste minuten stil. Gemeten tot 54': 10 regels zonder vertaling (`ITG_LANGUAGES=` leeg), 11 met `nl,es,fr`. De regels die er komen zijn op tijd, 0,2 wedstrijdminuut na hun minuut. De balk toont de laatste regel die er was, dus op 30' kan dat die van 23' zijn. De vertaling is niet de oorzaak; die komt na de Engelse regel en houdt hem niet op.
 
 | Variabele | Betekenis |
 | --- | --- |
