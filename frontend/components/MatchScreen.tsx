@@ -17,6 +17,7 @@ import { KeyMoment } from './KeyMoment';
 import { Controls } from './Controls';
 import { FactCheck, Whistle } from './icons';
 import { LangTag } from './Language';
+import { PreferencesProvider, usePreferences } from '@/lib/preferences';
 import { TeamsProvider, teamColorVars, teamsFor } from '@/lib/teams';
 
 const PERIOD: Record<number, Key> = { 1: 'p1', 2: 'p2', 3: 'p3', 4: 'p4', 5: 'p5' };
@@ -64,10 +65,23 @@ function CommentaryBar({ line }: { line: Commentary | null }) {
 }
 
 export function MatchScreen({ matchId, mode }: { matchId: string; mode: Mode }) {
+  const teams = useMemo(() => teamsFor(matchId), [matchId]);
+  return (
+    <TeamsProvider teams={teams}>
+      <PreferencesProvider>
+        <MatchView matchId={matchId} mode={mode} teams={teams} />
+      </PreferencesProvider>
+    </TeamsProvider>
+  );
+}
+
+function MatchView({ matchId, mode, teams }: { matchId: string; mode: Mode; teams: ReturnType<typeof teamsFor> }) {
   const s = useMatchStream(matchId, mode);
   const { t: tr } = useLang();
-  const teams = useMemo(() => teamsFor(matchId), [matchId]);
-  const [feedMode, setFeedMode] = useState<'casual' | 'analyst'>('casual');
+  // Casual fan | Analyst: the viewer's preference (default Casual fan, as before)
+  const { prefs, set: setPrefs } = usePreferences();
+  const feedMode = prefs.mode;
+  const setFeedMode = (m: 'casual' | 'analyst') => setPrefs({ mode: m });
   const [focusId, setFocusId] = useState<string | null>(null);
 
   // Right column: feed, scouting report or line-ups; a player analysis can open over it.
@@ -149,7 +163,6 @@ export function MatchScreen({ matchId, mode }: { matchId: string; mode: Mode }) 
   };
 
   return (
-    <TeamsProvider teams={teams}>
     <div className="flex h-screen min-h-[720px] flex-col overflow-hidden bg-bg text-fg" style={teamColorVars(teams) as React.CSSProperties}>
       <Scorebar stats={stats} clock={tick?.clock ?? '00:00'} period={period} mode={s.mode} events={s.events} />
 
@@ -251,6 +264,5 @@ export function MatchScreen({ matchId, mode }: { matchId: string; mode: Mode }) 
         onSeek={s.seek}
       />
     </div>
-    </TeamsProvider>
   );
 }
