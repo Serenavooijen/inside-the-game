@@ -179,6 +179,7 @@ class Simulator:
         if self.scout_lane and (card := self.scout_lane.kickoff_card(self.generation)):
             # the scouting report is the first card of the match (t = 0); translated at load, then from the cache
             self.insights[card.id] = self._translated(card, submit=False)
+            self._translate_perspectives(self.insights[card.id])   # its club variants: from the cache, or translated now
         self._advance(t, publish=False)
         self._last_second = int(t)
 

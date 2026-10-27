@@ -392,3 +392,26 @@ def test_club_variants_are_translated_with_the_same_check_and_a_rejected_one_sta
     assert perspectives_from_cache(persp, ["nl"], cache) == out      # second time: from the cache
     bad = Phrasebook({lever.observation: "De laatste linie van Kingsbridge staat op 31 m van het doel."})
     assert run(translate_perspectives(persp, NAMES, model=bad, cache=TranslationCache(), langs=["nl"])) == {"nl": {}}
+
+
+def test_the_scouting_report_variants_are_translated_also_on_a_second_load():
+    import os
+
+    from app.fixture import SCOUTING_REPORT
+    from app.scout_lane import ScoutLane
+
+    if not os.path.exists(SCOUTING_REPORT):
+        return
+
+    async def main():
+        tl = TranslationLane(OfflineModel(), langs=["nl"])
+        sim = Simulator(EventBus(maxsize=10_000), {MATCH_ID: GeneratorSource}, SmartLane(OfflineModel()),
+                        ScoutLane(OfflineModel(), SCOUTING_REPORT), None, tl)
+        await sim.load(MATCH_ID, "live")
+        await tl.wait()
+        await sim.load(MATCH_ID, "live")           # second load: the card comes from the cache
+        await tl.wait()
+        return sim.insights["i-tac-scouting"]
+
+    card = run(main())
+    assert card.perspectives and set(card.translations["nl"].perspectives) == {"kba", "ngr"}

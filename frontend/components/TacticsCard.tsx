@@ -186,7 +186,7 @@ export function TacticsCard({ insight: i, expanded = false, onToggle }: Props) {
   const border = i.status === 'corrected' && done ? 'border border-corrected' : fallback && done ? 'border border-dashed border-fallback' : 'border border-line';
   return (
     <article className={`box-border flex w-full flex-col gap-[14px] rounded-lg bg-surface px-[22px] py-5 ${border}`}>
-      <header className="flex items-center gap-3">
+      <header className={`flex items-center gap-3 ${persp ? 'flex-wrap gap-y-2' : ''}`}>
         <div className="flex h-9 w-9 flex-none items-center justify-center rounded-md bg-surface-2 text-fg"><TacticsIcon /></div>
         <div className="font-display text-card-type font-extrabold uppercase leading-none tracking-[.05em]">{scouting ? t('scoutingCard') : t('tactics')}</div>
         {persp && prefs.club !== 'neutral' && (
@@ -194,7 +194,7 @@ export function TacticsCard({ insight: i, expanded = false, onToggle }: Props) {
             <Swatch team={prefs.club} size={8} />{t('clubView', { club: teams.label(prefs.club) })}
           </span>
         )}
-        {i.window && !scouting && <div className="font-mono text-[13px] text-fg-2">{i.window.label}</div>}
+        {i.window && !scouting && <div className="whitespace-nowrap font-mono text-[13px] text-fg-2">{i.window.label}</div>}
         <div className="ml-auto whitespace-nowrap font-display text-[30px] font-extrabold leading-none">{scouting ? t('ko') : `${i.minute}'`}</div>
       </header>
 
