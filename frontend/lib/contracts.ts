@@ -149,6 +149,8 @@ export type Translation = {
   observations?: { observation: string; consequence: string; coachAction?: string }[];
   /** type 'substitution', stage 'watch' */
   watch?: string[];
+  /** per club: the variant's levers and change lines in the same order; only variants that passed the check */
+  perspectives?: Record<string, { levers: { observation: string; consequence: string; coachAction?: string }[]; changes: string[] }>;
   latencyMs?: number;
   tokens?: number;
 };

@@ -132,6 +132,12 @@ class TranslatedObservation(CamelModel):
     coach_action: str | None = None
 
 
+class TranslatedPerspective(CamelModel):
+    """One club's variant in one language: the levers and the change lines, in the same order."""
+    levers: list[TranslatedObservation]
+    changes: list[str] = []
+
+
 class Translation(CamelModel):
     """One language of a checked English text, made by the Translator after phase "done".
 
@@ -143,6 +149,7 @@ class Translation(CamelModel):
     text: str | None = None
     observations: list[TranslatedObservation] | None = None   # type "tactics", and a substitution's impact card
     watch: list[str] | None = None                            # type "substitution", stage "watch"
+    perspectives: dict[str, TranslatedPerspective] | None = None  # per club, only the variants that passed the check
     latency_ms: int | None = None
     tokens: int | None = None
 
