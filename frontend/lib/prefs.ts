@@ -42,3 +42,15 @@ export function emphasisOf(team: TeamId | undefined, club: Preferences['club']):
   if (club === 'neutral' || !team) return 'none';
   return team === club ? 'mine' : 'opponent';
 }
+
+/**
+ * The club variant of a tactics card or scouting report to show, or null for the neutral card: only with a club,
+ * in Analyst mode, with the club view on, and a checked variant for that club.
+ */
+export function perspectiveFor<P extends { status: string }>(
+  perspectives: Record<string, P> | undefined, prefs: Pick<Preferences, 'club' | 'mode' | 'tacticsView'>,
+): P | null {
+  if (prefs.club === 'neutral' || prefs.mode !== 'analyst' || prefs.tacticsView !== 'club') return null;
+  const p = perspectives?.[prefs.club];
+  return p && p.status === 'checked' ? p : null;
+}

@@ -118,3 +118,15 @@ def test_variants_of_an_old_generation_are_dropped():
         return sim.insights.get(old.id)
 
     assert run_sim(scenario) is None
+
+
+def test_same_only_where_the_code_compares_the_values():
+    from app.contracts import Fact
+    s = sheet()
+    s = s.model_copy(update={"facts": [
+        *s.facts,
+        Fact(fact_id="T9", text="Kingsbridge's attacks: left 22%, centre 71%, right 6%; cup match: centre 34%",
+             metric="channel_centre_pct", value=71, team="kba", concept="P1"),
+        Fact(fact_id="T8", text="Kingsbridge's build-up shape: 2-3-2-3 (cup match: 2-3-2-3)", metric="buildup_shape",
+             value="2-3-2-3", team="kba", concept="B6")]})
+    assert [(c.fact_ids, c.label) for c in changes_today(s, "kba")] == [(["T8"], "same")]

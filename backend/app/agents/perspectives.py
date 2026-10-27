@@ -66,7 +66,9 @@ def changes_today(sheet: TacticalFactSheet, opponent: str) -> list[PerspectiveCh
         if f.team != opponent or f.metric == "game_state":
             continue
         label = compare_from_text(f)
-        if label != "n/a":
+        # "same" only where the code compares the values itself (the build-up shape); elsewhere a fact without
+        # "up/down" may still differ from the cup match ("centre 71%; cup match: centre 34%"), so it is left out
+        if label == "changed" or (label == "same" and f.concept == "B6"):
             out.append(PerspectiveChange(text=f.text, fact_ids=[f.fact_id], label=label))
     out.sort(key=lambda c: c.label != "changed")            # changes first
     return out[:MAX_CHANGES]

@@ -4,6 +4,9 @@ import { useTeams } from '@/lib/teams';
 import { AttackArrow, PitchMarkings } from './InsightCard';
 import { FactCheck } from './icons';
 import { LangTag } from './Language';
+import { PerspectiveSwitch, PerspectiveView, usePerspective } from './Perspectives';
+import { Swatch } from './ProfileMenu';
+import { usePreferences } from '@/lib/preferences';
 
 const TRIGGER: Record<NonNullable<Insight['trigger']>, Key> = {
   interval: 'every5', half_time: 'halfTime', substitution: 'afterSub', scouting: 'cupMatch',
@@ -170,6 +173,10 @@ type Props = { insight: Insight; expanded?: boolean; onToggle?: () => void };
 export function TacticsCard({ insight: i, expanded = false, onToggle }: Props) {
   const { t } = useLang();
   const L = useCardLanguage(i);
+  // your club's side of the card ("How to beat {opponent}"), when there is a checked variant; else the neutral card
+  const persp = usePerspective(i.perspectives);
+  const { prefs } = usePreferences();
+  const teams = useTeams();
   const done = i.phase === 'done';
   const fallback = i.status === 'fallback';
   const scouting = i.trigger === 'scouting';
@@ -182,6 +189,11 @@ export function TacticsCard({ insight: i, expanded = false, onToggle }: Props) {
       <header className="flex items-center gap-3">
         <div className="flex h-9 w-9 flex-none items-center justify-center rounded-md bg-surface-2 text-fg"><TacticsIcon /></div>
         <div className="font-display text-card-type font-extrabold uppercase leading-none tracking-[.05em]">{scouting ? t('scoutingCard') : t('tactics')}</div>
+        {persp && prefs.club !== 'neutral' && (
+          <span className="flex h-[22px] flex-none items-center gap-[6px] whitespace-nowrap rounded-sm border border-line px-[6px] font-mono text-[11px] uppercase tracking-[.06em] text-fg-2">
+            <Swatch team={prefs.club} size={8} />{t('clubView', { club: teams.label(prefs.club) })}
+          </span>
+        )}
         {i.window && !scouting && <div className="font-mono text-[13px] text-fg-2">{i.window.label}</div>}
         <div className="ml-auto whitespace-nowrap font-display text-[30px] font-extrabold leading-none">{scouting ? t('ko') : `${i.minute}'`}</div>
       </header>
@@ -206,7 +218,9 @@ export function TacticsCard({ insight: i, expanded = false, onToggle }: Props) {
       {done && (
         <>
           {noChange && <div className="font-display text-[22px] font-extrabold uppercase tracking-[.06em] text-fg-2">{t('noChange')}</div>}
-          <Observations observations={i.observations ?? []} translated={L.tr?.observations} lang={L.textLang} />
+          <PerspectiveSwitch perspectives={i.perspectives} />
+          {persp ? <PerspectiveView p={persp} translations={i.translations} />
+            : <Observations observations={i.observations ?? []} translated={L.tr?.observations} lang={L.textLang} />}
           <HeatPitch heatmap={i.heatmap} buildUp={i.buildUp} width={300} />
           {(i.rejectedClaims?.length ?? 0) > 0 && <LeftOut items={i.rejectedClaims ?? []} />}
           <footer className="flex flex-wrap items-center gap-3">
@@ -236,6 +250,7 @@ export function TacticsCard({ insight: i, expanded = false, onToggle }: Props) {
 export function ScoutingReportPanel({ report, translations }: { report: ScoutingReport; translations?: Insight['translations'] }) {
   const { t } = useLang();
   const L = useCardLanguage({ phase: 'done', translations });
+  const persp = usePerspective(report.perspectives);
   const cited = new Set(report.observations.flatMap((o) => o.factIds));
   const facts: Fact[] = report.facts.filter((f) => cited.has(f.factId));
   return (
@@ -250,7 +265,9 @@ export function ScoutingReportPanel({ report, translations }: { report: Scouting
       <div className="font-mono text-label font-medium uppercase tracking-[.12em] text-accent-text">
         {t('madeBeforeKickoff')}
       </div>
-      <Observations observations={report.observations} translated={L.tr?.observations} lang={L.textLang} />
+      <PerspectiveSwitch perspectives={report.perspectives} />
+      {persp ? <PerspectiveView p={persp} translations={translations} />
+        : <Observations observations={report.observations} translated={L.tr?.observations} lang={L.textLang} />}
       {report.heatmaps.length > 0 && (
         <div className="flex flex-wrap gap-3">
           {report.heatmaps.map((h) => <HeatPitch key={h.team} heatmap={h} width={170} />)}
