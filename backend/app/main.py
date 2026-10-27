@@ -45,7 +45,7 @@ async def lifespan(app: FastAPI):
         scout_lane.cancel_all()
     if commentary_lane:
         commentary_lane.cancel_all()
-    translation_lane.cancel_all()
+    translation_lane.cancel_all(prepared=True)
 
 
 app = FastAPI(title="Inside the Game", lifespan=lifespan)

@@ -1,7 +1,7 @@
 """Translator: checked English -> nl/es/fr, the translation check, the cache, the deadline and the stream."""
 import asyncio
 
-from app.agents.checker import check_translation
+from app.agents.checker import _words_to_digits, check_translation
 from app.agents.llm import OfflineModel
 from app.agents.models import TranslationDraft
 from app.agents.translator import TranslationCache, languages, segments, translate
@@ -33,7 +33,7 @@ class Phrasebook:
     async def translate(self, lang, texts, prompt):
         self.calls.append((lang, list(texts)))
         await asyncio.sleep(self.delay_s)
-        return TranslationDraft(texts=[self.out.get(t, f"[{lang}] {t}") for t in texts]), 120
+        return TranslationDraft(texts=[self.out.get(t, f"[{lang}] {_words_to_digits(t)}") for t in texts]), 120
 
 
 def run(coro):
@@ -225,3 +225,63 @@ def test_hosted_translator_is_built_only_with_a_version(monkeypatch):
     monkeypatch.setenv("FOUNDRY_TRANSLATOR_AGENT_VERSION", "1")
     assert isinstance(model_from_env("foundry-agents").translator, FoundryAgent)
     assert model_from_env("foundry").translator is not None and model_from_env("offline").name == "offline"
+
+
+def test_a_long_card_goes_to_the_translator_in_parallel_chunks():
+    obs = [TacticalObservation(observation=f"Kingsbridge press {k} times.", fact_ids=["T1"], consequence="Space opens.",
+                               coach_action="Drop deeper.") for k in range(3, 6)]
+    card = Insight(id="i-tac", t=600, minute="10", type="tactics", text="", status="checked", observations=obs)
+    model = Phrasebook()
+    out = run(translate(card, NAMES, model=model, cache=TranslationCache(), langs=["nl"]))
+    # 9 texts, 5 different ones (the consequence and the advice repeat): chunks of 4 and 1
+    assert [len(texts) for _, texts in model.calls] == [4, 1]
+    assert out["nl"].status == "checked" and out["nl"].tokens == 240
+    assert [o.observation for o in out["nl"].observations] == [f"[nl] Kingsbridge press {k} times." for k in range(3, 6)]
+
+
+def test_the_scouting_report_is_translated_at_load_and_survives_a_seek():
+    import os
+
+    from app.fixture import SCOUTING_REPORT
+    from app.scout_lane import ScoutLane
+
+    async def main():
+        bus = EventBus(maxsize=10_000)
+        tl = TranslationLane(Phrasebook(delay_s=0.3), langs=["nl", "fr"])
+        sim = Simulator(bus, {MATCH_ID: GeneratorSource}, SmartLane(OfflineModel()),
+                        ScoutLane(OfflineModel(), SCOUTING_REPORT), None, tl)
+        await sim.load(MATCH_ID, "live")
+        assert sim.insights["i-tac-scouting"].translations is None   # on its way
+        sim.seek(600)                                                 # a seek does not cancel it
+        await tl.wait()
+        after_seek = sim.insights["i-tac-scouting"]
+        sim.seek(0)                                                   # from now on straight from the cache
+        return after_seek, sim.insights["i-tac-scouting"]
+
+    if not os.path.exists(SCOUTING_REPORT):
+        return
+    after_seek, again = run(main())
+    for card in (after_seek, again):
+        assert {k: v.status for k, v in card.translations.items()} == {"nl": "checked", "fr": "checked"}
+    assert again.translations["fr"].observations[0].observation.startswith("[fr] ")
+
+
+def test_the_check_knows_the_target_language():
+    """Seen in real translations from itg-translator: correct, and passed now; the wrong ones still fail."""
+    names = NAMES | {"Brouwer", "Rasmussen"}
+    ok = [("nl", "Press with three forwards.", "Press met drie aanvallers."),             # number words of the language
+          ("es", "Press with three forwards.", "Presionar con tres delanteros."),
+          ("nl", "Left flank 54%, up from 32%.", "Linkerflank 54%, ten opzichte van 32%."),  # Dutch "ten" is no 10
+          ("nl", "Following Brouwer’s recovery.", "Na Brouwers herstel."),                # Dutch genitive
+          ("nl", "Such pressing disrupts Northgate.", "Zo'n pressing verstoort Northgate."),  # contraction
+          ("fr", "Opposition keep the full-back narrow.", "L'adversaire garde le latéral resserré."),  # elision
+          ("fr", "In the first half Kingsbridge led 1-0.", "En 1re mi-temps, Kingsbridge menait 1-0."),  # ordinal
+          ("es", "Northgate win one duel.", "Northgate gana un duelo.")]                  # "un" is also an article
+    for lang, en, tr in ok:
+        assert check_translation(en, tr, names, lang) is None, (lang, tr)
+    bad = [("nl", "Press with three forwards.", "Press met vier aanvallers."),
+           ("nl", "Duarte passes.", "Duarte en Rasmussen passen."),                     # in the squad, not in the text
+           ("es", "Duarte passes.", "¿Rasmussen's pase? Duarte pasa."),
+           ("nl", "Kingsbridge press.", "Kingsbridge zet druk tegen Northgate.")]
+    for lang, en, tr in bad:
+        assert check_translation(en, tr, names, lang), (lang, tr)

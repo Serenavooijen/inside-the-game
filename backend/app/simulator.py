@@ -97,6 +97,9 @@ class Simulator:
         self._all_events = [e for i in self._items if not isinstance(i, SourceFrame)
                             if (e := to_match_event(i, source.roster))]
         self._reset(0)
+        scouting = next((i for i in self.insights.values() if i.trigger == "scouting"), None)
+        if self.translation_lane and scouting and scouting.translations is None:
+            self.translation_lane.prepare(scouting, lambda tr: self._attach(scouting.id, tr))
         self.playing, self.speed = True, 10
         self._publish_state()
 
@@ -174,8 +177,8 @@ class Simulator:
         self._cursor, self._frame, self.events, self.insights, self._history = 0, None, [], {}, []
         self.t = t
         if self.scout_lane and (card := self.scout_lane.kickoff_card(self.generation)):
-            # the scouting report is the first card of the match (t = 0); translated once, then from the cache
-            self.insights[card.id] = self._translated(card)
+            # the scouting report is the first card of the match (t = 0); translated at load, then from the cache
+            self.insights[card.id] = self._translated(card, submit=False)
         self._advance(t, publish=False)
         self._last_second = int(t)
 
@@ -260,7 +263,7 @@ class Simulator:
         if insight.phase == "done" and insight.moment_id and insight.moment_id == self.key_moment_id:
             self._key_deadline = min(self._key_deadline, self._clock + HOLD_AFTER_INSIGHT_S)
 
-    def _translated(self, insight: Insight) -> Insight:
+    def _translated(self, insight: Insight, submit: bool = True) -> Insight:
         """The insight with its translations when the cache has them all; else as it is, and the translation
         lane sends it again with translations later, unless the card has changed or the generation is old."""
         lane = self.translation_lane
@@ -268,6 +271,8 @@ class Simulator:
             return insight
         if (cached := lane.cached(insight)) is not None:
             return insight.model_copy(update={"translations": cached})
+        if not submit:
+            return insight
 
         def translated(tr) -> None:
             if insight.generation != self.generation or self.insights.get(insight.id) is not insight:
@@ -278,6 +283,15 @@ class Simulator:
 
         lane.submit(insight, translated)
         return insight
+
+    def _attach(self, insight_id: str, translations) -> None:
+        """The translations of a card made before kick-off, for its version in the current generation."""
+        card = self.insights.get(insight_id)
+        if card is None or card.translations is not None:
+            return
+        update = card.model_copy(update={"translations": self.translation_lane.cached(card) or translations})
+        self.insights[insight_id] = update
+        self.bus.publish("insight", update.to_json())
 
     def _start_key_moment(self, event_id: str) -> None:
         if self.key_moment_id:

@@ -262,8 +262,11 @@ class OfflineModel:
         ]), None
 
     async def translate(self, lang: str, texts: list[str], prompt: str) -> tuple[TranslationDraft, int | None]:
-        """A fixed "translation" for tests and demos without a model: the English text with the language tag."""
-        return TranslationDraft(texts=[f"[{lang}] {t}" for t in texts]), None
+        """A fixed "translation" for tests and demos without a model: the English text with the language tag,
+        numbers as digits (as the Translator's instructions ask)."""
+        from .checker import _words_to_digits
+
+        return TranslationDraft(texts=[f"[{lang}] {_words_to_digits(t)}" for t in texts]), None
 
     async def narrate(self, sheet: FactSheet, claims: list[Claim], prompt: str) -> AsyncIterator[str]:
         text = f"{sheet.moment.headline}. " + " ".join(c.text for c in claims)

@@ -27,6 +27,7 @@ from .llm import ModelClient
 from .prompts import translator_prompt
 
 TRANSLATE_DEADLINE_S = float(os.getenv("TRANSLATE_DEADLINE_S", "6"))
+CHUNK = 4                   # texts per Translator call; the chunks of a card run in parallel
 DEFAULT_LANGUAGES = "nl,es,fr"
 RTL = {"ar", "he", "fa", "ur"}      # right-to-left: needs layout work first
 
@@ -111,29 +112,39 @@ def _result(item: Item, lang: str, texts: list[str], hits: list[tuple[str, str |
 
 async def translate_one(item: Item, lang: str, names: set[str], *, model: ModelClient, cache: TranslationCache,
                         deadline_s: float | None = None) -> Translation:
-    """One language: the texts not in the cache go to the Translator in one call, then every text is checked."""
+    """One language: the texts not in the cache go to the Translator (in chunks of CHUNK, in parallel, each with
+    the deadline), then every text is checked against its source."""
     texts = segments(item)
     todo = list(dict.fromkeys(t for t in texts if cache.get(lang, t) is None))
-    start, tokens = time.perf_counter(), None
+    start = time.perf_counter()
+    ms = lambda: round((time.perf_counter() - start) * 1000)  # noqa: E731
     deadline = deadline_s or TRANSLATE_DEADLINE_S
+    tokens: int | None = None
     if todo:
         if not hasattr(model, "translate"):
             return Translation(status="rejected", reason=f"No Translator in the {model.name} set-up")
-        try:
-            draft, tokens = await within(model.translate(lang, todo, translator_prompt(lang, todo)), deadline)
-        except TimeoutError:
-            return Translation(status="rejected", reason=f"Translation timed out after {deadline:g} s",
-                               latency_ms=round((time.perf_counter() - start) * 1000))
-        except Exception as e:      # model or network error: the English text stays
-            return Translation(status="rejected", reason=f"Translator error: {type(e).__name__}")
-        if len(draft.texts) != len(todo):
-            return Translation(status="rejected", reason=f"{len(draft.texts)} translation(s) for {len(todo)} text(s)",
-                               latency_ms=round((time.perf_counter() - start) * 1000), tokens=tokens)
-        for source, translated in zip(todo, draft.texts):
-            translated = " ".join(translated.split())
-            cache.put(lang, source, translated, check_translation(source, translated, names))
-    return _result(item, lang, texts, [cache.get(lang, t) for t in texts],
-                   round((time.perf_counter() - start) * 1000), tokens)
+        chunks = [todo[k:k + CHUNK] for k in range(0, len(todo), CHUNK)]
+        results = await asyncio.gather(*(within(model.translate(lang, c, translator_prompt(lang, c)), deadline)
+                                         for c in chunks), return_exceptions=True)
+        failure = None
+        for chunk, r in zip(chunks, results):
+            if isinstance(r, asyncio.CancelledError):
+                raise r
+            if isinstance(r, BaseException):
+                failure = failure or (f"Translation timed out after {deadline:g} s" if isinstance(r, TimeoutError)
+                                      else f"Translator error: {type(r).__name__}")   # the English text stays
+                continue
+            draft, used = r
+            tokens = (tokens or 0) + used if used else tokens
+            if len(draft.texts) != len(chunk):
+                failure = failure or f"{len(draft.texts)} translation(s) for {len(chunk)} text(s)"
+                continue
+            for source, translated in zip(chunk, draft.texts):       # what came back is checked and cached
+                translated = " ".join(translated.split())
+                cache.put(lang, source, translated, check_translation(source, translated, names, lang))
+        if failure:
+            return Translation(status="rejected", reason=failure, latency_ms=ms(), tokens=tokens)
+    return _result(item, lang, texts, [cache.get(lang, t) for t in texts], ms(), tokens)
 
 
 async def translate(item: Item, names: set[str], *, model: ModelClient, cache: TranslationCache,
