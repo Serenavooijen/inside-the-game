@@ -207,14 +207,6 @@ No match data was provided, so we built our own:
 - **More languages** and a 3D pitch view.
 - **Scale-out:** Azure Event Hubs behind the event bus, with agents as separately scaled workers.
 
-## Honest limitations
-
-- The match is synthetic: tracking comes from a 1 Hz movement model, and xG from simple location models.
-- The checks guarantee numbers, names, score claims and directions, not meaning. A correct number attached to the wrong event can still slip through. That's why every card shows its evidence.
-- Commentary only appears when it arrives in time, so some minutes stay quiet.
-- The demo runs one shared match, in memory. Preferences live in your browser; there are no accounts.
-
----
 
 <details>
 <summary><b>For developers: run, test and deploy</b></summary>
