@@ -82,3 +82,19 @@ test('the followed player in four states, from the line-up data', () => {
   assert.equal(playerFocus(lineups, byName('Diallo-Kerr').id, 4000).status, 'on');
   assert.equal(playerFocus(lineups, 'XXX', 100), null);
 });
+
+test('tactics per club: the right variant for ngr, kba and Neutral; otherwise the neutral card', async () => {
+  const { perspectiveFor } = await import('../lib/prefs.ts');
+  const report = JSON.parse(readFileSync(new URL('../../fixtures/scouting/kba-ngr-cup.json', import.meta.url), 'utf8'));
+  const p = report.perspectives;
+  const analyst = (club, tacticsView = 'club') => ({ club, mode: 'analyst', tacticsView });
+  assert.equal(perspectiveFor(p, analyst('ngr')), p.ngr);            // Northgate fan: how to beat Kingsbridge
+  assert.equal(perspectiveFor(p, analyst('kba')), p.kba);
+  assert.match(p.ngr.levers[0].coachAction, /^Northgate/);
+  assert.match(p.kba.levers[0].coachAction, /^Kingsbridge/);
+  assert.equal(perspectiveFor(p, analyst('neutral')), null);         // Neutral: the card as it is
+  assert.equal(perspectiveFor(p, { club: 'ngr', mode: 'casual', tacticsView: 'club' }), null);
+  assert.equal(perspectiveFor(p, analyst('ngr', 'neutral')), null);  // the switch on the card
+  assert.equal(perspectiveFor({ ngr: { status: 'rejected', levers: [], changes: [] } }, analyst('ngr')), null);
+  assert.equal(perspectiveFor(undefined, analyst('ngr')), null);     // flag off: no perspectives at all
+});

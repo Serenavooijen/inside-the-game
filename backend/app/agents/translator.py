@@ -20,7 +20,7 @@ import logging
 import os
 import time
 
-from app.contracts import Commentary, Insight, TranslatedObservation, Translation
+from app.contracts import Commentary, Insight, Perspective, TranslatedObservation, TranslatedPerspective, Translation
 
 from .checker import check_translation
 from .deadline import within
@@ -118,18 +118,28 @@ async def translate_one(item: Item, lang: str, names: set[str], *, model: ModelC
     """One language: the texts not in the cache go to the Translator (in chunks of CHUNK, in parallel, each with
     the deadline), then every text is checked against its source."""
     texts = segments(item)
-    todo = list(dict.fromkeys(t for t in texts if cache.get(lang, t) is None))
     start = time.perf_counter()
-    ms = lambda: round((time.perf_counter() - start) * 1000)  # noqa: E731
+    failure, tokens = await _fill(texts, lang, names, model=model, cache=cache, deadline_s=deadline_s)
+    ms = round((time.perf_counter() - start) * 1000)
+    if failure:
+        return Translation(status="rejected", reason=failure, latency_ms=ms, tokens=tokens)
+    return _result(item, lang, texts, [cache.get(lang, t) for t in texts], ms, tokens)
+
+
+async def _fill(texts: list[str], lang: str, names: set[str], *, model: ModelClient, cache: TranslationCache,
+                deadline_s: float | None = None) -> tuple[str | None, int | None]:
+    """Translate the texts not in the cache yet, check each against its source, and cache the result.
+    Returns (why it failed, or None; tokens). A rejected text is cached with its reason; a timeout is not."""
+    todo = list(dict.fromkeys(t for t in texts if cache.get(lang, t) is None))
     deadline = deadline_s or TRANSLATE_DEADLINE_S
     tokens: int | None = None
+    failure = None
     if todo:
         if not hasattr(model, "translate"):
-            return Translation(status="rejected", reason=f"No Translator in the {model.name} set-up")
+            return f"No Translator in the {model.name} set-up", None
         chunks = [todo[k:k + CHUNK] for k in range(0, len(todo), CHUNK)]
         results = await asyncio.gather(*(within(model.translate(lang, c, translator_prompt(lang, c)), deadline)
                                          for c in chunks), return_exceptions=True)
-        failure = None
         for chunk, r in zip(chunks, results):
             if isinstance(r, asyncio.CancelledError):
                 raise r
@@ -148,9 +158,59 @@ async def translate_one(item: Item, lang: str, names: set[str], *, model: ModelC
                 if reason:
                     log.warning("Translation rejected (%s): %s\n  EN: %s\n  %s: %s", lang, reason, source, lang.upper(), translated)
                 cache.put(lang, source, translated, reason)
-        if failure:
-            return Translation(status="rejected", reason=failure, latency_ms=ms(), tokens=tokens)
-    return _result(item, lang, texts, [cache.get(lang, t) for t in texts], ms(), tokens)
+    return failure, tokens
+
+
+def perspective_segments(p: Perspective) -> list[str]:
+    return [t for lv in p.levers for t in (lv.observation, lv.consequence, lv.coach_action) if t] + [c.text for c in p.changes]
+
+
+async def translate_perspectives(perspectives: dict[str, Perspective], names: set[str], *, model: ModelClient,
+                                 cache: TranslationCache, langs: list[str] | None = None,
+                                 deadline_s: float | None = None) -> dict[str, dict[str, TranslatedPerspective]]:
+    """The checked club variants in every language, with the same check and cache as the cards:
+    {lang: {team: TranslatedPerspective}}. A variant with any text rejected or too late is left out (EN in the UI)."""
+    langs = languages() if langs is None else langs
+    checked = {t: p for t, p in perspectives.items() if p.status == "checked"}
+    texts = list(dict.fromkeys(x for p in checked.values() for x in perspective_segments(p)))
+
+    async def one(lang: str) -> dict[str, TranslatedPerspective]:
+        await _fill(texts, lang, names, model=model, cache=cache, deadline_s=deadline_s)
+        out = {}
+        for team, p in checked.items():
+            hits = {x: cache.get(lang, x) for x in perspective_segments(p)}
+            if any(h is None or h[1] for h in hits.values()):
+                continue
+            tr = lambda x: hits[x][0]  # noqa: E731
+            out[team] = TranslatedPerspective(
+                levers=[TranslatedObservation(observation=tr(lv.observation), consequence=tr(lv.consequence),
+                                              coach_action=tr(lv.coach_action) if lv.coach_action else None) for lv in p.levers],
+                changes=[tr(c.text) for c in p.changes])
+        return out
+
+    done = await asyncio.gather(*(one(lang) for lang in langs))
+    return dict(zip(langs, done))
+
+
+def perspectives_from_cache(perspectives: dict[str, Perspective], langs: list[str], cache: TranslationCache
+                            ) -> dict[str, dict[str, TranslatedPerspective]] | None:
+    """Like translate_perspectives, straight from the cache; None when a text still has to be translated."""
+    checked = {t: p for t, p in perspectives.items() if p.status == "checked"}
+    out: dict[str, dict[str, TranslatedPerspective]] = {}
+    for lang in langs:
+        out[lang] = {}
+        for team, p in checked.items():
+            hits = {x: cache.get(lang, x) for x in perspective_segments(p)}
+            if any(h is None for h in hits.values()):
+                return None
+            if any(h[1] for h in hits.values()):
+                continue
+            tr = lambda x: hits[x][0]  # noqa: E731
+            out[lang][team] = TranslatedPerspective(
+                levers=[TranslatedObservation(observation=tr(lv.observation), consequence=tr(lv.consequence),
+                                              coach_action=tr(lv.coach_action) if lv.coach_action else None) for lv in p.levers],
+                changes=[tr(c.text) for c in p.changes])
+    return out
 
 
 async def translate(item: Item, names: set[str], *, model: ModelClient, cache: TranslationCache,
@@ -162,4 +222,5 @@ async def translate(item: Item, names: set[str], *, model: ModelClient, cache: T
     return dict(zip(langs, done))
 
 
-__all__ = ["TranslationCache", "from_cache", "languages", "segments", "translatable", "translate", "translate_one"]
+__all__ = ["TranslationCache", "from_cache", "languages", "segments", "translatable", "translate", "translate_one",
+           "translate_perspectives"]

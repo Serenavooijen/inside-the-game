@@ -495,5 +495,110 @@
    "dir": -1
   }
  ],
- "generatedBy": "foundry-agents"
+ "generatedBy": "foundry-agents",
+ "perspectives": {
+  "kba": {
+   "status": "checked",
+   "levers": [
+    {
+     "observation": "Northgate frequently dropped their 6 between the centre-backs forming a back three in 58% of build-up phases, creating a 2-3-5 shape with a mid block at 28 m from goal and medium compactness.",
+     "factIds": [
+      "C14",
+      "C19",
+      "C23",
+      "C24"
+     ],
+     "consequence": "Kingsbridge faces a back three that creates numerical superiority early, demanding careful midfield positioning and passing lanes control to prevent clean progression.",
+     "coachAction": "Kingsbridge should press with three forwards or block passing lanes into midfield to disrupt Northgate's back three.",
+     "compareToCup": "n/a"
+    },
+    {
+     "observation": "At 61' Northgate adjusted from a 4-3-3 to a 4-4-2 and their defensive line dropped from mid block 29 m to low block 23 m after a substitution, maintaining very intense pressing.",
+     "factIds": [
+      "C25",
+      "C27",
+      "C30"
+     ],
+     "consequence": "Kingsbridge encounters a deeper Northgate block with very intense pressing, making direct penetration harder and space behind the defense reduced.",
+     "coachAction": "Kingsbridge should use width, patience and set pieces to break down Northgate's low block effectively.",
+     "compareToCup": "n/a"
+    }
+   ],
+   "changes": [
+    {
+     "text": "Cup match: Northgate's build-up shape 2-3-5",
+     "factIds": [
+      "C19"
+     ],
+     "label": "changed"
+    },
+    {
+     "text": "Cup match: Northgate's 6, Duarte (8), dropped between the centre-backs in 58% of 97 build-up phases",
+     "factIds": [
+      "C14"
+     ],
+     "label": "same"
+    },
+    {
+     "text": "Cup match: 22% of Northgate's attacks went down the left",
+     "factIds": [
+      "C20"
+     ],
+     "label": "same"
+    }
+   ]
+  },
+  "ngr": {
+   "status": "checked",
+   "levers": [
+    {
+     "observation": "Kingsbridge's left-back inverts inside next to their 6 for 34% of build-up, creating a 2-3-2-3 shape; their press intensity is very high (PPDA 5.5) with a high block 35 m from their goal.",
+     "factIds": [
+      "C4",
+      "C6",
+      "C10",
+      "C12"
+     ],
+     "consequence": "Northgate face strong pressure high up and must be prepared for quick ball recovery attempts and less space behind the defensive line.",
+     "coachAction": "Northgate should play quick, accurate passes out of press and use the goalkeeper to relieve pressure.",
+     "compareToCup": "n/a"
+    },
+    {
+     "observation": "Kingsbridge's attacks are well-distributed: 32% left, 34% centre, 34% right; their compactness is medium with a 30 m deep block in midfield.",
+     "factIds": [
+      "C7",
+      "C8",
+      "C9",
+      "C11"
+     ],
+     "consequence": "Northgate cannot predict flank attacks, requiring balanced defensive coverage and readiness to engage in central midfield battles.",
+     "coachAction": "Northgate must maintain midfield compactness and shift defensive block fluidly to cover all flanks effectively.",
+     "compareToCup": "n/a"
+    }
+   ],
+   "changes": [
+    {
+     "text": "Cup match: Kingsbridge's build-up shape 2-3-2-3",
+     "factIds": [
+      "C6"
+     ],
+     "label": "changed"
+    },
+    {
+     "text": "Cup match: Kingsbridge's left-back Mbeki (3) moved inside next to the 6 for 34% of the build-up time",
+     "factIds": [
+      "C4"
+     ],
+     "label": "same"
+    },
+    {
+     "text": "Cup match: 32% of Kingsbridge's attacks went down the left",
+     "factIds": [
+      "C7"
+     ],
+     "label": "same"
+    }
+   ]
+  }
+ }
 }

@@ -107,6 +107,14 @@ const en = {
   showLess: 'Show less',
   km: 'Km',
   close: 'Close',
+  // tactics per club
+  clubView: '{club} view',
+  howToBeat: 'How to beat {team}',
+  changedToday: 'What {team} changed today',
+  changedLabel: 'Changed',
+  sameLabel: 'Same',
+  tacticsView: 'Tactics view',
+  lever: 'Lever {n}',
 };
 
 export type Key = keyof typeof en;
@@ -197,6 +205,14 @@ const nl: Dict = {
   showLess: 'Minder tonen',
   km: 'Km',
   close: 'Sluiten',
+  // tactics per club
+  clubView: '{club}-weergave',
+  howToBeat: 'Zo versla je {team}',
+  changedToday: 'Wat {team} vandaag anders doet',
+  changedLabel: 'Anders',
+  sameLabel: 'Gelijk',
+  tacticsView: 'Tactiekweergave',
+  lever: 'Hefboom {n}',
 };
 
 const es: Dict = {
@@ -284,6 +300,14 @@ const es: Dict = {
   showLess: 'Ver menos',
   km: 'Km',
   close: 'Cerrar',
+  // tactics per club
+  clubView: 'Vista {club}',
+  howToBeat: 'Cómo ganar a {team}',
+  changedToday: 'Qué cambió {team} hoy',
+  changedLabel: 'Cambió',
+  sameLabel: 'Igual',
+  tacticsView: 'Vista táctica',
+  lever: 'Clave {n}',
 };
 
 const fr: Dict = {
@@ -371,6 +395,14 @@ const fr: Dict = {
   showLess: 'Afficher moins',
   km: 'Km',
   close: 'Fermer',
+  // tactics per club
+  clubView: 'Vue {club}',
+  howToBeat: 'Comment battre {team}',
+  changedToday: 'Ce que {team} a changé aujourd’hui',
+  changedLabel: 'Changé',
+  sameLabel: 'Pareil',
+  tacticsView: 'Vue tactique',
+  lever: 'Levier {n}',
 };
 
 export const DICTS: Record<Lang, Dict> = { en, nl, es, fr };

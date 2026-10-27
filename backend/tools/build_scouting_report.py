@@ -10,6 +10,7 @@ before kick-off.
     uv run python ../generator/generate_match.py ../script/cup/match_script.json ../output/cup   # once
     uv run python tools/build_scouting_report.py                         # MODEL_PROVIDER from the environment
     uv run python tools/build_scouting_report.py --provider foundry-agents
+    uv run python tools/build_scouting_report.py --provider foundry-agents --perspectives   # add the club variants
 """
 
 from __future__ import annotations
@@ -110,14 +111,42 @@ async def build(provider: str | None, deadline: float) -> ScoutingReport:
     )
 
 
+async def build_perspectives(provider: str | None, deadline: float, report: ScoutingReport) -> ScoutingReport:
+    """The report seen from each club ("How to beat {opponent}"), with the same checks; the neutral part stays."""
+    from app.agents.perspectives import run_perspectives
+
+    sheet, _, _ = cup_sheet()
+    shown = sheet.model_copy(update={"facts": [f for f in sheet.facts if visible_to_scout(f)]})
+    model = model_from_env(provider)
+    warm = getattr(model, "warmup", None)
+    if warm:
+        await warm()
+    found, tokens, latency = await run_perspectives(shown, model=model, deadline_s=deadline)
+    for team, p in found.items():
+        print(f"{team}: {p.status}{' (' + p.reason + ')' if p.reason else ''} · {len(p.levers)} lever(s)")
+        for lv in p.levers:
+            print(f"  • {lv.observation} {lv.fact_ids}\n    Consequence: {lv.consequence}\n    For the coach: {lv.coach_action}")
+    print(f"{tokens} tokens · {latency} ms")
+    return report.model_copy(update={"perspectives": found})
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--provider", default=None)
     ap.add_argument("--deadline", type=float, default=30.0)
     ap.add_argument("--out", default=str(OUT))
+    ap.add_argument("--perspectives", action="store_true",
+                    help="add the two club variants to the existing report (the neutral report stays as it is)")
     args = ap.parse_args()
-    report = asyncio.run(build(args.provider, args.deadline))
     out = Path(args.out)
+    if args.perspectives:
+        import json
+        report = ScoutingReport.model_validate(json.loads(out.read_text(encoding="utf-8")))
+        report = asyncio.run(build_perspectives(args.provider, args.deadline, report))
+        out.write_text(json.dumps(report.to_json(), indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+        print(f"Wrote {out}")
+        return 0
+    report = asyncio.run(build(args.provider, args.deadline))
     out.parent.mkdir(parents=True, exist_ok=True)
     import json
     out.write_text(json.dumps(report.to_json(), indent=1, ensure_ascii=False) + "\n", encoding="utf-8")

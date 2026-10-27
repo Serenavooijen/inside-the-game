@@ -373,3 +373,45 @@ def test_non_breaking_spaces_become_plain_spaces_before_the_check():
     model = Phrasebook({SOURCE: DUTCH.replace("0,41 xG", "0,41 xG")})
     out = run(translate(goal(), NAMES, model=model, cache=TranslationCache(), langs=["nl"]))
     assert out["nl"].status == "checked" and " " not in out["nl"].text
+
+
+def test_club_variants_are_translated_with_the_same_check_and_a_rejected_one_stays_english():
+    from app.agents.translator import perspectives_from_cache, translate_perspectives
+    from app.contracts import Perspective, PerspectiveChange, PerspectiveLever
+
+    lever = PerspectiveLever(observation="Kingsbridge's last line sits 22 m from goal.", fact_ids=["T2"],
+                             consequence="Space opens behind.", coach_action="Northgate should play long.")
+    persp = {"ngr": Perspective(status="checked", levers=[lever],
+                                changes=[PerspectiveChange(text="Kingsbridge's line is 7 m higher than the cup match.",
+                                                           fact_ids=["T2"], label="changed")]),
+             "kba": Perspective(status="rejected", reason="Perspective timed out after 15 s")}
+    cache = TranslationCache()
+    out = run(translate_perspectives(persp, NAMES, model=Phrasebook(), cache=cache, langs=["nl"]))
+    assert set(out["nl"]) == {"ngr"} and out["nl"]["ngr"].levers[0].coach_action == "[nl] Northgate should play long."
+    assert out["nl"]["ngr"].changes == ["[nl] Kingsbridge's line is 7 m higher than the cup match."]
+    assert perspectives_from_cache(persp, ["nl"], cache) == out      # second time: from the cache
+    bad = Phrasebook({lever.observation: "De laatste linie van Kingsbridge staat op 31 m van het doel."})
+    assert run(translate_perspectives(persp, NAMES, model=bad, cache=TranslationCache(), langs=["nl"])) == {"nl": {}}
+
+
+def test_the_scouting_report_variants_are_translated_also_on_a_second_load():
+    import os
+
+    from app.fixture import SCOUTING_REPORT
+    from app.scout_lane import ScoutLane
+
+    if not os.path.exists(SCOUTING_REPORT):
+        return
+
+    async def main():
+        tl = TranslationLane(OfflineModel(), langs=["nl"])
+        sim = Simulator(EventBus(maxsize=10_000), {MATCH_ID: GeneratorSource}, SmartLane(OfflineModel()),
+                        ScoutLane(OfflineModel(), SCOUTING_REPORT), None, tl)
+        await sim.load(MATCH_ID, "live")
+        await tl.wait()
+        await sim.load(MATCH_ID, "live")           # second load: the card comes from the cache
+        await tl.wait()
+        return sim.insights["i-tac-scouting"]
+
+    card = run(main())
+    assert card.perspectives and set(card.translations["nl"].perspectives) == {"kba", "ngr"}

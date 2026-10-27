@@ -132,6 +132,12 @@ class TranslatedObservation(CamelModel):
     coach_action: str | None = None
 
 
+class TranslatedPerspective(CamelModel):
+    """One club's variant in one language: the levers and the change lines, in the same order."""
+    levers: list[TranslatedObservation]
+    changes: list[str] = []
+
+
 class Translation(CamelModel):
     """One language of a checked English text, made by the Translator after phase "done".
 
@@ -143,11 +149,38 @@ class Translation(CamelModel):
     text: str | None = None
     observations: list[TranslatedObservation] | None = None   # type "tactics", and a substitution's impact card
     watch: list[str] | None = None                            # type "substitution", stage "watch"
+    perspectives: dict[str, TranslatedPerspective] | None = None  # per club, only the variants that passed the check
     latency_ms: int | None = None
     tokens: int | None = None
 
 
 TacticalTrigger = Literal["interval", "half_time", "substitution", "scouting"]
+
+
+class PerspectiveLever(CamelModel):
+    """One way to beat the opponent: a factual observation about them, what it means, what this club should do."""
+    observation: str
+    fact_ids: list[str]
+    consequence: str
+    coach_action: str
+    compare_to_cup: Literal["same", "changed", "n/a"] = "n/a"
+
+
+class PerspectiveChange(CamelModel):
+    """What the opponent changed today: made by the code from a fact that compares with the cup match."""
+    text: str
+    fact_ids: list[str]
+    label: Literal["changed", "same"]
+
+
+class Perspective(CamelModel):
+    """The tactics card from one club's side (PERSPECTIVES_ENABLED). status "checked": the levers passed the
+    same checks as the neutral card; "rejected" (check failed or too late): no levers, the UI keeps the
+    neutral card. The neutral card itself never changes."""
+    status: Literal["checked", "rejected"]
+    reason: str | None = None
+    levers: list[PerspectiveLever] = []
+    changes: list[PerspectiveChange] = []
 CompareToCup = Literal["same", "changed", "n/a"]
 
 
@@ -240,6 +273,8 @@ class Insight(CamelModel):
     substitution: SubstitutionInfo | None = None
     # Per language ("nl", "es", "fr"): the checked translation, sent as a later update of the same id
     translations: dict[str, Translation] | None = None
+    # Per club (team id): the card from that club's side, "How to beat {opponent}" (PERSPECTIVES_ENABLED)
+    perspectives: dict[TeamId, Perspective] | None = None
     # Traceability (not shown in the UI yet)
     cited_fact_ids: list[str] = []
     rejected_claims: list[RejectedClaim] = []
@@ -298,6 +333,7 @@ class ScoutingReport(CamelModel):
     rejected_claims: list[RejectedClaim] = []
     heatmaps: list[Heatmap] = []
     generated_by: str | None = None # model provider that wrote it
+    perspectives: dict[TeamId, Perspective] | None = None  # per club, made before kick-off with the same checks
 
 
 class MatchState(Tick):

@@ -149,8 +149,19 @@ export type Translation = {
   observations?: { observation: string; consequence: string; coachAction?: string }[];
   /** type 'substitution', stage 'watch' */
   watch?: string[];
+  /** per club: the variant's levers and change lines in the same order; only variants that passed the check */
+  perspectives?: Record<string, { levers: { observation: string; consequence: string; coachAction?: string }[]; changes: string[] }>;
   latencyMs?: number;
   tokens?: number;
+};
+
+/** The tactics card from one club's side (PERSPECTIVES_ENABLED): "How to beat {opponent}". Only 'checked' is shown. */
+export type Perspective = {
+  status: 'checked' | 'rejected';
+  reason?: string;
+  levers: { observation: string; factIds: string[]; consequence: string; coachAction: string; compareToCup: 'same' | 'changed' | 'n/a' }[];
+  /** made by the code from the facts that compare with the cup match */
+  changes: { text: string; factIds: string[]; label: 'changed' | 'same' }[];
 };
 
 export type Insight = {
@@ -188,6 +199,8 @@ export type Insight = {
   substitution?: SubstitutionInfo;
   /** Per language ('nl', 'es', 'fr'): the checked translation, sent as a later update of the same id */
   translations?: Record<string, Translation>;
+  /** Per club (team id): the card from that club's side, sent as a later update of the same id */
+  perspectives?: Record<TeamId, Perspective>;
   /** Traceability from the agents (optional) */
   rejectedClaims?: { text: string; reason: string; factIds?: string[] }[];
   citedFactIds?: string[];
@@ -266,6 +279,8 @@ export type ScoutingReport = {
   rejectedClaims: { text: string; reason: string; factIds?: string[] }[];
   heatmaps: Heatmap[];
   generatedBy?: string;
+  /** per club, made before kick-off with the same checks */
+  perspectives?: Record<TeamId, Perspective>;
 };
 
 /** Full picture, sent on (re)connect and from GET /state. */

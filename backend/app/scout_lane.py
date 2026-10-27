@@ -25,6 +25,7 @@ from pathlib import Path
 
 from app.agents.deadline import within
 from app.agents.llm import ModelClient
+from app.agents.perspectives import perspectives_enabled, run_perspectives
 from app.agents.scout import SCOUT_DEADLINE_S, run_scout, scouting_card, status_card, watch_card
 from app.contracts import (
     Fact, Insight, MatchInfo, MatchSnapshot, ScoutingReport, SourceEvent, SourceFrame, TacticalObservation,
@@ -85,6 +86,8 @@ class ScoutLane:
         self._pending_subs: list[tuple[float, str, list[SourceEvent]]] = []   # (due t, stage, substitutions)
         self._previous: list[TacticalObservation] = []   # the last checked analysis, so advice is not repeated
         self.last_facts: list[Fact] = []                  # today's facts of the last live sheet (for the commentary)
+        self.perspectives = perspectives_enabled()       # PERSPECTIVES_ENABLED: per club "How to beat {opponent}"
+        self._side: set[asyncio.Task] = set()             # running club variants (cancelled on seek, like the queue)
 
     # ------------------------------------------------------------------ set-up
 
@@ -107,11 +110,13 @@ class ScoutLane:
         if self._task and not self._task.done():
             self._task.cancel()
         self._task = None
+        for t in list(self._side):
+            t.cancel()
 
     async def wait(self) -> None:
         """Until the queue is empty and nothing runs (tests)."""
-        while self._task and not self._task.done():
-            await asyncio.gather(self._task, return_exceptions=True)
+        while (self._task and not self._task.done()) or self._side:
+            await asyncio.gather(*([self._task] if self._task else []), *self._side, return_exceptions=True)
 
     # ------------------------------------------------------------------ triggers
 
@@ -211,10 +216,32 @@ class ScoutLane:
             )
             if insight.status != "fallback" and insight.observations:
                 self._previous = list(insight.observations)
+                if self.perspectives and job.stage is None:     # tactics cards, not substitution cards
+                    self._spawn(self._perspectives(sheet, insight, publish))
             if not insight.observations:        # nothing new from the Scout: the status card replaces it
                 await self._status(job, publish, insight.rejected_claims, sheet)
         except TimeoutError:
             log.warning("Scout safety net hit at %s", job.to_t)
+
+    def _spawn(self, coro) -> None:
+        task = asyncio.get_running_loop().create_task(coro)
+        self._side.add(task)
+        task.add_done_callback(self._side.discard)
+
+    async def _perspectives(self, sheet, insight: Insight, publish: Publish) -> None:
+        """Both clubs' variants in parallel, after the neutral card; then the same card again with `perspectives`.
+        The queue goes on meanwhile; the semaphore keeps it at 3 Scout calls at once."""
+        try:
+            found, tokens, latency = await run_perspectives(sheet, model=self.model)
+        except asyncio.CancelledError:
+            raise
+        except Exception:  # never break the match: the neutral card stays
+            log.warning("Perspectives for %s failed", insight.id, exc_info=True)
+            return
+        log.info("Perspectives %s: %s · %d tokens · %d ms", insight.id,
+                 ", ".join(f"{t} {p.status}{' (' + p.reason + ')' if p.reason else ''}" for t, p in found.items()),
+                 tokens, latency)
+        publish(insight.model_copy(update={"perspectives": found}))
 
     async def _status(self, job: Job, publish: Publish, rejected: list | None = None, sheet=None) -> None:
         tac = self.tactician
