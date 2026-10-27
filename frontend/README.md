@@ -84,6 +84,29 @@ Wat echt is en wat niet:
 
 De tijd `t` is het generator-frame: seconden spel sinds de aftrap, inclusief blessuretijd (0–5821). De backend stuurt daarnaast `clock` ("45+1:30") en `minute` ("45+2") mee. De rust ligt op `halftime` (frame 2821). In de tweede helft speelt Kingsbridge naar links, net als in de generator.
 
+### Line-ups, spelersanalyse en corners
+
+`data/lineups/kba-ngr.json` komt uit `scripts/build_lineups.py` (na `npm run fixture`):
+
+```bash
+python scripts/build_lineups.py               # leest ../output, ../script/match_script.json, ../output/cup en data/matches/kba-ngr.json
+```
+
+Alles is door code gemeten, zonder AI. De frontend snijdt het bestand af op de huidige wedstrijdseconde (`lib/lineups.ts`). Daardoor werkt het met de mock en met de echte backend, live en na een seek, zonder contractwijziging. Het bestand laadt in een eigen chunk.
+
+| Onderdeel | Bron en definitie |
+| --- | --- |
+| Rollen, formaties | `tactical_states.json`; bankspelers uit de selectie in het draaiboek |
+| Touches | alle balacties van de speler in `events.json` (pass, cross, aanname, schot, take-on, tackle, clearance, interceptie, herovering, spelhervatting, redding, blok) |
+| Passes | pass + cross, compleet / totaal |
+| Duels | tackles en take-ons, van beide kanten |
+| Recoveries | ball_recovery + interception |
+| Sprints, afstand, topsnelheid | snelheid uit `tracking.csv` (sprint ≥ 23,8 km/u); afstand per 10 s |
+| Gemiddelde positie, heatmap | posities elke 5 s, teamrelatief: het team valt altijd van links naar rechts aan |
+| Corners | het frame bij de voorzet, de eerste balcontact en de uitkomst; opgeslagen als corner van links (u langs de doellijn, v vanaf de doellijn). Een corner die niet genomen is (59', wissel) telt niet mee. Lengtes staan niet in de data, dus die labels blijven weg. |
+
+De namen, rollen en wissels komen uit de eventdata. Waar de ontwerp-prompt afwijkt (bijvoorbeeld Achterberg valt in op 59', Okafor-Hale en Visser gaan eraf op 76'), volgt de app de data.
+
 ## Keuzes die afwijken van de ontwerp-prompt
 
 - **"Corrected" in plaats van "VAR · Overturned".** Het gaat om een AI-uitspraak die de fact-checker heeft verbeterd, niet om een scheidsrechtersbeslissing. Daarom is de status in het contract `corrected`.
@@ -102,4 +125,5 @@ lib/mock/engine.ts       de mock-backend
 data/matches/            de opgenomen wedstrijd
 design/                  de prototypes uit Claude Design (referentie, geen productiecode)
 scripts/import_generator.py  zet de generator-uitvoer om naar de opname
+scripts/build_lineups.py     line-ups, spelercijfers, posities en corners (data/lineups/)
 ```
