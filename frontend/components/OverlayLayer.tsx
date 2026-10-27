@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef } from 'react';
 import type { MatchEvent, Player, Point } from '@/lib/contracts';
 import type { ActiveOverlay } from '@/lib/useMatchStream';
 import { useTeams } from '@/lib/teams';
-import { pct } from './Pitch';
+import { NameTag, pct } from './Pitch';
 
 type Props = {
   overlays: ActiveOverlay[];
@@ -73,14 +73,10 @@ export function OverlayLayer({ overlays, players, positions, events, layer }: Pr
         <div
           key={o.id}
           data-label={PRIORITY.tag}
-          className="itg-in absolute flex h-[34px] w-max overflow-hidden whitespace-nowrap rounded-sm shadow-[0_4px_12px_rgba(0,0,0,.35)]"
+          className="itg-in absolute"
           style={{ left: `calc(${pct(pos).left} ${flip ? '-' : '+'} 26px)`, top: pct(pos).top, transform: `translate(${flip ? '-100%' : '0'}, -50%)` }}
         >
-          <div className="flex w-[34px] items-center justify-center font-display text-[20px] font-extrabold" style={{ background: teams.info(p.team)?.color, color: teams.info(p.team)?.fg }}>{p.n}</div>
-          <div className="flex items-center gap-2 bg-[rgba(12,14,13,.9)] px-3 font-display text-[20px] font-bold uppercase tracking-[.04em] text-chalk">
-            {p.name ?? `No. ${p.n}`}
-            {booked.has(p.id) && <span className="inline-block h-[14px] w-[10px] rounded-[2px] bg-card-yellow" aria-label="booked" />}
-          </div>
+          <NameTag player={p} booked={booked.has(p.id)} />
         </div>,
       );
     }

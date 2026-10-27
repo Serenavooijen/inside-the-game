@@ -1,7 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Insight, ScoutingReport } from '@/lib/contracts';
+import type { Corner } from '@/lib/lineups';
+import { feedItems } from '@/lib/feed';
+import { useTeams } from '@/lib/teams';
+import { CornerCard } from './Corners';
 import { InsightCard } from './InsightCard';
 import { SubstitutionCard } from './SubstitutionCard';
 import { ScoutingReportPanel, TacticsCard } from './TacticsCard';
@@ -16,25 +20,33 @@ type Props = {
   focusId?: string | null;
   /** The Scout's report on the cup match (backend with TACTICS_ENABLED=1) */
   scouting?: ScoutingReport;
+  tab: FeedTab;
+  onTab: (tab: FeedTab) => void;
+  /** Corners so far (made by code from the event data); they sit in the feed in both modes */
+  corners?: Corner[];
+  /** Content of the Line-ups tab; without it the tab is not shown */
+  lineups?: ReactNode;
+  /** Player analysis: fills the column, without the title and the tabs */
+  player?: ReactNode;
 };
 
+export type FeedTab = 'feed' | 'scouting' | 'lineups';
+
 /** Smart lane: newest first, newest card open. Tactics cards only in Analyst mode. */
-export function ProducerFeed({ insights, mode, onMode, arrivingId, focusId, scouting }: Props) {
+export function ProducerFeed({ insights, mode, onMode, arrivingId, focusId, scouting, tab, onTab, corners = [], lineups, player }: Props) {
+  const teams = useTeams();
   const [open, setOpen] = useState<Record<string, boolean>>({});
-  const [showReport, setShowReport] = useState(false);
   const refs = useRef<Record<string, HTMLDivElement | null>>({});
-  const list = [...insights]
-    .filter((i) => mode === 'analyst' || i.type !== 'tactics')
-    .sort((a, b) => b.t - a.t)
-    .slice(0, 14);
-  const newest = list[0]?.id;
+  const list = feedItems(insights, corners, mode);
+  const newest = list.flatMap((x) => (x.kind === 'insight' ? [x.insight.id] : []))[0];
 
   useEffect(() => {
     if (!focusId) return;
     const id = focusId.split(':')[0];
-    setShowReport(false);
+    onTab('feed');
     setOpen((o) => ({ ...o, [id]: true }));
     refs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusId]);
 
   const seg = (m: 'casual' | 'analyst', label: string) => (
@@ -48,31 +60,38 @@ export function ProducerFeed({ insights, mode, onMode, arrivingId, focusId, scou
     </button>
   );
 
-  const reportOpen = showReport && !!scouting;
+  const shown: FeedTab = tab === 'scouting' && !scouting ? 'feed' : tab === 'lineups' && !lineups ? 'feed' : tab;
+  const tabs = ([['feed', 'Feed'], ['scouting', 'Scouting report (cup)'], ['lineups', 'Line-ups']] as const)
+    .filter(([k]) => k === 'feed' || (k === 'scouting' ? !!scouting : !!lineups));
+  const title = shown === 'scouting' ? ['Scouting', 'THE CUP MATCH, BEFORE KICK-OFF']
+    : shown === 'lineups' ? ['Line-ups', `${teams.label(teams.home.id)} vs ${teams.label(teams.away.id)}`.toUpperCase()]
+      : ['Producer feed', 'NEWEST FIRST'];
 
   return (
     <section className="flex min-w-[400px] flex-1 basis-0 flex-col gap-4" aria-label="Producer feed">
       {/* Never cut or break the titles: when the column is narrow the mode switch moves to its own line. */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-col gap-[2px]">
-          <h2 className="whitespace-nowrap font-display text-[28px] font-extrabold uppercase leading-none tracking-[.04em]">{reportOpen ? 'Scouting' : 'Producer feed'}</h2>
-          <div className="whitespace-nowrap font-mono text-label tracking-[.12em] text-fg-3">{reportOpen ? 'THE CUP MATCH, BEFORE KICK-OFF' : 'NEWEST FIRST'}</div>
+      {!player && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-col gap-[2px]">
+            <h2 className="whitespace-nowrap font-display text-[28px] font-extrabold uppercase leading-none tracking-[.04em]">{title[0]}</h2>
+            <div className="whitespace-nowrap font-mono text-label tracking-[.12em] text-fg-3">{title[1]}</div>
+          </div>
+          <div className="flex flex-none gap-[2px] rounded-md bg-surface-2 p-[3px]" role="group" aria-label="Explanation style">
+            {seg('casual', 'Casual fan')}
+            {seg('analyst', 'Analyst')}
+          </div>
         </div>
-        <div className="flex flex-none gap-[2px] rounded-md bg-surface-2 p-[3px]" role="group" aria-label="Explanation style">
-          {seg('casual', 'Casual fan')}
-          {seg('analyst', 'Analyst')}
-        </div>
-      </div>
-      {scouting && (
-        <div className="flex flex-wrap gap-2" role="tablist" aria-label="Feed or scouting report">
-          {([[false, 'Feed'], [true, 'Scouting report (cup)']] as const).map(([report, label]) => (
+      )}
+      {!player && tabs.length > 1 && (
+        <div className="flex flex-wrap gap-2" role="tablist" aria-label="Feed, scouting report or line-ups">
+          {tabs.map(([k, label]) => (
             <button
-              key={label}
+              key={k}
               type="button"
               role="tab"
-              aria-selected={showReport === report}
-              onClick={() => setShowReport(report)}
-              className={`whitespace-nowrap rounded-full border px-3 py-[5px] text-[14px] font-medium ${showReport === report ? 'border-fg text-fg' : 'border-line text-fg-2 hover:text-fg'}`}
+              aria-selected={shown === k}
+              onClick={() => onTab(k)}
+              className={`h-[34px] whitespace-nowrap rounded-full border px-[14px] text-[14px] font-semibold ${shown === k ? 'border-fg text-fg' : 'border-line text-fg-2 hover:text-fg'}`}
             >
               {label}
             </button>
@@ -80,14 +99,18 @@ export function ProducerFeed({ insights, mode, onMode, arrivingId, focusId, scou
         </div>
       )}
       <div className="relative min-h-0 flex-1 overflow-hidden">
-        <div className="flex h-full flex-col gap-3 overflow-y-auto pb-16 [scrollbar-width:none]">
-          {reportOpen && <ScoutingReportPanel report={scouting} />}
-          {!reportOpen && list.length === 0 && (
+        <div className="flex h-full flex-col gap-3 overflow-y-auto overflow-x-hidden pb-16 [scrollbar-width:none]">
+          {player}
+          {!player && shown === 'scouting' && scouting && <ScoutingReportPanel report={scouting} />}
+          {!player && shown === 'lineups' && lineups}
+          {!player && shown === 'feed' && list.length === 0 && (
             <div className="rounded-lg border border-dashed border-line px-[22px] py-5 text-[15px] text-fg-3">
               Insights appear here at key moments and every five minutes.
             </div>
           )}
-          {!reportOpen && list.map((i) => {
+          {!player && shown === 'feed' && list.map((x) => {
+            if (x.kind === 'corner') return <div key={x.corner.id} className="itg-in"><CornerCard corner={x.corner} /></div>;
+            const i = x.insight;
             const isOpen = open[i.id] ?? i.id === newest;
             const toggle = () => setOpen((o) => ({ ...o, [i.id]: !isOpen }));
             return (
@@ -101,7 +124,7 @@ export function ProducerFeed({ insights, mode, onMode, arrivingId, focusId, scou
             );
           })}
         </div>
-        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-b from-transparent to-bg" />
+        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-b from-transparent to-bg" />
       </div>
     </section>
   );

@@ -99,3 +99,10 @@ body {
   .itg-arrive { animation: itgFade 200ms ease-out both; }
   * { transition-property: opacity !important; }
 }
+
+/* A stat tile whose value just changed: lifts to surface-2 and fades back, no count-up. */
+@keyframes itgFlash { from { opacity: 1; } to { opacity: 0; } }
+.itg-flash { animation: itgFlash 900ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .itg-flash { display: none; }
+}
