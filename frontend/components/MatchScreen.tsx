@@ -1,14 +1,17 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Commentary, Marker, Mode } from '@/lib/contracts';
+import type { Commentary, Marker, Mode, TeamId } from '@/lib/contracts';
+import { useLineups } from '@/lib/lineups';
 import { markersFrom } from '@/lib/markers';
 import { useMatchStream } from '@/lib/useMatchStream';
 import { useInterpolatedFrame } from '@/lib/useInterpolatedFrame';
 import { Scorebar } from './Scorebar';
-import { BallMarker, PitchSurface, PlayerChips } from './Pitch';
+import { BallMarker, ChipTooltip, PitchSurface, PlayerChips, SelectedTag } from './Pitch';
 import { OverlayLayer } from './OverlayLayer';
-import { ProducerFeed } from './ProducerFeed';
+import { ProducerFeed, type FeedTab } from './ProducerFeed';
+import { LineupsPanel } from './Lineups';
+import { PlayerPanel } from './PlayerPanel';
 import { KeyMoment } from './KeyMoment';
 import { Controls } from './Controls';
 import { FactCheck, Whistle } from './icons';
@@ -41,6 +44,22 @@ export function MatchScreen({ matchId, mode }: { matchId: string; mode: Mode }) 
   const teams = useMemo(() => teamsFor(matchId), [matchId]);
   const [feedMode, setFeedMode] = useState<'casual' | 'analyst'>('casual');
   const [focusId, setFocusId] = useState<string | null>(null);
+
+  // Right column: feed, scouting report or line-ups; a player analysis can open over it.
+  const lineups = useLineups(matchId);
+  const [tab, setTab] = useState<FeedTab>('feed');
+  const [lineupTeam, setLineupTeam] = useState<TeamId>(teams.home.id);
+  const [playerId, setPlayerId] = useState<string | null>(null);
+  const [shownId, setShownId] = useState<string | null>(null);
+  const [hoverId, setHoverId] = useState<string | null>(null);
+  const openPlayer = (id: string) => {
+    const p = lineups?.players.find((x) => x.id === id);
+    if (!p) return;
+    setPlayerId(id);
+    setTab('lineups');
+    setLineupTeam(p.team);
+  };
+  const pickOnPitch = (id: string) => { openPlayer(id); setShownId(id); setHoverId(null); };
 
   const tick = s.tick;
   const frame = tick?.frame ?? null;
@@ -88,6 +107,22 @@ export function MatchScreen({ matchId, mode }: { matchId: string; mode: Mode }) 
   const tactics = !!s.scouting || !!s.commentary;
   const stats = tick?.stats ?? { score: [0, 0] as [number, number], xg: [0, 0] as [number, number], possession: [50, 50] as [number, number] };
 
+  const playerPanel = (data: NonNullable<typeof lineups>) => {
+    const p = playerId ? data.players.find((x) => x.id === playerId) : undefined;
+    if (!p) return undefined;
+    return (
+      <PlayerPanel
+        data={data}
+        player={p}
+        t={t}
+        shown={shownId === p.id}
+        onShow={() => setShownId(shownId === p.id ? null : p.id)}
+        onBack={() => { setPlayerId(null); setShownId(null); }}
+        onSeek={s.seek}
+      />
+    );
+  };
+
   return (
     <TeamsProvider teams={teams}>
     <div className="flex h-screen min-h-[720px] flex-col overflow-hidden bg-bg text-fg" style={teamColorVars(teams) as React.CSSProperties}>
@@ -105,9 +140,18 @@ export function MatchScreen({ matchId, mode }: { matchId: string; mode: Mode }) 
           {frame && positions && (
             <>
               <OverlayLayer layer="lines" overlays={overlays} players={frame.players} positions={positions.players} events={s.events} />
-              <PlayerChips players={frame.players} positions={positions.players} />
+              <PlayerChips
+                players={frame.players}
+                positions={positions.players}
+                hoverId={hoverId}
+                selectedId={shownId}
+                onHover={lineups ? setHoverId : undefined}
+                onPick={lineups ? pickOnPitch : undefined}
+              />
               <BallMarker at={positions.ball} />
               <OverlayLayer layer="labels" overlays={overlays} players={frame.players} positions={positions.players} events={s.events} />
+              {frame.players.filter((p) => p.id === shownId).map((p) => <SelectedTag key={p.id} player={p} at={positions.players[p.id] ?? p} />)}
+              {frame.players.filter((p) => p.id === hoverId && p.id !== shownId).map((p) => <ChipTooltip key={p.id} player={p} at={positions.players[p.id] ?? p} />)}
             </>
           )}
 
@@ -156,6 +200,13 @@ export function MatchScreen({ matchId, mode }: { matchId: string; mode: Mode }) 
           arrivingId={arrivingId}
           focusId={focusId}
           scouting={s.scouting}
+          tab={tab}
+          onTab={setTab}
+          corners={lineups?.corners.filter((c) => c.t <= t)}
+          lineups={lineups && (
+            <LineupsPanel data={lineups} t={t} mode={feedMode} team={lineupTeam} onTeam={setLineupTeam} highlightId={hoverId} onPick={openPlayer} />
+          )}
+          player={lineups && playerPanel(lineups)}
         />
       </main>
 
