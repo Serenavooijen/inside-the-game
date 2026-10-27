@@ -91,6 +91,21 @@ A translation that fails the check, or comes later than `TRANSLATE_DEADLINE_S` (
 - **Settings:** `ITG_LANGUAGES=nl,es,fr` (default; empty turns translation off). No right-to-left languages: they need layout work first. `MODEL_TRANSLATOR` for `github` and `foundry`; `FOUNDRY_TRANSLATOR_AGENT` / `FOUNDRY_TRANSLATOR_AGENT_VERSION` (`itg-translator` / `3`) for `foundry-agents`, published with `tools/create_foundry_agents.py --only translator`. `offline` gives a fixed "translation" (`[nl] …`) for tests.
 - **Cost, measured on Foundry:** about 1.5–2.5 s after the English card and about 400–450 tokens per language for a moment card, about 1,300–1,500 tokens per language for a tactics card. The English card itself does not change.
 
+### Tactics per club (`PERSPECTIVES_ENABLED=1`)
+
+A fan who picks a club (the profile menu, frontend only, saved per device) sees the tactics cards and the scouting report from that club's side in Analyst mode: **How to beat {opponent}** and **What {opponent} changed today**. One stream for every viewer; the frontend picks the variant.
+
+- After every checked neutral tactics card the Scout writes one variant per club, in parallel, on the same FactSheet (`app/agents/perspectives.py`). The instruction goes in the prompt and the schema is the Scout's own, so `itg-scout` v3 stays as it is.
+- Every lever goes through the same `check_observations` as the neutral card, must be about the opponent and keep its advice. *What changed today* is made by the code from the opponent's facts that compare with the cup match. A failed or late variant is `rejected` with a reason; the neutral card always stays.
+- At most 3 Scout calls at once (`SCOUT_CONCURRENCY`); `PERSPECTIVE_DEADLINE_S` defaults to the Scout's 15 s. The translation lane translates the checked variants with the same check and cache.
+- Scouting report: `tools/build_scouting_report.py --perspectives` adds both variants to `fixtures/scouting/kba-ngr-cup.json`.
+- Measured on Foundry (6 analyses): all 12 variants checked, about 4,300–5,700 extra tokens per analysis (both clubs), 3.0–4.3 s after the neutral card. The goal at 24' stayed Checked in 3.4–4.3 s; no 429s.
+
+| Setting | Value |
+|---|---|
+| `PERSPECTIVES_ENABLED` | `1` (off: everything as before) |
+| `SCOUT_CONCURRENCY`, `PERSPECTIVE_DEADLINE_S` | optional, default 3 and 15 |
+
 ### Docker and Azure Container Apps
 
 `backend/Dockerfile` builds the backend image from the repo root. The reference match is generated from its seed during the build, so the image does not depend on `output/` in git.
