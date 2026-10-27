@@ -6,6 +6,7 @@ A fully synthetic, scripted football match for the *Inside the Game* hackathon, 
 |---|---|
 | `docs/DRAAIBOEK.md` | Match script: pre-match context (form, absences, schedule, coaches, set-piece profiles, match-ups), teams and players, phases, minute-by-minute moments, card and substitution effects with measured impact |
 | `docs/MATCH_ANALYSIS.md` | Analysis: attacking, defending, transitions, tactics, players, physical/mental, set pieces, advanced stats (xG, xGA, xGOT, PPDA, field tilt, progressive passes, deep completions, big chances, xT, set-piece xG), match-ups, context, coaching |
+| `docs/ROADMAP_REAL_MATCHES.md` | From the synthetic match to real matches: what is ready, what a real data source must deliver, what still has to change |
 | `script/match_script.json` | The script as data (source of truth for the match) |
 | `script/pre_match_context.json` | Pre-match context as data |
 | `script/cup/match_script.json` | The earlier cup match between the same teams (seed 4417), the Scout's baseline → `output/cup/`, `fixtures/scouting/` |
