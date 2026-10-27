@@ -136,6 +136,23 @@ export type SubstitutionInfo = {
   heatmapLabels: string[];
 };
 
+/**
+ * One language of a checked English text, made by the Translator after phase 'done'.
+ * status 'checked': same numbers and names as the English source; only then are the fields set.
+ * status 'rejected' (check failed or too late): show the English text. Evidence is never translated.
+ */
+export type Translation = {
+  status: 'checked' | 'rejected';
+  reason?: string;
+  text?: string;
+  /** type 'tactics', and a substitution's impact card */
+  observations?: { observation: string; consequence: string; coachAction?: string }[];
+  /** type 'substitution', stage 'watch' */
+  watch?: string[];
+  latencyMs?: number;
+  tokens?: number;
+};
+
 export type Insight = {
   id: string;
   t: number;
@@ -169,6 +186,8 @@ export type Insight = {
   buildUp?: Player[];
   /** type 'substitution': who goes off and comes on, the kind of change, what to watch or the impact */
   substitution?: SubstitutionInfo;
+  /** Per language ('nl', 'es', 'fr'): the checked translation, sent as a later update of the same id */
+  translations?: Record<string, Translation>;
   /** Traceability from the agents (optional) */
   rejectedClaims?: { text: string; reason: string; factIds?: string[] }[];
   citedFactIds?: string[];
@@ -217,6 +236,8 @@ export type Commentary = {
   /** the tactics insight it builds on */
   sourceInsightId?: string;
   generation: number;
+  /** the same line again, with its checked translations */
+  translations?: Record<string, Translation>;
 };
 
 export type Fact = {

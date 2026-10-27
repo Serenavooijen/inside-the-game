@@ -123,6 +123,30 @@ class RejectedClaim(CamelModel):
     fact_ids: list[str] = []
 
 
+TranslationStatus = Literal["checked", "rejected"]
+
+
+class TranslatedObservation(CamelModel):
+    observation: str
+    consequence: str
+    coach_action: str | None = None
+
+
+class Translation(CamelModel):
+    """One language of a checked English text, made by the Translator after phase "done".
+
+    status "checked": the translation has the same numbers and names as the English source and a sane
+    length; only then are the translated fields set. status "rejected" (check failed or too late): the
+    fields stay empty and the UI shows the English text. Evidence is never translated."""
+    status: TranslationStatus
+    reason: str | None = None
+    text: str | None = None
+    observations: list[TranslatedObservation] | None = None   # type "tactics", and a substitution's impact card
+    watch: list[str] | None = None                            # type "substitution", stage "watch"
+    latency_ms: int | None = None
+    tokens: int | None = None
+
+
 TacticalTrigger = Literal["interval", "half_time", "substitution", "scouting"]
 CompareToCup = Literal["same", "changed", "n/a"]
 
@@ -214,6 +238,8 @@ class Insight(CamelModel):
     build_up: list[Player] | None = None  # mean positions in build-up phases (shows where the 6 stands)
     # type "substitution": who goes off and comes on, the kind of change, what to watch or the impact
     substitution: SubstitutionInfo | None = None
+    # Per language ("nl", "es", "fr"): the checked translation, sent as a later update of the same id
+    translations: dict[str, Translation] | None = None
     # Traceability (not shown in the UI yet)
     cited_fact_ids: list[str] = []
     rejected_claims: list[RejectedClaim] = []
@@ -257,6 +283,7 @@ class Commentary(CamelModel):
     text: str                       # at most 25 words
     source_insight_id: str | None = None  # the tactics insight it builds on
     generation: int = 0
+    translations: dict[str, Translation] | None = None  # the same line again, with its checked translations
 
 
 class ScoutingReport(CamelModel):
