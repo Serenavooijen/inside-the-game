@@ -257,9 +257,17 @@ class Simulator:
         if insight.generation != self.generation:
             return                                  # from before a seek: drop it
         if insight.phase == "done":
+            cur = self.insights.get(insight.id)
+            if cur is not None and _same_card(cur, insight):
+                # a later update of the same card (club variants, or a resend): keep what the other lanes added
+                insight = insight.model_copy(update={
+                    "translations": insight.translations if insight.translations is not None else cur.translations,
+                    "perspectives": insight.perspectives if insight.perspectives is not None else cur.perspectives})
             insight = self._translated(insight)
         self.insights[insight.id] = insight
         self.bus.publish("insight", insight.to_json())
+        if insight.phase == "done":
+            self._translate_perspectives(insight)
         if insight.phase == "done" and insight.moment_id and insight.moment_id == self.key_moment_id:
             self._key_deadline = min(self._key_deadline, self._clock + HOLD_AFTER_INSIGHT_S)
 
@@ -275,14 +283,38 @@ class Simulator:
             return insight
 
         def translated(tr) -> None:
-            if insight.generation != self.generation or self.insights.get(insight.id) is not insight:
+            cur = self.insights.get(insight.id)
+            if insight.generation != self.generation or cur is None or not _same_card(cur, insight):
                 return                              # old generation, or a newer version of the card is out
-            update = insight.model_copy(update={"translations": tr})
+            update = cur.model_copy(update={"translations": tr})
             self.insights[update.id] = update
             self.bus.publish("insight", update.to_json())
+            self._translate_perspectives(update)
 
         lane.submit(insight, translated)
         return insight
+
+    def _translate_perspectives(self, card: Insight) -> None:
+        """Once a card has both its translations and its club variants: translate the variants (cache first)."""
+        lane = self.translation_lane
+        if not lane or not card.perspectives or not card.translations:
+            return
+        if any(t.perspectives is not None for t in card.translations.values()):
+            return
+
+        def attach(per_lang) -> None:
+            cur = self.insights.get(card.id)
+            if card.generation != self.generation or cur is None or not _same_card(cur, card) or not cur.translations:
+                return
+            tr = {lang: t.model_copy(update={"perspectives": per_lang.get(lang, {})}) for lang, t in cur.translations.items()}
+            update = cur.model_copy(update={"translations": tr})
+            self.insights[update.id] = update
+            self.bus.publish("insight", update.to_json())
+
+        if (cached := lane.cached_perspectives(card.perspectives)) is not None:
+            attach(cached)
+        else:
+            lane.submit_perspectives(card.perspectives, attach)
 
     def _attach(self, insight_id: str, translations) -> None:
         """The translations of a card made before kick-off, for its version in the current generation."""
@@ -292,6 +324,7 @@ class Simulator:
         update = card.model_copy(update={"translations": self.translation_lane.cached(card) or translations})
         self.insights[insight_id] = update
         self.bus.publish("insight", update.to_json())
+        self._translate_perspectives(update)
 
     def _start_key_moment(self, event_id: str) -> None:
         if self.key_moment_id:
@@ -327,3 +360,9 @@ class Simulator:
 
     def _publish_state(self) -> None:
         self.bus.publish("state", self.state().to_json())
+
+
+def _same_card(a: Insight, b: Insight) -> bool:
+    """The same finished card: an update that only adds translations or club variants."""
+    return (a.id == b.id and a.phase == b.phase == "done" and a.text == b.text and a.status == b.status
+            and a.observations == b.observations and a.substitution == b.substitution)

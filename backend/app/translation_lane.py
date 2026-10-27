@@ -18,7 +18,9 @@ import os
 from collections.abc import Callable
 
 from app.agents.llm import ModelClient
-from app.agents.translator import TranslationCache, from_cache, languages, translatable, translate
+from app.agents.translator import (
+    TranslationCache, from_cache, languages, perspectives_from_cache, translatable, translate, translate_perspectives,
+)
 from app.contracts import Commentary, Insight, Translation
 
 log = logging.getLogger(__name__)
@@ -70,6 +72,39 @@ class TranslationLane:
         task = asyncio.get_running_loop().create_task(self._run(item, publish, PREPARE_DEADLINE_S, slot=False))
         self._prepared.add(task)
         task.add_done_callback(self._prepared.discard)
+
+    def cached_perspectives(self, perspectives) -> dict | None:
+        """The club variants' translations straight from the cache, or None."""
+        return perspectives_from_cache(perspectives, self.langs, self.cache) if self.langs else None
+
+    def submit_perspectives(self, perspectives, publish) -> None:
+        """Translate the checked club variants in the background; publish({lang: {team: ...}}) when done."""
+        if not self.langs or not any(p.status == "checked" for p in perspectives.values()):
+            return
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:        # a seek runs in FastAPI's thread pool
+            return
+
+        async def run() -> None:
+            async with self._slots:
+                waited = 0.0
+                while self.busy() and waited < YIELD_MAX_S:
+                    await asyncio.sleep(0.25)
+                    waited += 0.25
+                try:
+                    result = await translate_perspectives(perspectives, self.names, model=self.model, cache=self.cache,
+                                                          langs=self.langs, deadline_s=self.deadline_s)
+                except asyncio.CancelledError:
+                    raise
+                except Exception:  # never break the match: the variants stay English
+                    log.warning("Translation of perspectives failed", exc_info=True)
+                    return
+                publish(result)
+
+        task = loop.create_task(run())
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.discard)
 
     def cancel_all(self, prepared: bool = False) -> None:
         """The running translations of this generation; with prepared=True (shutdown) also the scouting report."""

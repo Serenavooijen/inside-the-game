@@ -197,7 +197,9 @@ async def run_scout(
         scout = getattr(model, "scout", None)
         if scout is None:
             raise LookupError(f"model {getattr(model, 'name', '?')} has no Scout")
-        draft, used = await scout(sheet, scout_prompt(sheet, previous))
+        from .perspectives import scout_slots    # at most 3 Scout calls at once, with the club variants
+        async with scout_slots():
+            draft, used = await scout(sheet, scout_prompt(sheet, previous))
         tokens += used or 0
         if not draft.observations:
             # Nothing new to say: no observations (the Scout lane shows the status card made by the code)
@@ -268,6 +270,7 @@ def scouting_card(report: ScoutingReport, generation: int = 0) -> Insight:
         phase="done", generation=generation, observations=report.observations,
         evidence=[by_id[i].text for i in cited if i in by_id][:MAX_EVIDENCE], cited_fact_ids=cited,
         heatmap=report.heatmaps[0] if report.heatmaps else None, rejected_claims=report.rejected_claims,
+        perspectives=report.perspectives,
     )
 
 
