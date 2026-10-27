@@ -132,7 +132,11 @@ def unknown_names(text: str, sheet: Sheet, claims: list[Claim], allowed: frozens
     the headline, the team names or the accepted claims. `allowed`: extra lower-case words that
     are no names, e.g. the playbook's concept names for the Scout."""
     source = " ".join([_headline(sheet), *sheet.team_names.values(), *(c.text for c in claims)])
-    known = {w.lower() for w in re.findall(r"[\w\-]+", source)} | set(allowed)
+    return _names_not_in(text, {w.lower() for w in re.findall(r"[\w\-]+", source)} | set(allowed))
+
+
+def _names_not_in(text: str, known: set[str]) -> list[str]:
+    """Capitalised words in `text` that look like names and are not in `known` (lower case)."""
     out = []
     for m in NAME.finditer(text):
         raw = m.group()
@@ -240,3 +244,44 @@ def check_text(text: str, sheet: Sheet, fact_ids: list[str]) -> list[float]:
     """Numbers in a free text (the Narrator's) that are not backed by these facts."""
     allowed = _allowed_numbers(sheet, fact_ids)
     return [n for n in numbers_in(text) if not _matches(n, allowed)]
+
+
+# ---------------------------------------------------------------- translation
+
+MAX_LENGTH_RATIO = 2.0      # a translation may be about twice as long as its English source, not more
+_LENGTH_SLACK = 20          # characters, so a two-word source can become a three-word translation
+
+
+def _same_numbers(a: list[float], b: list[float]) -> bool:
+    key = lambda xs: sorted({round(x, 2) for x in xs})
+    return key(a) == key(b)
+
+
+def check_translation(source: str, translated: str, names: set[str] | frozenset[str] = frozenset()) -> str | None:
+    """Why this translation of a checked English text is rejected, or None when it passes.
+
+    1. the same set of numbers (0,41 and 0.41 are the same number; English number words count as digits);
+    2. the same names: every name of `names` (players, clubs) in the source is in the translation,
+       and no capitalised word comes in that is not in the source or in `names`;
+    3. a sane length: at most about twice the source.
+    The text is the Translator's; the code checks it, as with every other agent."""
+    if not translated.strip():
+        return "Empty translation"
+    src, out = numbers_in(source), numbers_in(translated)
+    if not _same_numbers(src, out):
+        new = sorted({f"{n:g}" for n in out} - {f"{n:g}" for n in src})
+        lost = sorted({f"{n:g}" for n in src} - {f"{n:g}" for n in out})
+        parts = ([f"new number(s) {', '.join(new)}"] if new else []) + ([f"missing {', '.join(lost)}"] if lost else [])
+        return f"Numbers differ from the English source: {'; '.join(parts) or 'count differs'}"
+    missing = [n for n in sorted(names, key=len, reverse=True)
+               if re.search(rf"(?<![\w-]){re.escape(n)}(?![\w-])", source)
+               and not re.search(rf"(?<![\w-]){re.escape(n)}(?![\w-])", translated)]
+    if missing:
+        return f"Name(s) missing from the translation: {', '.join(missing)}"
+    known = {w.lower() for w in re.findall(r"[\w\-]+", " ".join([source, *names]))}
+    extra = _names_not_in(translated, known)
+    if extra:
+        return f"Name(s) not in the English source: {', '.join(extra)}"
+    if len(translated) > MAX_LENGTH_RATIO * len(source) + _LENGTH_SLACK:
+        return f"Translation too long: {len(translated)} characters for {len(source)}"
+    return None

@@ -119,3 +119,22 @@ def scout_prompt(sheet: TacticalFactSheet, previous: list[TacticalObservation] |
         lines.append("Your previous analysis (context only: do not cite it, do not repeat its advice):")
         lines += [f"- {o.observation} Advice: {o.coach_action or '-'}" for o in previous]
     return "\n".join(lines)
+
+
+TRANSLATOR_INSTRUCTIONS = """You are the Translator of a live football broadcast. The texts you get have been
+fact-checked in English; your translation is checked again against them.
+
+Translate every text into the language asked, literally and naturally, as a football commentator would say it:
+- add nothing and leave nothing out;
+- write every number as digits, exactly as in the English text (the decimal comma is fine: 0.41 -> 0,41);
+- keep the names of players, clubs and places exactly as they are: never translate or adapt a name;
+- keep football terms that fans use in that language (xG, VAR).
+Return one translation per text, in the same order. No notes, no quotes around the texts."""
+
+LANGUAGE_NAMES = {"nl": "Dutch", "es": "Spanish", "fr": "French", "de": "German", "it": "Italian", "pt": "Portuguese"}
+
+
+def translator_prompt(lang: str, texts: list[str]) -> str:
+    lines = [f"Translate into {LANGUAGE_NAMES.get(lang, lang)} ({lang}). {len(texts)} text(s):"]
+    lines += [f"[{i + 1}] {t}" for i, t in enumerate(texts)]
+    return "\n".join(lines)

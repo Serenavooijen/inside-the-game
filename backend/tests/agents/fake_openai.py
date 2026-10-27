@@ -39,7 +39,11 @@ class Handler(BaseHTTPRequestHandler):
         text = user["content"] if isinstance(user["content"], str) else " ".join(p.get("text", "") for p in user["content"])
 
         schema = json.dumps(body.get("response_format") or {})
-        if "observations" in schema:
+        if '"texts"' in schema:
+            # The Translator: "[1] text" lines back as "[nl] text", in the same order.
+            lang = re.search(r"\((\w+)\)\.", text).group(1)
+            content = json.dumps({"texts": [f"[{lang}] {t}" for t in re.findall(r"^\[\d+\] (.+)$", text, re.M)]})
+        elif "observations" in schema:
             # The Scout: one observation per tactical fact, with a clean consequence
             # (or, with SCOUT_BAD, a consequence that adds a number and a coach action that adds a name).
             facts = [(fid, team, t) for fid, t, team in re.findall(r"\[(T\d+)\] (.+) \(team (\w+); [^)]*\)", text)][:STATE.get("scout_n", 2)]

@@ -20,6 +20,7 @@ from app.fixture import MATCH_ID, SCOUTING_REPORT, SUMMARY, GeneratorSource
 from app.scout_lane import ScoutLane, tactics_enabled
 from app.simulator import Simulator
 from app.smart_lane import SmartLane
+from app.translation_lane import TranslationLane
 
 CORS_ORIGINS = os.environ.get("ITG_CORS_ORIGINS", "http://localhost:3000").split(",")
 
@@ -28,7 +29,9 @@ smart_lane = SmartLane(model_from_env())    # MODEL_PROVIDER: offline (default),
 # TACTICS_ENABLED=1: the Scout's tactical cards every 5 minutes, at half time and after substitutions
 scout_lane = ScoutLane(smart_lane.model, SCOUTING_REPORT) if tactics_enabled() else None
 commentary_lane = CommentaryLane(smart_lane.model) if tactics_enabled() else None   # a checked line per minute
-simulator = Simulator(bus, {MATCH_ID: GeneratorSource}, smart_lane, scout_lane, commentary_lane)
+# ITG_LANGUAGES=nl,es,fr (default): every checked card is translated afterwards and checked again; "" turns it off
+translation_lane = TranslationLane(smart_lane.model)
+simulator = Simulator(bus, {MATCH_ID: GeneratorSource}, smart_lane, scout_lane, commentary_lane, translation_lane)
 
 
 @asynccontextmanager
@@ -42,6 +45,7 @@ async def lifespan(app: FastAPI):
         scout_lane.cancel_all()
     if commentary_lane:
         commentary_lane.cancel_all()
+    translation_lane.cancel_all()
 
 
 app = FastAPI(title="Inside the Game", lifespan=lifespan)
