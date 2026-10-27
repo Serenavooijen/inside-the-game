@@ -8,15 +8,17 @@ import { markersFrom } from '@/lib/markers';
 import { useMatchStream } from '@/lib/useMatchStream';
 import { useInterpolatedFrame } from '@/lib/useInterpolatedFrame';
 import { Scorebar } from './Scorebar';
-import { BallMarker, ChipTooltip, PitchSurface, PlayerChips, SelectedTag } from './Pitch';
+import { BallMarker, ChipTooltip, FocusLabel, PitchSurface, PlayerChips, SelectedTag } from './Pitch';
 import { OverlayLayer } from './OverlayLayer';
 import { ProducerFeed, type FeedTab } from './ProducerFeed';
 import { LineupsPanel } from './Lineups';
 import { PlayerPanel } from './PlayerPanel';
+import { PlayerStrip } from './PlayerStrip';
 import { KeyMoment } from './KeyMoment';
 import { Controls } from './Controls';
 import { FactCheck, Whistle } from './icons';
 import { LangTag } from './Language';
+import { PreferencesProvider, usePreferences } from '@/lib/preferences';
 import { TeamsProvider, teamColorVars, teamsFor } from '@/lib/teams';
 
 const PERIOD: Record<number, Key> = { 1: 'p1', 2: 'p2', 3: 'p3', 4: 'p4', 5: 'p5' };
@@ -64,10 +66,23 @@ function CommentaryBar({ line }: { line: Commentary | null }) {
 }
 
 export function MatchScreen({ matchId, mode }: { matchId: string; mode: Mode }) {
+  const teams = useMemo(() => teamsFor(matchId), [matchId]);
+  return (
+    <TeamsProvider teams={teams}>
+      <PreferencesProvider>
+        <MatchView matchId={matchId} mode={mode} teams={teams} />
+      </PreferencesProvider>
+    </TeamsProvider>
+  );
+}
+
+function MatchView({ matchId, mode, teams }: { matchId: string; mode: Mode; teams: ReturnType<typeof teamsFor> }) {
   const s = useMatchStream(matchId, mode);
   const { t: tr } = useLang();
-  const teams = useMemo(() => teamsFor(matchId), [matchId]);
-  const [feedMode, setFeedMode] = useState<'casual' | 'analyst'>('casual');
+  // Casual fan | Analyst: the viewer's preference (default Casual fan, as before)
+  const { prefs, set: setPrefs } = usePreferences();
+  const feedMode = prefs.mode;
+  const setFeedMode = (m: 'casual' | 'analyst') => setPrefs({ mode: m });
   const [focusId, setFocusId] = useState<string | null>(null);
 
   // Right column: feed, scouting report or line-ups; a player analysis can open over it.
@@ -132,6 +147,8 @@ export function MatchScreen({ matchId, mode }: { matchId: string; mode: Mode }) 
   const tactics = !!s.scouting || !!s.commentary;
   const stats = tick?.stats ?? { score: [0, 0] as [number, number], xg: [0, 0] as [number, number], possession: [50, 50] as [number, number] };
 
+  const followed = prefs.playerId ? lineups?.players.find((p) => p.id === prefs.playerId) : undefined;
+
   const playerPanel = (data: NonNullable<typeof lineups>) => {
     const p = playerId ? data.players.find((x) => x.id === playerId) : undefined;
     if (!p) return undefined;
@@ -149,9 +166,8 @@ export function MatchScreen({ matchId, mode }: { matchId: string; mode: Mode }) 
   };
 
   return (
-    <TeamsProvider teams={teams}>
     <div className="flex h-screen min-h-[720px] flex-col overflow-hidden bg-bg text-fg" style={teamColorVars(teams) as React.CSSProperties}>
-      <Scorebar stats={stats} clock={tick?.clock ?? '00:00'} period={period} mode={s.mode} events={s.events} />
+      <Scorebar stats={stats} clock={tick?.clock ?? '00:00'} period={period} mode={s.mode} events={s.events} players={lineups?.players} />
 
       <main className="flex min-h-0 min-w-0 flex-1 gap-8 overflow-x-hidden px-10 py-4">
         {/* The column is exactly as wide as the pitch, so the commentary below can never widen it. */}
@@ -172,10 +188,17 @@ export function MatchScreen({ matchId, mode }: { matchId: string; mode: Mode }) 
                 selectedId={shownId}
                 onHover={lineups ? setHoverId : undefined}
                 onPick={lineups ? pickOnPitch : undefined}
+                focusId={prefs.playerId}
               />
               <BallMarker at={positions.ball} />
               <OverlayLayer layer="labels" overlays={overlays} players={frame.players} positions={positions.players} events={s.events} />
               {frame.players.filter((p) => p.id === shownId).map((p) => <SelectedTag key={p.id} player={p} at={positions.players[p.id] ?? p} />)}
+              {frame.players.filter((p) => p.id === prefs.playerId && p.id !== shownId).map((p) => {
+                const at = positions.players[p.id] ?? p;
+                // another chip within about 40 px (5 m on the pitch): the label moves up, with a connector
+                const crowded = frame.players.some((q) => q.id !== p.id && Math.hypot((positions.players[q.id] ?? q).x - at.x, (positions.players[q.id] ?? q).y - at.y) < 5);
+                return <FocusLabel key={`focus-${p.id}`} player={p} at={at} crowded={crowded} />;
+              })}
               {frame.players.filter((p) => p.id === hoverId && p.id !== shownId).map((p) => <ChipTooltip key={p.id} player={p} at={positions.players[p.id] ?? p} />)}
             </>
           )}
@@ -233,6 +256,8 @@ export function MatchScreen({ matchId, mode }: { matchId: string; mode: Mode }) 
             <LineupsPanel data={lineups} t={t} mode={feedMode} team={lineupTeam} onTeam={setLineupTeam} highlightId={hoverId} onPick={openPlayer} />
           )}
           player={lineups && playerPanel(lineups)}
+          focusPlayer={followed ? { id: followed.id, name: followed.name } : null}
+          strip={lineups && followed && <PlayerStrip data={lineups} t={t} onOpen={openPlayer} />}
         />
       </main>
 
@@ -251,6 +276,5 @@ export function MatchScreen({ matchId, mode }: { matchId: string; mode: Mode }) 
         onSeek={s.seek}
       />
     </div>
-    </TeamsProvider>
   );
 }

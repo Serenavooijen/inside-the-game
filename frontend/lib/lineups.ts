@@ -285,3 +285,28 @@ export function formationBoth(l: Lineups, home: TeamId, away: TeamId, t: number)
     ...formationSpots(l, away, t).map((s) => ({ ...s, team: away, x: 105 - s.x, y: 68 - s.y })),
   ];
 }
+
+// ---------------------------------------------------------------- player focus
+
+export type PlayerFocus = {
+  player: LineupPlayer;
+  status: Status;
+  /** live numbers up to t (final numbers once he is off); null on the bench */
+  stats: PlayerStats | null;
+  /** status 'off': the substitute who came on for him */
+  replacedBy?: LineupPlayer;
+  /** status 'red': his team's formation now, from the line-up data */
+  formationAfter?: string;
+};
+
+/** Everything the followed player's strip shows at t, from the line-up data (nothing is made up). */
+export function playerFocus(l: Lineups, id: string, t: number): PlayerFocus | null {
+  const player = l.players.find((p) => p.id === id);
+  if (!player) return null;
+  const status = statusAt(player, t);
+  return {
+    player, status, stats: statsAt(l, player, t),
+    replacedBy: status === 'off' && player.off?.by ? l.players.find((p) => p.id === player.off!.by) : undefined,
+    formationAfter: status === 'red' ? formationAt(l, player.team, t) : undefined,
+  };
+}

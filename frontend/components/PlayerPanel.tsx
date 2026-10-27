@@ -6,6 +6,7 @@ import {
   type LineupPlayer, type Lineups, type PlayerStats,
 } from '@/lib/lineups';
 import { useLang, type Key, type T } from '@/lib/i18n';
+import { usePreferences } from '@/lib/preferences';
 import { useTeams } from '@/lib/teams';
 import { SmallBall } from './icons';
 import { ArrowDown, AttackRow, CardIcon, Chip, HeatPitch, SectionLabel } from './Lineups';
@@ -108,6 +109,8 @@ const LABEL: Record<'goal' | 'assist' | 'yellow' | 'red' | 'off' | 'on', Key> = 
 export function PlayerPanel({ data, player: p, t, shown, onShow, onBack, onSeek }: Props) {
   const teams = useTeams();
   const { t: tr, role } = useLang();
+  const { isMyPlayer, follow } = usePreferences();
+  const followed = isMyPlayer(p.id);
   const [span, setSpan] = useState<'all' | 'last'>('all');
   useEffect(() => setSpan('all'), [p.id]);
   const st = statusAt(p, t);
@@ -155,6 +158,18 @@ export function PlayerPanel({ data, player: p, t, shown, onShow, onBack, onSeek 
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="3" /></svg>
           {!canShow ? tr('notOnPitch') : shown ? tr('shownOnPitch') : tr('showOnPitch')}
+        </button>
+      </div>
+      <div className="-mt-2 flex justify-end">
+        {/* follow this player through the match; tap again to stop, another player replaces him */}
+        <button
+          type="button"
+          onClick={() => follow(followed ? null : p.id)}
+          aria-pressed={followed}
+          className={`flex h-11 items-center gap-2 whitespace-nowrap rounded-full border pl-3 pr-[14px] text-[14px] font-semibold ${followed ? 'border-accent bg-accent text-ink' : 'border-line-strong bg-transparent text-fg hover:bg-surface-2'}`}
+        >
+          <span aria-hidden>{followed ? '★' : '☆'}</span>
+          {followed ? tr('following') : tr('followPlayer')}
         </button>
       </div>
 
