@@ -68,9 +68,13 @@ type ChipProps = {
   selectedId?: string | null;
   onHover?: (id: string | null) => void;
   onPick?: (id: string) => void;
+  /** the followed player: 3 px gap in bg, 6 px ring in the accent, above the other chips and overlays */
+  focusId?: string | null;
 };
 
-export function PlayerChips({ players, positions, hoverId, selectedId, onHover, onPick }: ChipProps) {
+const FOCUS_SHADOW = '0 0 0 3px var(--itg-bg), 0 0 0 6px var(--itg-accent), 0 4px 8px rgba(0,0,0,.45)';
+
+export function PlayerChips({ players, positions, hoverId, selectedId, onHover, onPick, focusId }: ChipProps) {
   const teams = useTeams();
   return (
     <>
@@ -79,6 +83,7 @@ export function PlayerChips({ players, positions, hoverId, selectedId, onHover, 
         const c = chipColors(p, teams.side(p.team) ?? 'home', teams.info(p.team));
         const sel = selectedId === p.id;
         const hov = hoverId === p.id;
+        const focus = focusId === p.id;
         const Tag = onPick ? 'button' : 'div';
         return (
           <Tag
@@ -94,7 +99,8 @@ export function PlayerChips({ players, positions, hoverId, selectedId, onHover, 
             style={{
               ...pct(pos), background: c.bg, color: c.fg, border: `2px solid ${c.ring}`,
               outline: sel ? '3px solid var(--itg-fg)' : hov ? '2px solid rgba(244,242,238,.7)' : 'none', outlineOffset: 3,
-              zIndex: sel || hov ? 2 : undefined,
+              zIndex: focus ? 4 : sel || hov ? 2 : undefined,
+              ...(focus ? { boxShadow: FOCUS_SHADOW } : {}),
             }}
             title={onPick ? undefined : p.name ? `${p.n} ${p.name}` : `${p.n}`}
           >
@@ -135,6 +141,19 @@ export function NameTag({ player, booked }: { player: Player; booked?: boolean }
         {player.name ?? `No. ${player.n}`}
         {booked && <span className="inline-block h-[14px] w-[10px] rounded-[2px] bg-card-yellow" aria-label="booked" />}
       </div>
+    </div>
+  );
+}
+
+/** The followed player's label: a dark pill with the surname above the chip, moving with it. With other chips
+ *  close by it moves up, with a thin connector in the accent. */
+export function FocusLabel({ player, at, crowded }: { player: Player; at: Point; crowded: boolean }) {
+  const name = (player.name ?? `${player.n}`).split('. ').pop();
+  const lift = crowded ? 58 : 30;
+  return (
+    <div className="itg-fade pointer-events-none absolute z-[4] -translate-x-1/2" style={{ left: pct(at).left, top: `calc(${pct(at).top} - ${lift}px)` }}>
+      <div className="-translate-y-full whitespace-nowrap rounded-full bg-[rgba(12,14,13,.9)] px-[10px] py-[3px] font-display text-[14px] font-bold uppercase leading-none tracking-[.04em] text-chalk">{name}</div>
+      {crowded && <div className="absolute left-1/2 top-0 w-px -translate-x-1/2 bg-accent" style={{ height: lift - 25 }} />}
     </div>
   );
 }

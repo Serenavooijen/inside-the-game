@@ -24,7 +24,7 @@ const touch = (a: DOMRect, b: DOMRect) => a.left < b.right && b.left < a.right &
  *  'full' pills, then 'compact' pills (icon + 1×), and only if even that does not fit, the bar moves below them. */
 type Fit = 'full' | 'compact' | 'below';
 
-/** TV-director layer over the pitch while the backend has slowed to 1×. */
+/** TV-director layer over the pitch while the backend has slowed to 1×. z-[5]: above the followed player's chip (z 4). */
 export function KeyMoment({ event, insight, stats, mode, exiting }: Props) {
   const teams = useTeams();
   const { t } = useLang();
@@ -71,10 +71,10 @@ export function KeyMoment({ event, insight, stats, mode, exiting }: Props) {
   const compact = fit !== 'full';
   return (
     <>
-      <div className={`pointer-events-none absolute inset-0 bg-black/[.24] transition-opacity duration-[480ms] ${exiting ? 'opacity-0' : 'itg-fade'}`} />
+      <div className={`pointer-events-none absolute inset-0 z-[5] bg-black/[.24] transition-opacity duration-[480ms] ${exiting ? 'opacity-0' : 'itg-fade'}`} />
 
       {/* The status pills, at the top corners. They give way to the bar (see Fit). */}
-      <div className="pointer-events-none absolute inset-x-7 top-7 flex items-start justify-between gap-3">
+      <div className="pointer-events-none absolute inset-x-7 top-7 z-[5] flex items-start justify-between gap-3">
         <div
           ref={pill}
           title={t('keyMoment')}
@@ -95,7 +95,7 @@ export function KeyMoment({ event, insight, stats, mode, exiting }: Props) {
         </div>
       </div>
 
-      <div className={`absolute left-1/2 ${fit === 'below' ? 'top-[76px]' : 'top-7'} flex -translate-x-1/2 flex-col items-center gap-[10px] transition-opacity duration-[480ms] ${exiting ? 'opacity-0' : 'itg-in'}`} ref={top}>
+      <div className={`absolute left-1/2 z-[5] ${fit === 'below' ? 'top-[76px]' : 'top-7'} flex -translate-x-1/2 flex-col items-center gap-[10px] transition-opacity duration-[480ms] ${exiting ? 'opacity-0' : 'itg-in'}`} ref={top}>
         <div ref={bar} className="flex h-16 overflow-hidden rounded-md shadow-[0_12px_32px_rgba(0,0,0,.45)]">
           <div className="flex items-center whitespace-nowrap bg-chalk px-6 font-display text-tv-bar font-extrabold tracking-[.08em] text-ink">{t(BAR_LABEL[event.kind]).toUpperCase()}</div>
           <div
@@ -116,7 +116,7 @@ export function KeyMoment({ event, insight, stats, mode, exiting }: Props) {
       {insight && (
         <div
           ref={heroBox}
-          className={`absolute bottom-7 left-7 w-[min(700px,calc(100%-56px))] origin-top-right ${heroFit === 3 ? 'overflow-hidden rounded-lg' : ''} transition-[transform,opacity] duration-[480ms] ease-out ${exiting ? 'translate-x-[45%] -translate-y-[85%] scale-[.6] opacity-0' : 'itg-in'}`}
+          className={`absolute bottom-7 left-7 z-[5] w-[min(700px,calc(100%-56px))] origin-top-right ${heroFit === 3 ? 'overflow-hidden rounded-lg' : ''} transition-[transform,opacity] duration-[480ms] ease-out ${exiting ? 'translate-x-[45%] -translate-y-[85%] scale-[.6] opacity-0' : 'itg-in'}`}
           style={{ maxHeight: heroMaxHeight() }}
         >
           <InsightCard insight={insight} size="hero" mode={mode} dense={Math.min(heroFit, 2) as 0 | 1 | 2} />

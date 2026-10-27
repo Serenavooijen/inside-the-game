@@ -8,11 +8,12 @@ import { markersFrom } from '@/lib/markers';
 import { useMatchStream } from '@/lib/useMatchStream';
 import { useInterpolatedFrame } from '@/lib/useInterpolatedFrame';
 import { Scorebar } from './Scorebar';
-import { BallMarker, ChipTooltip, PitchSurface, PlayerChips, SelectedTag } from './Pitch';
+import { BallMarker, ChipTooltip, FocusLabel, PitchSurface, PlayerChips, SelectedTag } from './Pitch';
 import { OverlayLayer } from './OverlayLayer';
 import { ProducerFeed, type FeedTab } from './ProducerFeed';
 import { LineupsPanel } from './Lineups';
 import { PlayerPanel } from './PlayerPanel';
+import { PlayerStrip } from './PlayerStrip';
 import { KeyMoment } from './KeyMoment';
 import { Controls } from './Controls';
 import { FactCheck, Whistle } from './icons';
@@ -187,10 +188,17 @@ function MatchView({ matchId, mode, teams }: { matchId: string; mode: Mode; team
                 selectedId={shownId}
                 onHover={lineups ? setHoverId : undefined}
                 onPick={lineups ? pickOnPitch : undefined}
+                focusId={prefs.playerId}
               />
               <BallMarker at={positions.ball} />
               <OverlayLayer layer="labels" overlays={overlays} players={frame.players} positions={positions.players} events={s.events} />
               {frame.players.filter((p) => p.id === shownId).map((p) => <SelectedTag key={p.id} player={p} at={positions.players[p.id] ?? p} />)}
+              {frame.players.filter((p) => p.id === prefs.playerId && p.id !== shownId).map((p) => {
+                const at = positions.players[p.id] ?? p;
+                // another chip within about 40 px (5 m on the pitch): the label moves up, with a connector
+                const crowded = frame.players.some((q) => q.id !== p.id && Math.hypot((positions.players[q.id] ?? q).x - at.x, (positions.players[q.id] ?? q).y - at.y) < 5);
+                return <FocusLabel key={`focus-${p.id}`} player={p} at={at} crowded={crowded} />;
+              })}
               {frame.players.filter((p) => p.id === hoverId && p.id !== shownId).map((p) => <ChipTooltip key={p.id} player={p} at={positions.players[p.id] ?? p} />)}
             </>
           )}
@@ -249,6 +257,7 @@ function MatchView({ matchId, mode, teams }: { matchId: string; mode: Mode; team
           )}
           player={lineups && playerPanel(lineups)}
           focusPlayer={followed ? { id: followed.id, name: followed.name } : null}
+          strip={lineups && followed && <PlayerStrip data={lineups} t={t} onOpen={openPlayer} />}
         />
       </main>
 
