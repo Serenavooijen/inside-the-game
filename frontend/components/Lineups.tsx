@@ -1,9 +1,9 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { TeamId } from '@/lib/contracts';
 import {
-  HEAT_COLS, HEAT_ROWS, average, endAt, formationAt, minuteAt, samples, statusAt,
+  HEAT_COLS, HEAT_ROWS, average, endAt, formationAt, formationSpots, lineHeight, minuteAt, samples, statusAt,
   type LineupPlayer, type Lineups,
 } from '@/lib/lineups';
 import { useTeams } from '@/lib/teams';
@@ -197,22 +197,39 @@ type Props = {
   onPick: (playerId: string) => void;
 };
 
-/** Line-ups tab: one team at a time, average positions of who is on the pitch now, the team sheet. */
+/** Line-ups tab: one team at a time; the current shape or the average positions of who is on the pitch now; the team sheet. */
 export function LineupsPanel({ data, t, mode, team, onTeam, highlightId, onPick }: Props) {
   const teams = useTeams();
+  const [view, setView] = useState<'formation' | 'average'>('formation');
   const other = team === teams.home.id ? teams.away.id : teams.home.id;
   const squad = data.players.filter((p) => p.team === team);
   const starters = squad.filter((p) => p.starter).sort(byRole);
   const played = (p: LineupPlayer) => !!p.on && p.on[0] <= t;
   const subs = squad.filter((p) => !p.starter).sort((a, b) => Number(played(b)) - Number(played(a)) || (a.on?.[0] ?? 1e9) - (b.on?.[0] ?? 1e9) || byRole(a, b));
 
-  // On the pitch now: who came on replaces who went off; a sent-off player stays, dimmed.
-  const chips: PitchChip[] = squad.flatMap((p) => {
-    const st = statusAt(p, t);
-    if (st !== 'on' && st !== 'red') return [];
-    const a = average(samples(data, p, p.on![0], endAt(p, t)));
-    return a ? [{ id: p.id, team: p.team, n: p.n, gk: p.gk, name: p.name, x: a.x, y: a.y, dim: st === 'red' }] : [];
-  });
+  // Formation: the current shape on the own half, a substitute in the place of the player he replaced.
+  // Average positions: who is on the pitch now, where they stood on average; a sent-off player stays, dimmed.
+  const byId = Object.fromEntries(squad.map((p) => [p.id, p]));
+  const chips: PitchChip[] = view === 'formation'
+    ? formationSpots(data, team, t).map(({ id, x, y }) => ({ id, team, n: byId[id].n, gk: byId[id].gk, name: byId[id].name, x, y }))
+    : squad.flatMap((p) => {
+      const st = statusAt(p, t);
+      if (st !== 'on' && st !== 'red') return [];
+      const a = average(samples(data, p, p.on![0], endAt(p, t)));
+      return a ? [{ id: p.id, team: p.team, n: p.n, gk: p.gk, name: p.name, x: a.x, y: a.y, dim: st === 'red' }] : [];
+    });
+  const height = view === 'average' ? lineHeight(data, team, t) : null;
+
+  const viewBtn = (v: 'formation' | 'average', label: string) => (
+    <button
+      type="button"
+      onClick={() => setView(v)}
+      aria-pressed={view === v}
+      className={`h-7 whitespace-nowrap rounded-sm px-[10px] text-[13px] font-semibold ${view === v ? 'bg-fg text-bg' : 'bg-transparent text-fg-2 hover:text-fg'}`}
+    >
+      {label}
+    </button>
+  );
 
   const seg = (id: TeamId) => (
     <button
@@ -241,12 +258,22 @@ export function LineupsPanel({ data, t, mode, team, onTeam, highlightId, onPick 
           <span className="font-display text-[44px] font-extrabold leading-[.85]">{formationAt(data, team, t)}</span>
           <span className="text-[14px] text-fg-2">vs {formationAt(data, other, t)} {teams.label(other)}</span>
         </div>
-        <span className="font-mono text-label uppercase tracking-[.08em] text-fg-3">Average positions · 0–{minuteAt(t, data.halftime)}&apos;</span>
+        <div className="flex gap-[2px] rounded-md bg-surface-2 p-[3px]" role="group" aria-label="Pitch view">
+          {viewBtn('formation', 'Formation')}
+          {viewBtn('average', 'Average positions')}
+        </div>
       </div>
 
       <div className="flex flex-col gap-2">
         <GrassPitch chips={chips} highlightId={highlightId} onPick={onPick} />
-        <AttackRow note={chips.some((c) => c.dim) ? 'Both halves shown left to right · dimmed = sent off' : 'Both halves shown left to right'} />
+        {view === 'formation' ? (
+          <AttackRow note={`Shape at ${minuteAt(t, data.halftime)}' · players on the pitch now`} />
+        ) : (
+          <>
+            <AttackRow note={chips.some((c) => c.dim) ? `Average positions · 0–${minuteAt(t, data.halftime)}' · dimmed = sent off` : `Average positions · 0–${minuteAt(t, data.halftime)}'`} />
+            {height !== null && <div className="font-mono text-label uppercase tracking-[.08em] text-fg-2">Average line height: {height} m from own goal</div>}
+          </>
+        )}
       </div>
 
       <div className="flex flex-col">

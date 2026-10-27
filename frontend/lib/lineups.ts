@@ -74,6 +74,8 @@ export type Lineups = {
   bucket: number;
   /** [from t, shape] per team */
   formations: Record<TeamId, [number, string][]>;
+  /** [from t, {player id: role}] per team, e.g. "RCB" */
+  roles: Record<TeamId, [number, Record<string, string>][]>;
   players: LineupPlayer[];
   corners: Corner[];
   cup: { cornerGoals: Record<TeamId, number> } | null;
@@ -208,3 +210,69 @@ export const ZONE_LABEL: Record<Corner['zone'], string> = { near: 'Near post', f
 
 /** "4th" */
 export const ordinal = (n: number) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] ?? 'th'}`;
+
+// ---------------------------------------------------------------- formation view
+
+// Depth from the own goal (1 = back line … 5 = front line) and side (-1 left … +1 right) per role.
+// Wing-backs sit between the back line and midfield, so a 5-4-1 and a 3-4-2 both split correctly.
+const DEPTH: Record<string, number> = {
+  GK: 0, RB: 1, RCB: 1, CB: 1, LCB: 1, LB: 1, DM: 2, RWB: 2.5, LWB: 2.5,
+  RM: 3, RCM: 3, CM: 3, LCM: 3, LM: 3, AM: 4, RW: 5, RS: 5, ST: 5, LS: 5, LW: 5, FW: 5,
+};
+const SIDE: Record<string, number> = {
+  RB: 1, RWB: 1, RM: 1, RW: 1, RCB: 0.4, RCM: 0.4, RS: 0.4, LCB: -0.4, LCM: -0.4, LS: -0.4, LB: -1, LWB: -1, LM: -1, LW: -1,
+};
+const DEFENDERS = new Set(['RB', 'RCB', 'CB', 'LCB', 'LB', 'RWB', 'LWB']);
+
+/** The role of every player of a team at match second t (tactical states; a substitute without one takes the role of the player he replaced). */
+export function rolesAt(l: Lineups, team: TeamId, t: number): Record<string, string> {
+  const snap = [...(l.roles[team] ?? [])].reverse().find(([from]) => from <= t)?.[1] ?? {};
+  const out: Record<string, string> = {};
+  for (const p of l.players) {
+    if (p.team !== team || statusAt(p, t) !== 'on') continue;
+    const replaced = p.replaced ? snap[p.replaced] : undefined;
+    out[p.id] = snap[p.id] ?? replaced ?? p.role;
+  }
+  return out;
+}
+
+/**
+ * The classic line-up on the own half (attacking left to right): goalkeeper at the own goal, then
+ * the lines of the current formation, each spread over the width (left side at the top).
+ * Only players on the pitch now; when the shape does not add up (e.g. just after a red card)
+ * the lines follow the roles.
+ */
+export function formationSpots(l: Lineups, team: TeamId, t: number): { id: string; x: number; y: number }[] {
+  const roles = rolesAt(l, team, t);
+  const ids = Object.keys(roles);
+  const gk = ids.filter((id) => roles[id] === 'GK');
+  const field = ids.filter((id) => roles[id] !== 'GK')
+    .sort((a, b) => (DEPTH[roles[a]] ?? 3) - (DEPTH[roles[b]] ?? 3) || (SIDE[roles[a]] ?? 0) - (SIDE[roles[b]] ?? 0));
+  const shape = formationAt(l, team, t).split('-').map(Number).filter((n) => n > 0);
+  let lines: string[][] = [];
+  if (shape.reduce((a, b) => a + b, 0) === field.length) {
+    let k = 0;
+    lines = shape.map((n) => field.slice(k, (k += n)));
+  } else {
+    const band = (id: string) => { const d = DEPTH[roles[id]] ?? 3; return d < 2 ? 0 : d < 5 ? 1 : 2; };
+    lines = [0, 1, 2].map((b) => field.filter((id) => band(id) === b)).filter((x) => x.length);
+  }
+  const spots = gk.map((id) => ({ id, x: 5, y: 34 }));
+  lines.forEach((line, i) => {
+    const x = lines.length === 1 ? 30 : 16 + (i * (46 - 16)) / (lines.length - 1);
+    [...line].sort((a, b) => (SIDE[roles[a]] ?? 0) - (SIDE[roles[b]] ?? 0))
+      .forEach((id, k) => spots.push({ id, x, y: (68 * (k + 1)) / (line.length + 1) }));
+  });
+  return spots;
+}
+
+/** Average distance of the back line from the own goal (m), from the average positions so far. */
+export function lineHeight(l: Lineups, team: TeamId, t: number): number | null {
+  const roles = rolesAt(l, team, t);
+  const xs = l.players
+    .filter((p) => DEFENDERS.has(roles[p.id] ?? ''))
+    .map((p) => average(samples(l, p, p.on![0], endAt(p, t)))?.x)
+    .filter((x): x is number => x !== undefined);
+  return xs.length ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length) : null;
+}
+

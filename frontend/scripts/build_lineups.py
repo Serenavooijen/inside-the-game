@@ -17,7 +17,7 @@ What is in it:
   touches, passes (completed/attempted), shots (xG), duels (won/lost), recoveries,
   sprints (>= 23.8 km/h, from the tracking speed), distance per 10 s and top speed.
 - positions every 5 s on the pitch, team-relative: the team always attacks left to right.
-- formations over time (tactical_states.json).
+- formations and roles over time (tactical_states.json).
 - corners (heights from pre_match_context.json): the frame at the moment of delivery around the box, the first contact and the
   outcome, stored as a corner from the left (u 0-68 along the goal line, v distance from it).
 - goals from corners in the cup match.
@@ -117,6 +117,7 @@ for s in states:
     for pid, r in s["roles"].items():
         role_of.setdefault(pid, short_role(r))       # the first role a player has on the pitch
 formations = defaultdict(list)
+roles = defaultdict(list)       # team -> [t, {player id: role}]: who plays where, for the formation view
 for s in states:
     team = TEAM[s["team"]]
     mm, ss = s["clock"].split(":")
@@ -124,6 +125,7 @@ for s in states:
     shape = s["formation"].replace("-deep", "")
     if not formations[team] or formations[team][-1][1] != shape:
         formations[team].append([max(0, t), shape])
+    roles[team].append([max(0, t), s["roles"]])
 
 # ---------------------------------------------------------------- tracking: speed per second
 speed = defaultdict(dict)    # pid -> frame -> m/s
@@ -374,6 +376,7 @@ out = {
     "matchId": match["id"], "duration": duration, "halftime": halftime,
     "sample": SAMPLE, "bucket": BUCKET,
     "formations": formations,
+    "roles": roles,
     "players": players,
     "corners": corners,
     "cup": cup,
