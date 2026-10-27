@@ -146,6 +146,8 @@ function MatchView({ matchId, mode, teams }: { matchId: string; mode: Mode; team
   const tactics = !!s.scouting || !!s.commentary;
   const stats = tick?.stats ?? { score: [0, 0] as [number, number], xg: [0, 0] as [number, number], possession: [50, 50] as [number, number] };
 
+  const followed = prefs.playerId ? lineups?.players.find((p) => p.id === prefs.playerId) : undefined;
+
   const playerPanel = (data: NonNullable<typeof lineups>) => {
     const p = playerId ? data.players.find((x) => x.id === playerId) : undefined;
     if (!p) return undefined;
@@ -164,7 +166,7 @@ function MatchView({ matchId, mode, teams }: { matchId: string; mode: Mode; team
 
   return (
     <div className="flex h-screen min-h-[720px] flex-col overflow-hidden bg-bg text-fg" style={teamColorVars(teams) as React.CSSProperties}>
-      <Scorebar stats={stats} clock={tick?.clock ?? '00:00'} period={period} mode={s.mode} events={s.events} />
+      <Scorebar stats={stats} clock={tick?.clock ?? '00:00'} period={period} mode={s.mode} events={s.events} players={lineups?.players} />
 
       <main className="flex min-h-0 min-w-0 flex-1 gap-8 overflow-x-hidden px-10 py-4">
         {/* The column is exactly as wide as the pitch, so the commentary below can never widen it. */}
@@ -246,6 +248,7 @@ function MatchView({ matchId, mode, teams }: { matchId: string; mode: Mode; team
             <LineupsPanel data={lineups} t={t} mode={feedMode} team={lineupTeam} onTeam={setLineupTeam} highlightId={hoverId} onPick={openPlayer} />
           )}
           player={lineups && playerPanel(lineups)}
+          focusPlayer={followed ? { id: followed.id, name: followed.name } : null}
         />
       </main>
 

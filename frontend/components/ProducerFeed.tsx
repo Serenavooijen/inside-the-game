@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Insight, ScoutingReport } from '@/lib/contracts';
 import type { Corner } from '@/lib/lineups';
-import { feedItems } from '@/lib/feed';
+import { feedItems, insightTeam, type FeedFilter, type FocusPlayer } from '@/lib/feed';
+import { usePreferences } from '@/lib/preferences';
+import { Segmented } from './Segmented';
 import { useLang } from '@/lib/i18n';
 import { useTeams } from '@/lib/teams';
 import { CornerCard } from './Corners';
@@ -31,17 +33,27 @@ type Props = {
   lineups?: ReactNode;
   /** Player analysis: fills the column, without the title and the tabs */
   player?: ReactNode;
+  /** the followed player, for the filter "My player" */
+  focusPlayer?: FocusPlayer | null;
+  /** the followed player's strip, at the top of the column */
+  strip?: ReactNode;
 };
 
 export type FeedTab = 'feed' | 'scouting' | 'lineups';
 
 /** Smart lane: newest first, newest card open. Tactics cards only in Analyst mode. */
-export function ProducerFeed({ insights, mode, onMode, arrivingId, focusId, scouting, scoutingTranslations, tab, onTab, corners = [], lineups, player }: Props) {
+export function ProducerFeed({ insights, mode, onMode, arrivingId, focusId, scouting, scoutingTranslations, tab, onTab, corners = [], lineups, player, focusPlayer = null, strip }: Props) {
   const teams = useTeams();
   const { t } = useLang();
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const refs = useRef<Record<string, HTMLDivElement | null>>({});
-  const list = feedItems(insights, corners, mode);
+  const { prefs, emphasis, myClubColor } = usePreferences();
+  // My club / My player: only the options that fit your choice; without a choice there is no filter row
+  const [filter, setFilter] = useState<FeedFilter>('all');
+  const filters: FeedFilter[] = ['all', ...(prefs.club !== 'neutral' ? ['club' as const] : []), ...(focusPlayer ? ['player' as const] : [])];
+  const active: FeedFilter = filters.includes(filter) ? filter : 'all';
+  const sel = (f: FeedFilter) => ({ filter: f, club: prefs.club, player: focusPlayer });
+  const list = feedItems(insights, corners, mode, sel(active));
   const newest = list.flatMap((x) => (x.kind === 'insight' ? [x.insight.id] : []))[0];
 
   useEffect(() => {
@@ -102,6 +114,20 @@ export function ProducerFeed({ insights, mode, onMode, arrivingId, focusId, scou
           ))}
         </div>
       )}
+      {!player && strip}
+      {!player && shown === 'feed' && filters.length > 1 && (
+        <Segmented
+          label={t('feedFilter')}
+          value={active}
+          onChange={setFilter}
+          size="sm"
+          options={filters.map((f) => ({
+            value: f,
+            label: <>{f === 'club' ? `★ ${t('filterClub')}` : f === 'player' ? `◎ ${t('filterPlayer')}` : t('filterAll')}
+              <span className="opacity-60">{feedItems(insights, corners, mode, sel(f)).length}</span></>,
+          }))}
+        />
+      )}
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <div className="flex h-full flex-col gap-3 overflow-y-auto overflow-x-hidden pb-16 [scrollbar-width:none]">
           {player}
@@ -113,12 +139,19 @@ export function ProducerFeed({ insights, mode, onMode, arrivingId, focusId, scou
             </div>
           )}
           {!player && shown === 'feed' && list.map((x) => {
-            if (x.kind === 'corner') return <div key={x.corner.id} className="itg-in"><CornerCard corner={x.corner} /></div>;
+            // your club: a left edge in the team colour; the opponent: quieter, never hidden
+            const emph = (team?: string) => {
+              const e = emphasis(team);
+              return e === 'mine' ? 'itg-emph-mine' : e === 'opponent' ? 'itg-emph-opponent' : '';
+            };
+            const emphStyle = { ['--itg-emph' as string]: myClubColor() } as React.CSSProperties;
+            if (x.kind === 'corner') return <div key={x.corner.id} className={`itg-in ${emph(x.corner.team)}`} style={emphStyle}><CornerCard corner={x.corner} /></div>;
             const i = x.insight;
             const isOpen = open[i.id] ?? i.id === newest;
             const toggle = () => setOpen((o) => ({ ...o, [i.id]: !isOpen }));
             return (
-              <div key={i.id} ref={(el) => { refs.current[i.id] = el; }} className={i.id === arrivingId ? 'itg-arrive' : i.type === 'tactics' || i.type === 'substitution' ? 'itg-in' : undefined}>
+              <div key={i.id} ref={(el) => { refs.current[i.id] = el; }} style={emphStyle}
+                className={[i.id === arrivingId ? 'itg-arrive' : i.type === 'tactics' || i.type === 'substitution' ? 'itg-in' : '', emph(insightTeam(i))].join(' ').trim() || undefined}>
                 {i.type === 'tactics'
                   ? <TacticsCard insight={i} expanded={isOpen} onToggle={toggle} />
                   : i.type === 'substitution'

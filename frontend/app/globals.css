@@ -106,3 +106,15 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .itg-flash { display: none; }
 }
+
+/* Your view: the followed player's lime ring and the club swatches (existing tokens only). */
+.itg-player-ring { box-shadow: 0 0 0 2px var(--itg-bg), 0 0 0 4px var(--itg-accent); }
+.theme-day .itg-player-ring { box-shadow: 0 0 0 2px var(--itg-fg), 0 0 0 4px var(--itg-accent); }
+.itg-focus-chip { box-shadow: 0 0 0 3px var(--itg-bg), 0 0 0 6px var(--itg-accent), 0 4px 8px rgba(0, 0, 0, .45); }
+.theme-day .itg-swatch { box-shadow: 0 0 0 1px var(--itg-swatch-text); }
+
+/* Your club in the feed: a 4 px left edge in the team colour; the opponent's cards are quieter but never hidden. */
+.itg-emph-mine > article { box-shadow: inset 4px 0 0 var(--itg-emph); }
+.itg-emph-opponent > article .text-fg,
+.itg-emph-opponent > article header { color: var(--itg-fg-2); }
+.itg-emph-opponent > article header > div:first-child { opacity: .6; }

@@ -2,9 +2,12 @@
 
 import type { MatchEvent, MatchStats, Mode } from '@/lib/contracts';
 import { useLang } from '@/lib/i18n';
+import { usePreferences } from '@/lib/preferences';
 import { useTeams } from '@/lib/teams';
 import { AwayCrest, HomeCrest, Logo, SmallBall, SubIcon } from './icons';
 import { LanguagePicker } from './Language';
+import { ProfileMenu } from './ProfileMenu';
+import type { LineupPlayer } from '@/lib/lineups';
 import { ThemeToggle } from './ThemeToggle';
 
 type Props = {
@@ -14,16 +17,26 @@ type Props = {
   mode: Mode;
   /** Most recent first is not required; the bar shows the last four */
   events: MatchEvent[];
+  /** the squads, for "Your view" (favourite club and player); without them there is no profile button */
+  players?: LineupPlayer[];
 };
 
-export function Scorebar({ stats, clock, period, mode, events }: Props) {
+export function Scorebar({ stats, clock, period, mode, events, players }: Props) {
   const teams = useTeams();
   const { t } = useLang();
+  const { isMyClub } = usePreferences();
+  // "★ YOUR CLUB" under your club's bar: team colour with the team's own foreground for contrast
+  const clubTab = (id: string, fg: string) => isMyClub(id) && (
+    <span className="pointer-events-none absolute left-1/2 top-[calc(100%-4px)] z-[1] flex h-[18px] -translate-x-1/2 items-center whitespace-nowrap rounded-b-sm px-2 font-mono text-[11px] font-medium uppercase leading-none tracking-[.08em]"
+      style={{ background: teams.color(id), color: fg }}>
+      ★ {t('yourClub')}
+    </span>
+  );
   const recent = events.filter((e) => e.kind !== 'bigchance').slice(-4);
   const [possH, possA] = stats.possession;
   const [xgH, xgA] = stats.xg;
   return (
-    <header className="grid h-[104px] flex-none grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-8 border-b border-line bg-bg px-10">
+    <header className={`grid h-[104px] flex-none items-center gap-8 border-b border-line bg-bg px-10 ${players ? 'grid-cols-[minmax(0,1fr)_auto_auto] min-[1600px]:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]' : 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]'}`}>
       <div className="flex min-w-0 items-center gap-3">
         <a href="/" className="flex flex-none items-center gap-[10px] whitespace-nowrap" aria-label="Inside the Game, back to the match list">
           <Logo />
@@ -46,12 +59,14 @@ export function Scorebar({ stats, clock, period, mode, events }: Props) {
         <div className="flex flex-none items-center gap-2">
           <ThemeToggle />
           <LanguagePicker />
+          {players && <ProfileMenu players={players} />}
         </div>
       </div>
 
-      <div className="flex flex-col items-center gap-[6px]">
-        <div className="flex h-[60px] items-stretch overflow-hidden rounded-md bg-surface-2 shadow-[0_4px_12px_rgba(0,0,0,.25)]">
-          <div className="flex items-center gap-3 border-b-[5px] border-home pl-[14px] pr-[18px]">
+      <div className={`flex flex-col items-center ${isMyClub(teams.home.id) || isMyClub(teams.away.id) ? 'gap-[16px]' : 'gap-[6px]'}`}>
+        <div className="flex h-[60px] items-stretch rounded-md bg-surface-2 shadow-[0_4px_12px_rgba(0,0,0,.25)]">
+          <div className="relative flex items-center gap-3 rounded-l-md border-b-[5px] border-home pl-[14px] pr-[18px]">
+            {clubTab(teams.home.id, teams.home.fg)}
             <HomeCrest color={teams.home.color} fg={teams.home.fg} />
             <span className="font-display text-[32px] font-extrabold tracking-[.04em]">{teams.home.short}</span>
           </div>
@@ -63,11 +78,12 @@ export function Scorebar({ stats, clock, period, mode, events }: Props) {
             <span className="text-[28px] opacity-50">–</span>
             <span>{stats.score[1]}</span>
           </div>
-          <div className="flex items-center gap-3 border-b-[5px] border-away pl-[18px] pr-[14px]">
+          <div className="relative flex items-center gap-3 border-b-[5px] border-away pl-[18px] pr-[14px]">
+            {clubTab(teams.away.id, teams.away.fg)}
             <span className="font-display text-[32px] font-extrabold tracking-[.04em]">{teams.away.short}</span>
             <AwayCrest color={teams.away.color} fg={teams.away.fg} />
           </div>
-          <div className="flex min-w-[96px] flex-col items-center justify-center border-l border-line px-[18px]">
+          <div className="flex min-w-[96px] flex-col items-center justify-center rounded-r-md border-l border-line px-[18px]">
             <span className="font-mono text-[24px] font-medium leading-none">{clock}</span>
             <span className="mt-1 font-mono text-[11px] tracking-[.12em] text-fg-3">{period}</span>
           </div>
@@ -86,7 +102,7 @@ export function Scorebar({ stats, clock, period, mode, events }: Props) {
         </div>
       </div>
 
-      <div className="flex items-center justify-end gap-10">
+      <div className={`flex items-center justify-end ${players ? 'gap-6 min-[1600px]:gap-10' : 'gap-10'}`}>
         <div className="flex w-[200px] flex-col gap-[6px]">
           <div className="flex items-baseline justify-between">
             <span className="font-display text-[26px] font-bold leading-none">{possH}%</span>
