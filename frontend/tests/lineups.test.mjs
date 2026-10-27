@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { formationAt, formationSpots, lineHeight } from '../lib/lineups.ts';
+import { formationAt, formationBoth, formationSpots, lineHeight } from '../lib/lineups.ts';
 
 const data = JSON.parse(readFileSync(new URL('../data/lineups/kba-ngr.json', import.meta.url), 'utf8'));
 const n = Object.fromEntries(data.players.map((p) => [p.id, p.n]));
@@ -43,3 +43,23 @@ test('average line height: Kingsbridge play a much higher line than Northgate', 
   const kba = lineHeight(data, 'kba', 4212), ngr = lineHeight(data, 'ngr', 4212);
   assert.ok(kba > 35 && ngr < 35 && kba > ngr, `${kba} vs ${ngr}`);
 });
+
+test('Formation shows both teams: Kingsbridge on the left half, Northgate turned round on the right half', () => {
+  for (const t of [0, 600, 3270, 3400, 4212, 5000, 5600]) {
+    const spots = formationBoth(data, 'kba', 'ngr', t);
+    const kba = spots.filter((s) => s.team === 'kba'), ngr = spots.filter((s) => s.team === 'ngr');
+    assert.ok(kba.length >= 10 && ngr.length >= 10, `${t}: ${kba.length} + ${ngr.length}`);
+    assert.ok(kba.every((s) => s.x < 52.5), `${t}: KBA over the halfway line`);
+    assert.ok(ngr.every((s) => s.x > 52.5), `${t}: NTG over the halfway line`);
+    assert.ok(spots.every((s) => s.y > 0 && s.y < 68));
+  }
+  // keepers at their own goal: KBA left, NTG right
+  const at = formationBoth(data, 'kba', 'ngr', 600);
+  assert.equal(at.find((s) => s.id === 'KBA-01').x, 5);
+  assert.equal(at.find((s) => s.id === 'NGR-01').x, 100);
+  // after the red card: ten Kingsbridge players, the sent-off player is gone
+  const red = formationBoth(data, 'kba', 'ngr', 3400);
+  assert.equal(red.filter((s) => s.team === 'kba').length, 10);
+  assert.ok(!red.some((s) => s.id === 'KBA-06'));
+});
+

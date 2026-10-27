@@ -276,3 +276,12 @@ export function lineHeight(l: Lineups, team: TeamId, t: number): number | null {
   return xs.length ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length) : null;
 }
 
+
+/** Both teams on one pitch, as a TV line-up: the home team on the left half (keeper at the left goal),
+ *  the away team turned round on the right half (keeper at the right goal). Each team stays in its own half. */
+export function formationBoth(l: Lineups, home: TeamId, away: TeamId, t: number): { id: string; team: TeamId; x: number; y: number }[] {
+  return [
+    ...formationSpots(l, home, t).map((s) => ({ ...s, team: home })),
+    ...formationSpots(l, away, t).map((s) => ({ ...s, team: away, x: 105 - s.x, y: 68 - s.y })),
+  ];
+}

@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from 'react';
 import type { TeamId } from '@/lib/contracts';
 import {
-  HEAT_COLS, HEAT_ROWS, average, endAt, formationAt, formationSpots, lineHeight, minuteAt, samples, statusAt,
+  HEAT_COLS, HEAT_ROWS, average, endAt, formationAt, formationBoth, lineHeight, minuteAt, samples, statusAt,
   type LineupPlayer, type Lineups,
 } from '@/lib/lineups';
 import { useTeams } from '@/lib/teams';
@@ -197,7 +197,7 @@ type Props = {
   onPick: (playerId: string) => void;
 };
 
-/** Line-ups tab: one team at a time; the current shape or the average positions of who is on the pitch now; the team sheet. */
+/** Line-ups tab: the current shape of both teams (TV line-up) or the average positions of one team; the team sheet of one team. */
 export function LineupsPanel({ data, t, mode, team, onTeam, highlightId, onPick }: Props) {
   const teams = useTeams();
   const [view, setView] = useState<'formation' | 'average'>('formation');
@@ -207,11 +207,12 @@ export function LineupsPanel({ data, t, mode, team, onTeam, highlightId, onPick 
   const played = (p: LineupPlayer) => !!p.on && p.on[0] <= t;
   const subs = squad.filter((p) => !p.starter).sort((a, b) => Number(played(b)) - Number(played(a)) || (a.on?.[0] ?? 1e9) - (b.on?.[0] ?? 1e9) || byRole(a, b));
 
-  // Formation: the current shape on the own half, a substitute in the place of the player he replaced.
-  // Average positions: who is on the pitch now, where they stood on average; a sent-off player stays, dimmed.
-  const byId = Object.fromEntries(squad.map((p) => [p.id, p]));
+  // Formation: both teams as a TV line-up, home on the left half, away on the right half; a substitute in the
+  // place of the player he replaced. Average positions: one team, who is on the pitch now, where they stood on
+  // average; a sent-off player stays, dimmed.
+  const byId = Object.fromEntries(data.players.map((p) => [p.id, p]));
   const chips: PitchChip[] = view === 'formation'
-    ? formationSpots(data, team, t).map(({ id, x, y }) => ({ id, team, n: byId[id].n, gk: byId[id].gk, name: byId[id].name, x, y }))
+    ? formationBoth(data, teams.home.id, teams.away.id, t).map(({ id, team: tm, x, y }) => ({ id, team: tm, n: byId[id].n, gk: byId[id].gk, name: byId[id].name, x, y }))
     : squad.flatMap((p) => {
       const st = statusAt(p, t);
       if (st !== 'on' && st !== 'red') return [];
@@ -244,20 +245,37 @@ export function LineupsPanel({ data, t, mode, team, onTeam, highlightId, onPick 
     </button>
   );
 
+  // In Formation the switch only picks the team sheet under the pitch; in Average positions also the pitch.
+  const teamSwitch = (
+    <div className="grid grid-cols-2 gap-[2px] rounded-md bg-surface-2 p-[3px]" role="group" aria-label="Team">
+      {seg(teams.home.id)}
+      {seg(teams.away.id)}
+    </div>
+  );
+
   return (
     <div className="flex w-full flex-col gap-4">
       {mode === 'analyst' && <CornerSummary corners={data.corners.filter((c) => c.t <= t)} cup={data.cup} players={data.players} range={`0–${minuteAt(t, data.halftime)}'`} />}
 
-      <div className="grid grid-cols-2 gap-[2px] rounded-md bg-surface-2 p-[3px]" role="group" aria-label="Team">
-        {seg(teams.home.id)}
-        {seg(teams.away.id)}
-      </div>
+      {view === 'average' && teamSwitch}
 
       <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-1">
-        <div className="flex items-baseline gap-[10px]">
-          <span className="font-display text-[44px] font-extrabold leading-[.85]">{formationAt(data, team, t)}</span>
-          <span className="text-[14px] text-fg-2">vs {formationAt(data, other, t)} {teams.label(other)}</span>
-        </div>
+        {view === 'formation' ? (
+          <div className="flex items-baseline gap-[10px] font-display text-[44px] font-extrabold leading-[.85]" aria-label="Formations">
+            <span className="flex items-baseline gap-2" style={{ color: teams.text(teams.home.id) }}>
+              <span className="font-mono text-[13px] font-medium">{teams.short(teams.home.id)}</span>{formationAt(data, teams.home.id, t)}
+            </span>
+            <span className="text-[28px] text-fg-3">·</span>
+            <span className="flex items-baseline gap-2" style={{ color: teams.text(teams.away.id) }}>
+              {formationAt(data, teams.away.id, t)}<span className="font-mono text-[13px] font-medium">{teams.short(teams.away.id)}</span>
+            </span>
+          </div>
+        ) : (
+          <div className="flex items-baseline gap-[10px]">
+            <span className="font-display text-[44px] font-extrabold leading-[.85]">{formationAt(data, team, t)}</span>
+            <span className="text-[14px] text-fg-2">vs {formationAt(data, other, t)} {teams.label(other)}</span>
+          </div>
+        )}
         <div className="flex gap-[2px] rounded-md bg-surface-2 p-[3px]" role="group" aria-label="Pitch view">
           {viewBtn('formation', 'Formation')}
           {viewBtn('average', 'Average positions')}
@@ -267,7 +285,11 @@ export function LineupsPanel({ data, t, mode, team, onTeam, highlightId, onPick 
       <div className="flex flex-col gap-2">
         <GrassPitch chips={chips} highlightId={highlightId} onPick={onPick} />
         {view === 'formation' ? (
-          <AttackRow note={`Shape at ${minuteAt(t, data.halftime)}' · players on the pitch now`} />
+          <div className="flex flex-wrap items-center gap-x-[10px] gap-y-1 font-mono text-label text-fg-3">
+            <span className="uppercase tracking-[.08em]" style={{ color: teams.text(teams.home.id) }}>{teams.short(teams.home.id)} →</span>
+            <span className="uppercase tracking-[.08em]" style={{ color: teams.text(teams.away.id) }}>← {teams.short(teams.away.id)}</span>
+            <span>Shape at {minuteAt(t, data.halftime)}&apos; · players on the pitch now</span>
+          </div>
         ) : (
           <>
             <AttackRow note={chips.some((c) => c.dim) ? `Average positions · 0–${minuteAt(t, data.halftime)}' · dimmed = sent off` : `Average positions · 0–${minuteAt(t, data.halftime)}'`} />
@@ -275,6 +297,8 @@ export function LineupsPanel({ data, t, mode, team, onTeam, highlightId, onPick 
           </>
         )}
       </div>
+
+      {view === 'formation' && teamSwitch}
 
       <div className="flex flex-col">
         <SectionLabel className="pb-[6px]">Starting XI</SectionLabel>
