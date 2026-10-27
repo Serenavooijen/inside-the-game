@@ -47,8 +47,51 @@ The two open sources are the cheapest way to test with real data, without a lice
    - Card facts use the referee's `reason`, which feeds rarely provide as text.
    - The Scout compares with the earlier cup match between the same teams (`output/cup/`); with real data that becomes the previous real meeting.
 
-## Order of work
+## Step plan
 
-1. **A replay adapter for StatsBomb Open Data or Metrica.** It proves the seam with real data, without a licence or a network. Metrica includes tracking, which tests point 3.
-2. **A "fake live" source.** The same real match, released in real time. It makes the simulator live-capable (points 1 and 2) before any paid feed is involved.
-3. **A licensed feed.** Next to the adapter, this needs agreements on the licence, broadcast rights and the delay of the feed.
+Each phase builds on the previous one and ends with something that runs. Phases 1 and 2 need no licence and no paid data.
+
+### Phase 1: a real match, replayed
+
+Goal: a real match plays in the frontend the way the synthetic one does now.
+
+1. **Pick the data.** A Metrica Sports sample match: full tracking at 25 Hz plus events, so every part of the backend is tested.
+2. **Write `MetricaSource`** next to `GeneratorSource`: coordinates (Metrica uses 0-1) to 105 × 68, time to `t`, event types to `SourceEventType`, ids, squad and team names (see *What an adapter has to do*).
+3. **Make the backend frame-rate independent** (point 3 above): possession weighted by frame duration, the sprint rule in seconds instead of frames. Keep sending one `tick` per match second, so the frontend does not change.
+4. **Fill the gaps in the data.** Metrica has no xG: add a simple xG model from shot distance and angle, so the shot overlay and the goal facts keep working.
+5. **Tests**, as for the synthetic match: every event fits the contracts, the final score and shot count match the published result.
+6. **A second adapter for StatsBomb Open Data** (events only). This tests the path without tracking (point 4): score, xG, cards and goal facts without moving players.
+
+Done when: the Metrica match runs in the frontend with moving players, the right score, overlays and checked insights on every goal.
+
+### Phase 2: live-capable, with "fake live"
+
+Goal: the backend handles a feed that arrives in real time and never ends early, before any paid feed is involved.
+
+1. **`LiveReplaySource`**: wraps any replay source and releases its items at the real clock, as a live feed would.
+2. **Live mode in the simulator** (point 1 above): read the source as a running stream instead of up front, follow the feed's time, no speed control, seek only back to what has been received (`live_head_t`), no fixed duration.
+3. **Broadcast delay instead of slowing down** (point 2 above): hold the picture back by a configurable delay (for example `ITG_LIVE_DELAY_S`, about 6-10 s) so that the explanation of a goal is ready when the goal is shown.
+4. **Frontend live state**: a timeline without a fixed end and a "LIVE" indicator.
+5. **Run Recorder**: record every live run as JSONL, so it can be replayed afterwards without model calls.
+6. **A full 90 minutes in real time**: a long run with reconnects, to find memory growth, dropped connections and drift between the clock and the feed.
+
+Done when: the Metrica match runs as fake live for 90 minutes, insights arrive together with the goals after the delay, and a reconnecting browser shows the right picture.
+
+### Phase 3: a licensed feed
+
+Goal: one real match, live, at a pilot.
+
+1. **Choose a provider and agree terms**: licence, broadcast and display rights, a test or sandbox feed, and the provider's own delay.
+2. **Write the provider adapter**: connect (push, websocket or polling), reconnect after a drop, and drop duplicate events.
+3. **Handle corrections.** Providers change events afterwards (a goal disallowed by VAR, a different scorer, an updated xG). This needs a correction message in the contracts and a way to undo a published event, overlay or insight.
+4. **Set the broadcast delay** from the measured delay of the feed plus the time the agents need.
+5. **Cost and safety**: a budget for model calls per match, the kill switch for all model calls, rate limits on the public endpoints.
+6. **A pilot**: one real match end to end, recorded, then reviewed against the TV broadcast.
+
+Done when: a real match runs live with checked insights, and the recording replays without model calls.
+
+### Phase 4: more matches and real history
+
+1. **State per match** instead of one global simulator, so one backend can serve several matches.
+2. **EventBus to Azure Event Hubs or Service Bus** (already the growth path in the architecture), with the agents as separate workers that scale on their own.
+3. **The Scout's baseline from real history**: the previous real meetings between the two teams instead of the synthetic cup match.
