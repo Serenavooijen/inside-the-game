@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Commentary, Marker, Mode, TeamId } from '@/lib/contracts';
+import { cardView, useLang, type Key } from '@/lib/i18n';
 import { useLineups } from '@/lib/lineups';
 import { markersFrom } from '@/lib/markers';
 import { useMatchStream } from '@/lib/useMatchStream';
@@ -15,9 +16,12 @@ import { PlayerPanel } from './PlayerPanel';
 import { KeyMoment } from './KeyMoment';
 import { Controls } from './Controls';
 import { FactCheck, Whistle } from './icons';
+import { LangTag } from './Language';
 import { TeamsProvider, teamColorVars, teamsFor } from '@/lib/teams';
 
-const PERIOD: Record<number, string> = { 1: '1ST HALF', 2: '2ND HALF', 3: 'EXTRA TIME 1', 4: 'EXTRA TIME 2', 5: 'PENALTIES' };
+const PERIOD: Record<number, Key> = { 1: 'p1', 2: 'p2', 3: 'p3', 4: 'p4', 5: 'p5' };
+/** How long a new commentary line may wait for its translation before it shows in English. */
+const TRANSLATION_WAIT_MS = 7000;
 
 
 // The pitch keeps its 111:74 ratio and leaves at least 400 px for the feed.
@@ -25,14 +29,34 @@ const PITCH_WIDTH = 'min(1248px, calc(100vw - 80px - 32px - 400px), calc((100vh 
 // With the commentary under the pitch (backend with TACTICS_ENABLED=1): 2 lines of text plus the gap, 64 px less height.
 const PITCH_WIDTH_WITH_COMMENTARY = 'min(1248px, calc(100vw - 80px - 32px - 400px), calc((100vh - 104px - 112px - 32px - 64px) * 1.5))';
 
-/** Narrator per minute: the newest line under the pitch, as wide as the pitch, at most 2 lines, short fade. */
+/** Narrator per minute: the newest line under the pitch, as wide as the pitch, at most 2 lines, short fade.
+ *  In another language the previous line stays until the new one has its checked translation (or until
+ *  TRANSLATION_WAIT_MS, then the English line shows with "EN"), so the bar does not flick between languages. */
 function CommentaryBar({ line }: { line: Commentary | null }) {
+  const { t, lang } = useLang();
+  const [shown, setShown] = useState<Commentary | null>(line);
+  const [original, setOriginal] = useState(false);
+  useEffect(() => {
+    if (!line || lang === 'en' || line.translations?.[lang] || (shown && shown.generation !== line.generation)) {
+      setShown(line);
+      return;
+    }
+    const h = setTimeout(() => setShown(line), TRANSLATION_WAIT_MS);
+    return () => clearTimeout(h);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [line, lang]);
+  useEffect(() => setOriginal(false), [shown?.t]);
+  const view = shown ? cardView(lang, shown, original) : 'source';
+  const text = view === 'translated' ? shown!.translations![lang].text! : shown?.text;
   return (
-    <div className="flex h-[52px] w-full min-w-0 items-start gap-3 px-1" aria-live="off" aria-label="Commentary">
-      <span className="flex-none pt-[6px] font-mono text-label uppercase tracking-[.12em] text-fg-3">{line ? `${line.minute}'` : 'Commentary'}</span>
-      {line && (
-        <p key={`${line.generation}-${line.t}`} className="itg-fade line-clamp-2 min-w-0 flex-1 break-words font-serif text-[19px] leading-[1.3] text-fg-2" title={line.text}>
-          {line.text}
+    <div className="flex h-[52px] w-full min-w-0 items-start gap-3 px-1" aria-live="off" aria-label={t('commentary')}>
+      <span className="flex flex-none flex-col items-start gap-1 pt-[6px]">
+        <span className="font-mono text-label uppercase tracking-[.12em] text-fg-3">{shown ? `${shown.minute}'` : t('commentary')}</span>
+        {shown && <LangTag view={view} reason={shown.translations?.[lang]?.reason} pending={!shown.translations?.[lang]} onToggle={() => setOriginal((o) => !o)} compact />}
+      </span>
+      {shown && (
+        <p key={`${shown.generation}-${shown.t}-${view}`} lang={view === 'translated' ? lang : 'en'} className="itg-fade line-clamp-2 min-w-0 flex-1 break-words font-serif text-[19px] leading-[1.3] text-fg-2" title={text}>
+          {text}
         </p>
       )}
     </div>
@@ -41,6 +65,7 @@ function CommentaryBar({ line }: { line: Commentary | null }) {
 
 export function MatchScreen({ matchId, mode }: { matchId: string; mode: Mode }) {
   const s = useMatchStream(matchId, mode);
+  const { t: tr } = useLang();
   const teams = useMemo(() => teamsFor(matchId), [matchId]);
   const [feedMode, setFeedMode] = useState<'casual' | 'analyst'>('casual');
   const [focusId, setFocusId] = useState<string | null>(null);
@@ -97,7 +122,7 @@ export function MatchScreen({ matchId, mode }: { matchId: string; mode: Mode }) 
     () => s.markers ?? markersFrom(s.events, s.insights.filter((i) => i.phase === 'done' && i.type !== 'tactics' && i.type !== 'substitution')),
     [s.markers, s.events, s.insights],
   );
-  const period = !tick ? '' : tick.finished ? 'FULL TIME' : PERIOD[tick.period] ?? '';
+  const period = (!tick ? '' : tick.finished ? tr('fullTime') : PERIOD[tick.period] ? tr(PERIOD[tick.period]) : '').toUpperCase();
 
   // Tactics cards only show in Analyst mode, so their corrections only get the pill there.
   const recentCorrection = s.insights.find((i) => i.status === 'corrected' && i.phase === 'done' && t - i.t < 240 && t >= i.t
@@ -164,7 +189,7 @@ export function MatchScreen({ matchId, mode }: { matchId: string; mode: Mode }) 
               className="itg-in absolute right-7 top-7 flex items-center gap-[10px] whitespace-nowrap rounded-full border border-corrected bg-[rgba(12,14,13,.9)] py-[10px] pl-3 pr-4 text-[15px] font-semibold text-chalk"
             >
               <FactCheck size={18} color="var(--itg-bad)" />
-              Fact-check · 1 claim corrected
+              {tr('factCheckPill')}
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden><path d="M5 12h14M13 6l6 6-6 6" /></svg>
             </button>
           )}
@@ -172,21 +197,21 @@ export function MatchScreen({ matchId, mode }: { matchId: string; mode: Mode }) 
           {!keyEvent && tick?.finished && (
             <div className="itg-in absolute left-7 top-7 flex items-center gap-2 rounded-full bg-[rgba(12,14,13,.88)] py-2 pl-[10px] pr-[14px] text-[15px] font-semibold text-chalk">
               <Whistle size={18} />
-              Full time · Kingsbridge {stats.score[0]}-{stats.score[1]} Northgate
+              {tr('fullTime')} · {teams.home.name} {stats.score[0]}-{stats.score[1]} {teams.away.name}
             </div>
           )}
 
           {(s.connection === 'reconnecting' || s.error) && (
             <div className="itg-in absolute bottom-7 left-1/2 flex -translate-x-1/2 items-center gap-3 rounded-full bg-[rgba(12,14,13,.9)] py-[10px] pl-[14px] pr-[18px] text-[15px] text-chalk shadow-[0_12px_32px_rgba(0,0,0,.35)]" role="status">
               <span className="itg-spin inline-block h-4 w-4 rounded-full border-2 border-white/25 border-t-chalk" />
-              <span className="font-semibold">{s.error ?? 'Stream dropped. Reconnecting…'}</span>
-              {!s.error && <span className="font-mono text-[12px] text-[#B8B4AD]">Retry in 3 s</span>}
+              <span className="font-semibold">{s.error ?? tr('reconnecting')}</span>
+              {!s.error && <span className="font-mono text-[12px] text-[#B8B4AD]">{tr('retryIn')}</span>}
             </div>
           )}
 
           {!tick && !s.error && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="rounded-full bg-[rgba(12,14,13,.88)] px-4 py-2 font-mono text-[13px] tracking-[.12em] text-chalk">LOADING MATCH…</div>
+              <div className="rounded-full bg-[rgba(12,14,13,.88)] px-4 py-2 font-mono text-[13px] uppercase tracking-[.12em] text-chalk">{tr('loading')}</div>
             </div>
           )}
         </div>
@@ -200,6 +225,7 @@ export function MatchScreen({ matchId, mode }: { matchId: string; mode: Mode }) 
           arrivingId={arrivingId}
           focusId={focusId}
           scouting={s.scouting}
+          scoutingTranslations={s.insights.find((i) => i.trigger === 'scouting')?.translations}
           tab={tab}
           onTab={setTab}
           corners={lineups?.corners.filter((c) => c.t <= t)}

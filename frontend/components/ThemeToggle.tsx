@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useLang } from '@/lib/i18n';
 import { SunMoon } from './icons';
 
 /** Switches between the night (default) and day theme on <html>. */
 export function ThemeToggle() {
   const [day, setDay] = useState(false);
+  const { t } = useLang();
   useEffect(() => { setDay(document.documentElement.classList.contains('theme-day')); }, []);
   const toggle = () => {
     const next = !day;
@@ -19,8 +21,8 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={toggle}
-      aria-label={day ? 'Switch to night theme' : 'Switch to day theme'}
-      title={day ? 'Night theme' : 'Day theme'}
+      aria-label={day ? t('nightTheme') : t('dayTheme')}
+      title={day ? t('nightTheme') : t('dayTheme')}
       className="flex h-9 w-9 items-center justify-center rounded-full border border-line text-fg-2 hover:text-fg"
     >
       <SunMoon day={day} />

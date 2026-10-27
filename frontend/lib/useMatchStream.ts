@@ -95,6 +95,8 @@ function reducer(s: StreamState, a: Action): StreamState {
     }
     case 'commentary':
       if (a.data.generation < gen) return s;
+      // The same line comes once more with its translations; an older line never replaces a newer one.
+      if (s.commentary && s.commentary.generation === a.data.generation && a.data.t < s.commentary.t) return s;
       return { ...s, commentary: a.data };
     case 'connection':
       return { ...s, connection: a.value };

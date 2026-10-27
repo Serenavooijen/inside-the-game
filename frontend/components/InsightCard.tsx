@@ -1,6 +1,8 @@
 import type { Insight, Zone } from '@/lib/contracts';
+import { useCardLanguage, useLang, type Key } from '@/lib/i18n';
 import { useTeams } from '@/lib/teams';
 import { FactCheck, Stopwatch } from './icons';
+import { LangTag } from './Language';
 
 type Props = {
   insight: Insight;
@@ -12,8 +14,11 @@ type Props = {
   dense?: 0 | 1 | 2;
 };
 
-const LABELS: Record<Insight['type'], string> = {
-  goal: 'Goal', bigchance: 'Big chance', card: 'Card', momentum: 'Momentum', update: '5-min update', fulltime: 'Full time', tactics: 'Tactics', substitution: 'Substitution',
+/** The analyst numbers come from the backend with English labels; the known ones are translated here. */
+const STAT_LABEL: Record<string, Key> = { Possession: 'possession', Shots: 'shots' };
+
+const LABELS: Record<Insight['type'], Key> = {
+  goal: 'goal', bigchance: 'bigchance', card: 'card', momentum: 'momentum', update: 'update', fulltime: 'fulltime', tactics: 'tactics', substitution: 'substitution',
 };
 
 
@@ -73,6 +78,10 @@ function MiniPitch({ zone: z, width }: { zone: Zone; width: number }) {
 
 export function InsightCard({ insight: i, size = 'feed', mode = 'casual', expanded = false, onToggle, dense = 0 }: Props) {
   const teams = useTeams();
+  const { t, lang } = useLang();
+  // The English text until a checked translation is there; then the translation, with a fade (no jump).
+  const L = useCardLanguage(i);
+  const text = L.tr?.text ?? i.text;
   const hero = size === 'hero';
   const done = i.phase === 'done';
   const corrected = i.status === 'corrected' && done;
@@ -90,7 +99,7 @@ export function InsightCard({ insight: i, size = 'feed', mode = 'casual', expand
     >
       <header className="flex items-center gap-3">
         <div className="flex h-9 w-9 flex-none items-center justify-center rounded-md bg-surface-2 text-fg"><TypeIcon type={i.type} card={i.card} /></div>
-        <div className={`font-display font-extrabold uppercase leading-none tracking-[.05em] ${hero ? 'text-[28px]' : 'text-card-type'}`}>{i.type === 'card' && i.card === 'red' ? 'Red card' : LABELS[i.type]}</div>
+        <div className={`font-display font-extrabold uppercase leading-none tracking-[.05em] ${hero ? 'text-[28px]' : 'text-card-type'}`}>{i.type === 'card' && i.card === 'red' ? t('redCard') : t(LABELS[i.type])}</div>
         {i.team && (
           <div className="flex items-center gap-[6px] font-mono text-[13px] text-fg-2">
             <span className="inline-block h-3 w-3 rounded-[3px]" style={{ background: teams.color(i.team) }} />
@@ -102,14 +111,14 @@ export function InsightCard({ insight: i, size = 'feed', mode = 'casual', expand
 
       <div className={`flex items-center gap-2 font-mono text-label font-medium uppercase tracking-[.12em] ${fallback ? 'text-fallback' : 'text-accent-text'}`}>
         <span className="inline-block h-2 w-2 rounded-[2px]" style={{ background: fallback ? 'var(--itg-fallback)' : 'var(--itg-accent)' }} />
-        {fallback ? 'Template text' : 'AI analysis'}
+        {fallback ? t('templateText') : t('aiAnalysis')}
       </div>
 
       {i.phase === 'analysing' && (
         <div className="flex flex-col gap-3" aria-label="Analysing">
           <div className="flex items-center gap-[10px] font-mono text-[15px] text-accent-text">
             <span className="itg-pulse inline-block h-[10px] w-[10px] rounded-full bg-accent" />
-            Analysing…
+            {t('analysing')}
           </div>
           <div className="h-[14px] w-[92%] rounded-sm bg-surface-2" />
           <div className="h-[14px] w-[64%] rounded-sm bg-surface-2" />
@@ -120,23 +129,23 @@ export function InsightCard({ insight: i, size = 'feed', mode = 'casual', expand
         <div className="flex flex-col gap-[14px]">
           <div className="flex items-center gap-[10px] rounded-md bg-corrected-soft px-[14px] py-[10px] text-corrected">
             <FactCheck size={22} />
-            <div className="font-display text-[22px] font-extrabold uppercase leading-none tracking-[.08em]">Corrected</div>
-            <div className="ml-auto whitespace-nowrap font-mono text-[12px]">Checked against event data</div>
+            <div className="font-display text-[22px] font-extrabold uppercase leading-none tracking-[.08em]">{t('corrected')}</div>
+            <div className="ml-auto whitespace-nowrap font-mono text-[12px]">{t('checkedAgainst')}</div>
           </div>
           <div className="flex flex-col gap-1">
-            <div className="text-[15px] text-fg-3 line-through">Removed: {i.claim}</div>
-            <div className="font-mono text-[12px] text-fg-3">
-              {i.rejectedClaims?.[0]?.reason ?? 'Not backed by the event data'}
+            <div className="text-[15px] text-fg-3 line-through" lang="en">{t('removed')}: {i.claim}</div>
+            <div className="font-mono text-[12px] text-fg-3" lang="en">
+              {i.rejectedClaims?.[0]?.reason ?? t('notBacked')}
             </div>
           </div>
-          <div className={`font-serif ${textSize} [text-wrap:pretty]`}>{i.text}</div>
+          <div key={L.view} lang={L.textLang} className={`font-serif ${textSize} [text-wrap:pretty] ${L.view !== 'source' ? 'itg-fade' : ''}`}>{text}</div>
           {i.stats && (
             <div className="flex items-end gap-5">
               <div className="flex flex-col gap-1">
                 <div className="font-display text-[64px] font-extrabold leading-[.9]" style={{ color: teams.text(i.stats.aTeam) }}>{i.stats.a}</div>
                 <div className="whitespace-nowrap font-mono text-[12px] text-fg-2">{i.stats.aLabel}</div>
               </div>
-              <div className="pb-[22px] font-display text-[28px] font-bold text-fg-3">vs</div>
+              <div className="pb-[22px] font-display text-[28px] font-bold text-fg-3">{t('vs')}</div>
               <div className="flex flex-col gap-1">
                 <div className="font-display text-[64px] font-extrabold leading-[.9]" style={{ color: teams.text(i.stats.bTeam) }}>{i.stats.b}</div>
                 <div className="whitespace-nowrap font-mono text-[12px] text-fg-2">{i.stats.bLabel}</div>
@@ -148,8 +157,8 @@ export function InsightCard({ insight: i, size = 'feed', mode = 'casual', expand
 
       {!corrected && i.phase !== 'analysing' && (
         <div className="flex items-start gap-5">
-          <p className={`min-w-0 flex-1 font-serif ${textSize} text-fg [text-wrap:pretty]`}>
-            {i.text}
+          <p key={L.view} lang={L.textLang} className={`min-w-0 flex-1 font-serif ${textSize} text-fg [text-wrap:pretty] ${L.view !== 'source' ? 'itg-fade' : ''}`}>
+            {text}
             {i.phase === 'streaming' && (
               <span className="itg-blink ml-1 inline-block h-[0.85em] w-[0.45em] bg-accent align-[-0.08em]" aria-hidden />
             )}
@@ -163,7 +172,7 @@ export function InsightCard({ insight: i, size = 'feed', mode = 'casual', expand
           {i.analystStats.map((s) => (
             <div key={s.k} className="flex flex-col gap-[2px] bg-surface px-3 py-[10px]">
               <div className="font-display text-[26px] font-bold leading-none">{s.v}</div>
-              <div className="font-mono text-label text-fg-3">{s.k}</div>
+              <div className="font-mono text-label text-fg-3">{STAT_LABEL[s.k] ? t(STAT_LABEL[s.k]) : s.k}</div>
             </div>
           ))}
         </div>
@@ -174,21 +183,22 @@ export function InsightCard({ insight: i, size = 'feed', mode = 'casual', expand
           {i.status === 'checked' && (
             <div className="flex items-center gap-[6px] rounded-full bg-checked-soft py-[5px] pl-2 pr-[10px] text-[14px] font-semibold text-checked">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M20 6 9 17l-5-5" /></svg>
-              Checked
+              {t('checked')}
             </div>
           )}
           {corrected && (
             <div className="flex items-center gap-[6px] rounded-full bg-corrected-soft py-[5px] pl-2 pr-[10px] text-[14px] font-semibold text-corrected">
               <FactCheck size={16} />
-              Corrected
+              {t('corrected')}
             </div>
           )}
           {fallback && (
             <div className="flex items-center gap-2">
-              <div className="rounded-full border border-dashed border-fallback px-[10px] py-[5px] text-[14px] font-semibold text-fallback">Fallback</div>
-              <div className="font-mono text-[12px] text-fg-3">{i.fallbackReason ?? 'Model timed out · template used'}</div>
+              <div className="rounded-full border border-dashed border-fallback px-[10px] py-[5px] text-[14px] font-semibold text-fallback">{t('fallback')}</div>
+              <div className="font-mono text-[12px] text-fg-3" lang="en">{i.fallbackReason ?? t('modelTimedOut')}</div>
             </div>
           )}
+          <LangTag view={L.view} reason={L.reason} pending={L.pending} onToggle={L.toggle} />
           {evidence.length > 0 && onToggle && (
             <button
               type="button"
@@ -196,7 +206,7 @@ export function InsightCard({ insight: i, size = 'feed', mode = 'casual', expand
               aria-expanded={expanded}
               className="ml-auto flex flex-none items-center gap-[6px] whitespace-nowrap rounded-full border border-line bg-transparent px-3 py-[5px] text-[14px] font-medium text-fg-2 hover:text-fg"
             >
-              Evidence · {evidence.length}
+              {t('evidence')} · {evidence.length}
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ transform: expanded ? 'rotate(180deg)' : 'none' }} aria-hidden><path d="m6 9 6 6 6-6" /></svg>
             </button>
           )}
@@ -204,7 +214,8 @@ export function InsightCard({ insight: i, size = 'feed', mode = 'casual', expand
       )}
 
       {done && (expanded || (hero && !onToggle && dense < 2)) && evidence.length > 0 && (
-        <ul className="flex flex-col border-t border-line">
+        <ul className="flex flex-col border-t border-line" lang="en">
+          {lang !== 'en' && <li className="pt-[9px] font-mono text-label uppercase tracking-[.12em] text-fg-3">{t('evidenceSource')}</li>}
           {evidence.map((e) => (
             <li key={e} className="flex items-center gap-[10px] border-b border-line py-[9px] font-mono text-evidence text-fg">
               <span className="h-[6px] w-[6px] flex-none rounded-full bg-fg-3" />

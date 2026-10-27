@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Insight, MatchEvent, MatchStats } from '@/lib/contracts';
+import { useLang, type Key } from '@/lib/i18n';
 import { InsightCard } from './InsightCard';
 import { useTeams } from '@/lib/teams';
 import { Crest, Stopwatch } from './icons';
@@ -13,7 +14,7 @@ type Props = {
   exiting: boolean;
 };
 
-const BAR_LABEL: Record<MatchEvent['kind'], string> = { goal: 'GOAL', bigchance: 'BIG CHANCE', yellow: 'CARD', red: 'RED CARD', sub: 'SUB' };
+const BAR_LABEL: Record<MatchEvent['kind'], Key> = { goal: 'barGoal', bigchance: 'barBigchance', yellow: 'barCard', red: 'barRed', sub: 'barSub' };
 
 const HERO_GAP = 12;     // px between the detail pill and the hero card
 const HERO_BOTTOM = 28;  // bottom-7
@@ -26,6 +27,7 @@ type Fit = 'full' | 'compact' | 'below';
 /** TV-director layer over the pitch while the backend has slowed to 1×. */
 export function KeyMoment({ event, insight, stats, mode, exiting }: Props) {
   const teams = useTeams();
+  const { t } = useLang();
   const team = event.team;
   const info = teams.info(team) ?? teams.home;
   const side = teams.side(team) ?? 'home';
@@ -75,27 +77,27 @@ export function KeyMoment({ event, insight, stats, mode, exiting }: Props) {
       <div className="pointer-events-none absolute inset-x-7 top-7 flex items-start justify-between gap-3">
         <div
           ref={pill}
-          title="Key moment · slowed to 1×"
-          aria-label="Key moment · slowed to 1×"
+          title={t('keyMoment')}
+          aria-label={t('keyMoment')}
           className={`flex items-center gap-2 whitespace-nowrap rounded-full bg-chalk py-2 pl-[10px] pr-[14px] text-[15px] font-semibold text-ink transition-opacity duration-[480ms] ${exiting ? 'opacity-0' : 'itg-in'}`}
         >
           <Stopwatch size={18} />
-          {compact ? '1×' : 'Key moment · slowed to 1×'}
+          {compact ? '1×' : t('keyMoment')}
         </div>
         <div
           ref={replay}
-          title="Replay"
-          aria-label="Replay"
+          title={t('replayTag')}
+          aria-label={t('replayTag')}
           className={`flex items-center gap-2 rounded-full bg-[rgba(12,14,13,.88)] px-[14px] py-2 font-mono text-[13px] tracking-[.12em] text-chalk transition-opacity duration-[480ms] ${exiting ? 'opacity-0' : 'itg-in'}`}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M11 19 2 12l9-7v14ZM22 19l-9-7 9-7v14Z" /></svg>
-          {!compact && 'REPLAY'}
+          {!compact && t('replayTag').toUpperCase()}
         </div>
       </div>
 
       <div className={`absolute left-1/2 ${fit === 'below' ? 'top-[76px]' : 'top-7'} flex -translate-x-1/2 flex-col items-center gap-[10px] transition-opacity duration-[480ms] ${exiting ? 'opacity-0' : 'itg-in'}`} ref={top}>
         <div ref={bar} className="flex h-16 overflow-hidden rounded-md shadow-[0_12px_32px_rgba(0,0,0,.45)]">
-          <div className="flex items-center whitespace-nowrap bg-chalk px-6 font-display text-tv-bar font-extrabold tracking-[.08em] text-ink">{BAR_LABEL[event.kind]}</div>
+          <div className="flex items-center whitespace-nowrap bg-chalk px-6 font-display text-tv-bar font-extrabold tracking-[.08em] text-ink">{t(BAR_LABEL[event.kind]).toUpperCase()}</div>
           <div
             className="flex items-center gap-3 whitespace-nowrap pl-[18px] pr-6 font-display text-[38px] font-extrabold tracking-[.02em]"
             style={{ background: info.color, color: info.fg }}

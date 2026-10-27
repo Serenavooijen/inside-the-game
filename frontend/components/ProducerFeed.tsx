@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Insight, ScoutingReport } from '@/lib/contracts';
 import type { Corner } from '@/lib/lineups';
 import { feedItems } from '@/lib/feed';
+import { useLang } from '@/lib/i18n';
 import { useTeams } from '@/lib/teams';
 import { CornerCard } from './Corners';
 import { InsightCard } from './InsightCard';
@@ -20,6 +21,8 @@ type Props = {
   focusId?: string | null;
   /** The Scout's report on the cup match (backend with TACTICS_ENABLED=1) */
   scouting?: ScoutingReport;
+  /** the checked translations of the scouting card in the feed: the same observations as the report */
+  scoutingTranslations?: Insight['translations'];
   tab: FeedTab;
   onTab: (tab: FeedTab) => void;
   /** Corners so far (made by code from the event data); they sit in the feed in both modes */
@@ -33,8 +36,9 @@ type Props = {
 export type FeedTab = 'feed' | 'scouting' | 'lineups';
 
 /** Smart lane: newest first, newest card open. Tactics cards only in Analyst mode. */
-export function ProducerFeed({ insights, mode, onMode, arrivingId, focusId, scouting, tab, onTab, corners = [], lineups, player }: Props) {
+export function ProducerFeed({ insights, mode, onMode, arrivingId, focusId, scouting, scoutingTranslations, tab, onTab, corners = [], lineups, player }: Props) {
   const teams = useTeams();
+  const { t } = useLang();
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const refs = useRef<Record<string, HTMLDivElement | null>>({});
   const list = feedItems(insights, corners, mode);
@@ -61,11 +65,11 @@ export function ProducerFeed({ insights, mode, onMode, arrivingId, focusId, scou
   );
 
   const shown: FeedTab = tab === 'scouting' && !scouting ? 'feed' : tab === 'lineups' && !lineups ? 'feed' : tab;
-  const tabs = ([['feed', 'Feed'], ['scouting', 'Scouting report (cup)'], ['lineups', 'Line-ups']] as const)
+  const tabs = ([['feed', t('tabFeed')], ['scouting', t('tabScouting')], ['lineups', t('tabLineups')]] as const)
     .filter(([k]) => k === 'feed' || (k === 'scouting' ? !!scouting : !!lineups));
-  const title = shown === 'scouting' ? ['Scouting', 'THE CUP MATCH, BEFORE KICK-OFF']
-    : shown === 'lineups' ? ['Line-ups', `${teams.label(teams.home.id)} vs ${teams.label(teams.away.id)}`.toUpperCase()]
-      : ['Producer feed', 'NEWEST FIRST'];
+  const title = shown === 'scouting' ? [t('scouting'), t('cupBeforeKickoff')]
+    : shown === 'lineups' ? [t('lineups'), `${teams.label(teams.home.id)} ${t('vs')} ${teams.label(teams.away.id)}`]
+      : [t('producerFeed'), t('newestFirst')];
 
   return (
     <section className="flex min-w-[400px] flex-1 basis-0 flex-col gap-4" aria-label="Producer feed">
@@ -74,11 +78,11 @@ export function ProducerFeed({ insights, mode, onMode, arrivingId, focusId, scou
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-col gap-[2px]">
             <h2 className="whitespace-nowrap font-display text-[28px] font-extrabold uppercase leading-none tracking-[.04em]">{title[0]}</h2>
-            <div className="whitespace-nowrap font-mono text-label tracking-[.12em] text-fg-3">{title[1]}</div>
+            <div className="whitespace-nowrap font-mono text-label uppercase tracking-[.12em] text-fg-3">{title[1]}</div>
           </div>
-          <div className="flex flex-none gap-[2px] rounded-md bg-surface-2 p-[3px]" role="group" aria-label="Explanation style">
-            {seg('casual', 'Casual fan')}
-            {seg('analyst', 'Analyst')}
+          <div className="flex flex-none gap-[2px] rounded-md bg-surface-2 p-[3px]" role="group" aria-label={t('explanationStyle')}>
+            {seg('casual', t('casual'))}
+            {seg('analyst', t('analyst'))}
           </div>
         </div>
       )}
@@ -101,11 +105,11 @@ export function ProducerFeed({ insights, mode, onMode, arrivingId, focusId, scou
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <div className="flex h-full flex-col gap-3 overflow-y-auto overflow-x-hidden pb-16 [scrollbar-width:none]">
           {player}
-          {!player && shown === 'scouting' && scouting && <ScoutingReportPanel report={scouting} />}
+          {!player && shown === 'scouting' && scouting && <ScoutingReportPanel report={scouting} translations={scoutingTranslations} />}
           {!player && shown === 'lineups' && lineups}
           {!player && shown === 'feed' && list.length === 0 && (
             <div className="rounded-lg border border-dashed border-line px-[22px] py-5 text-[15px] text-fg-3">
-              Insights appear here at key moments and every five minutes.
+              {t('emptyFeed')}
             </div>
           )}
           {!player && shown === 'feed' && list.map((x) => {

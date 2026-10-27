@@ -9,6 +9,7 @@ import '@fontsource/geist/600.css';
 import '@fontsource/jetbrains-mono/400.css';
 import '@fontsource/jetbrains-mono/500.css';
 import './globals.css';
+import { LangProvider } from '@/lib/i18n';
 
 export const metadata: Metadata = {
   title: 'Inside the Game',
@@ -24,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="min-h-screen bg-bg text-fg font-sans">{children}</body>
+      <body className="min-h-screen bg-bg text-fg font-sans"><LangProvider>{children}</LangProvider></body>
     </html>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useRef } from 'react';
 import type { Marker, Speed } from '@/lib/contracts';
+import { useLang } from '@/lib/i18n';
 import { useTeams } from '@/lib/teams';
 import { PauseIcon, PlayIcon, Stopwatch, Whistle } from './icons';
 
@@ -24,12 +25,13 @@ type Props = {
 
 export function Controls({ t, minute, duration, halftime, speed, playing, keyMoment, finished, markers, onToggle, onSpeed, onSeek }: Props) {
   const teams = useTeams();
+  const { t: tr } = useLang();
   const track = useRef<HTMLDivElement>(null);
   const at = (s: number) => Math.min(100, (s / duration) * 100);
   const progress = at(t);
   const ticks = [
-    { at: 0, label: "0'" }, { at: at(900), label: "15'" }, { at: at(1800), label: "30'" }, { at: at(halftime), label: 'HT' },
-    { at: at(halftime + 900), label: "60'" }, { at: at(halftime + 1800), label: "75'" }, { at: 100, label: 'FT' },
+    { at: 0, label: "0'" }, { at: at(900), label: "15'" }, { at: at(1800), label: "30'" }, { at: at(halftime), label: tr('ht') },
+    { at: at(halftime + 900), label: "60'" }, { at: at(halftime + 1800), label: "75'" }, { at: 100, label: tr('ft') },
   ];
 
   const seekFromPointer = (clientX: number) => {
@@ -55,14 +57,14 @@ export function Controls({ t, minute, duration, halftime, speed, playing, keyMom
       <button
         type="button"
         onClick={onToggle}
-        aria-label={playing ? 'Pause' : 'Play'}
+        aria-label={playing ? tr('pause') : tr('play')}
         className="flex h-14 w-14 flex-none items-center justify-center rounded-full bg-fg text-bg active:scale-[.96]"
       >
         {playing ? <PauseIcon /> : <PlayIcon />}
       </button>
 
       <div className="flex flex-none items-center gap-3">
-        <div className="flex items-center gap-1 rounded-md bg-surface-2 p-1" role="group" aria-label="Playback speed">
+        <div className="flex items-center gap-1 rounded-md bg-surface-2 p-1" role="group" aria-label={tr('speed')}>
           <div className="flex pl-[6px] pr-2 text-fg-3"><Stopwatch size={18} strokeWidth={1.75} /></div>
           {speedBtn(1)}
           {speedBtn(10)}
@@ -70,7 +72,7 @@ export function Controls({ t, minute, duration, halftime, speed, playing, keyMom
         {keyMoment && (
           <div className="flex items-center gap-2 text-[14px] font-semibold text-fg-2">
             <Whistle />
-            Auto-slowed for key moment
+            {tr('autoSlowed')}
           </div>
         )}
       </div>
@@ -82,7 +84,7 @@ export function Controls({ t, minute, duration, halftime, speed, playing, keyMom
             type="button"
             onClick={() => onSeek(Math.max(0, m.t - 8))}
             title={m.title}
-            aria-label={`${m.title}, jump to ${m.minute}'`}
+            aria-label={`${m.title}, ${tr('jumpTo', { m: m.minute })}`}
             className="absolute top-0 flex -translate-x-1/2 flex-col items-center gap-1 bg-transparent p-0 text-fg-2 hover:text-fg"
             style={{ left: `${at(m.t)}%` }}
           >
@@ -101,7 +103,7 @@ export function Controls({ t, minute, duration, halftime, speed, playing, keyMom
           ref={track}
           role="slider"
           tabIndex={0}
-          aria-label="Match time"
+          aria-label={tr('matchTime')}
           aria-valuemin={0}
           aria-valuemax={duration}
           aria-valuenow={t}
@@ -136,7 +138,7 @@ export function Controls({ t, minute, duration, halftime, speed, playing, keyMom
       </div>
 
       <div className="flex flex-none items-baseline gap-[6px] font-display font-extrabold">
-        <div className="text-[40px] leading-none">{finished ? 'FT' : `${minute}'`}</div>
+        <div className="text-[40px] leading-none">{finished ? tr('ft') : `${minute}'`}</div>
         {!finished && <div className="text-[20px] text-fg-3">/ 90&apos;</div>}
       </div>
     </footer>

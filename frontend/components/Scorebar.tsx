@@ -1,6 +1,10 @@
+'use client';
+
 import type { MatchEvent, MatchStats, Mode } from '@/lib/contracts';
+import { useLang } from '@/lib/i18n';
 import { useTeams } from '@/lib/teams';
 import { AwayCrest, HomeCrest, Logo, SmallBall, SubIcon } from './icons';
+import { LanguagePicker } from './Language';
 import { ThemeToggle } from './ThemeToggle';
 
 type Props = {
@@ -14,31 +18,35 @@ type Props = {
 
 export function Scorebar({ stats, clock, period, mode, events }: Props) {
   const teams = useTeams();
+  const { t } = useLang();
   const recent = events.filter((e) => e.kind !== 'bigchance').slice(-4);
   const [possH, possA] = stats.possession;
   const [xgH, xgA] = stats.xg;
   return (
     <header className="grid h-[104px] flex-none grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-8 border-b border-line bg-bg px-10">
-      <div className="flex min-w-0 items-center gap-5">
-        <a href="/" className="flex items-center gap-[10px]" aria-label="Inside the Game, back to the match list">
+      <div className="flex min-w-0 items-center gap-3">
+        <a href="/" className="flex flex-none items-center gap-[10px] whitespace-nowrap" aria-label="Inside the Game, back to the match list">
           <Logo />
           <span className="font-display text-[28px] font-extrabold uppercase leading-none tracking-[.04em]">Inside the Game</span>
         </a>
         {mode === 'live' ? (
-          <div className="flex items-center gap-2 rounded-full bg-surface-2 px-3 py-[6px] text-[14px] font-semibold">
+          <div className="flex flex-none items-center gap-2 whitespace-nowrap rounded-full bg-surface-2 px-3 py-[6px] text-[14px] font-semibold">
             <span className="itg-live inline-block h-[9px] w-[9px] rounded-full bg-corrected" />
-            Live
+            {t('live')}
           </div>
         ) : (
           <div className="flex flex-none items-center gap-[10px] whitespace-nowrap rounded-full border border-line-strong py-[6px] pl-[10px] pr-[14px] text-[14px] font-semibold">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
               <path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" />
             </svg>
-            Recorded replay
-            <span className="font-mono text-[12px] font-medium text-fg-3">No live AI</span>
+            {t('replay')}
+            <span className="font-mono text-[12px] font-medium text-fg-3">{t('noLiveAi')}</span>
           </div>
         )}
-        <ThemeToggle />
+        <div className="flex flex-none items-center gap-2">
+          <ThemeToggle />
+          <LanguagePicker />
+        </div>
       </div>
 
       <div className="flex flex-col items-center gap-[6px]">
@@ -82,7 +90,7 @@ export function Scorebar({ stats, clock, period, mode, events }: Props) {
         <div className="flex w-[200px] flex-col gap-[6px]">
           <div className="flex items-baseline justify-between">
             <span className="font-display text-[26px] font-bold leading-none">{possH}%</span>
-            <span className="font-mono text-label tracking-[.12em] text-fg-3">POSSESSION</span>
+            <span className="font-mono text-label uppercase tracking-[.12em] text-fg-3">{t('possession')}</span>
             <span className="font-display text-[26px] font-bold leading-none">{possA}%</span>
           </div>
           <div className="flex h-[6px] gap-[3px]">
