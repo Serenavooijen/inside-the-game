@@ -40,7 +40,7 @@ export function Scorebar({ stats, clock, period, mode, events, players }: Props)
       <div className="flex min-w-0 items-center gap-3">
         <a href="/" className="flex flex-none items-center gap-[10px] whitespace-nowrap" aria-label="Inside the Game, back to the match list">
           <Logo />
-          <span className="font-display text-[28px] font-extrabold uppercase leading-none tracking-[.04em]">Inside the Game</span>
+          <span className="font-display text-[28px] font-extrabold uppercase leading-none tracking-[.04em] max-[1439px]:hidden">Inside the Game</span>
         </a>
         {mode === 'live' ? (
           <div className="flex flex-none items-center gap-2 whitespace-nowrap rounded-full bg-surface-2 px-3 py-[6px] text-[14px] font-semibold">

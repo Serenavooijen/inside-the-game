@@ -124,7 +124,8 @@ export function ProducerFeed({ insights, mode, onMode, arrivingId, focusId, scou
           options={filters.map((f) => ({
             value: f,
             label: <>{f === 'club' ? `★ ${t('filterClub')}` : f === 'player' ? `◎ ${t('filterPlayer')}` : t('filterAll')}
-              <span className="opacity-60">{feedItems(insights, corners, mode, sel(f)).length}</span></>,
+              {/* contrast: fg-2 on surface-2 is 7.7:1 (60 % was 3.7:1); in the selected option 60 % on fg is 4.9:1 */}
+              <span className={f === active ? 'opacity-60' : 'text-fg-2'}>{feedItems(insights, corners, mode, sel(f)).length}</span></>,
           }))}
         />
       )}
