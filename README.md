@@ -6,7 +6,7 @@ Inside the Game sits next to the match and tells you *why* things happen, as the
 
 ![Inside the Game: How to beat Kingsbridge, checked against the match data](docs/hero.png)
 
-**[▶ Open the live demo](https://itg-frontend.kindriver-dc99ee94.westeurope.azurecontainerapps.io)** (no login) · **[Watch the 2-minute video](#)** _<YouTube/Vimeo link>_
+**[▶ Open the live demo](https://itg-frontend.kindriver-dc99ee94.westeurope.azurecontainerapps.io)** (no login) · **[Watch the 2-minute video](https://youtu.be/2lWViPzLlEo)**
 
 Built for the **Inside the Game Developer Hackathon (Microsoft × Premier League)** by Serena van Ooijen, Bryan van Ooijen and Edwin Poot.
 
