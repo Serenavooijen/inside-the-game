@@ -18,7 +18,7 @@ What is in it:
   sprints (>= 23.8 km/h, from the tracking speed), distance per 10 s and top speed.
 - positions every 5 s on the pitch, team-relative: the team always attacks left to right.
 - formations over time (tactical_states.json).
-- corners: the frame at the moment of delivery around the box, the first contact and the
+- corners (heights from pre_match_context.json): the frame at the moment of delivery around the box, the first contact and the
   outcome, stored as a corner from the left (u 0-68 along the goal line, v distance from it).
 - goals from corners in the cup match.
 """
@@ -36,6 +36,7 @@ OUT_FILE = os.path.join(HERE, "..", "data", "lineups", "kba-ngr.json")
 src = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..", "..", "output")
 script_path = sys.argv[2] if len(sys.argv) > 2 else os.path.join(HERE, "..", "..", "script", "match_script.json")
 cup_src = sys.argv[3] if len(sys.argv) > 3 else os.path.join(src, "cup")
+context_path = os.path.join(os.path.dirname(script_path), "pre_match_context.json")
 
 
 def load(path):
@@ -47,6 +48,9 @@ match = load(MATCH_FILE)
 events = load(os.path.join(src, "events.json"))
 script = load(script_path)
 states = load(os.path.join(src, "tactical_states.json"))
+# player heights (cm) from the pre-match profiles, for the corner cards
+heights = {pid: p["height_cm"] for pid, p in load(context_path).get("player_profiles", {}).items()
+           if p.get("height_cm")} if os.path.exists(context_path) else {}
 
 TEAM = {"KBA": match["home"]["id"], "NGR": match["away"]["id"]}
 HOME = match["home"]["id"]
@@ -297,6 +301,8 @@ for i, e in enumerate(events):
         item = {"n": by_id[pid]["n"], "u": round(u, 1), "v": round(v, 1), "id": pid}
         if by_id[pid]["gk"]:
             item["gk"] = True
+        if pid in heights:
+            item["height"] = heights[pid] / 100
         (att if by_id[pid]["team"] == team else dfn).append(item)
     nth[team] += 1
     if fc:

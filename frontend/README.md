@@ -103,7 +103,7 @@ Alles is door code gemeten, zonder AI. De frontend snijdt het bestand af op de h
 | Recoveries | ball_recovery + interception |
 | Sprints, afstand, topsnelheid | snelheid uit `tracking.csv` (sprint ≥ 23,8 km/u); afstand per 10 s |
 | Gemiddelde positie, heatmap | posities elke 5 s, teamrelatief: het team valt altijd van links naar rechts aan |
-| Corners | het frame bij de voorzet, de eerste balcontact en de uitkomst; opgeslagen als corner van links (u langs de doellijn, v vanaf de doellijn). Een corner die niet genomen is (59', wissel) telt niet mee. Lengtes staan niet in de data, dus die labels blijven weg. |
+| Corners | het frame bij de voorzet, de eerste balcontact en de uitkomst; opgeslagen als corner van links (u langs de doellijn, v vanaf de doellijn). Een corner die niet genomen is (59', wissel) telt niet mee. Lengtes uit `player_profiles` in `script/pre_match_context.json`; de kaart toont ze alleen in de zestien. |
 
 De namen, rollen en wissels komen uit de eventdata. Waar de ontwerp-prompt afwijkt (bijvoorbeeld Achterberg valt in op 59', Okafor-Hale en Visser gaan eraf op 76'), volgt de app de data.
 

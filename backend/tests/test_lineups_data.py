@@ -47,6 +47,13 @@ def test_corners_taken_with_first_contact_and_outcome():
     assert DATA["cup"] == {"cornerGoals": {"kba": 0, "ngr": 0}}
 
 
+def test_corner_heights_come_from_the_player_profiles():
+    profiles = json.loads((ROOT / "script" / "pre_match_context.json").read_text(encoding="utf-8"))["player_profiles"]
+    for c in DATA["corners"]:
+        for p in c["attackers"] + c["defenders"]:
+            assert p["height"] == profiles[p["id"]]["height_cm"] / 100
+
+
 def test_positions_are_team_relative():
     # goalkeepers stand near their own goal, on the left, in both halves
     for gk in ("KBA-01", "NGR-01"):
