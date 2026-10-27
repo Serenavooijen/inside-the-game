@@ -28,7 +28,7 @@ So we built a match companion that explains the game like a good analyst does, a
 
 **Before kick-off.** You open the scouting report. These two teams met in the cup not long ago. Kingsbridge defended in a high block; Northgate now and then went long from the back. Now you know what to look out for.
 
-**24' — Goal Northgate.** The match slows down. A card appears and the explanation writes itself, word by word: Duarte sets up Adeyemi-Clarke, who finishes from 10.9 metres. Next to it a green **Checked**. Click **Evidence** and you see the exact facts behind every sentence.
+**24' — Goal Northgate.** The match slows down. A card appears and the explanation writes itself, word by word: Duarte plays a long pass and Adeyemi-Clarke finishes from 10.9 metres. Next to it a green **Checked**. Click **Evidence** and you see the exact facts behind every sentence.
 
 ![The 24' goal card, Checked, with its evidence open](docs/screenshots/goal-24-evidence.png)
 
@@ -57,7 +57,7 @@ Switch to the Analyst view, and the tactics turn towards your club:
 
 The neutral card is one click away, and both versions rest on exactly the same facts.
 
-![How to beat Kingsbridge, from Northgate's side](docs/screenshots/how-to-beat-kingsbridge.png)
+![The same match from Kingsbridge's side: How to beat Northgate](docs/screenshots/how-to-beat-northgate.png)
 
 ### Your player
 
@@ -276,14 +276,14 @@ cd frontend; az acr build -r <registry> -t itg-frontend:<tag> --build-arg NEXT_P
 
 ```
 backend/app/            FastAPI app, simulator, Stats Engine, tactics, event bus, SSE, translation lane
-backend/app/agents/     workflow, fact-checker, translation check, prompts, Scout, Translator, playbook
+backend/app/agents/     workflow, fact-checker, translation check, prompts, Scout, Translator, tactics playbook (knowledge/)
 backend/tools/          create_foundry_agents.py, test-moment and scouting-report builders
 backend/tests/          unit and integration tests
 frontend/               Next.js app: pitch, overlays, feed, cards, line-ups, player analysis, profile menu
 frontend/scripts/       build_lineups.py: line-ups, player stats, heatmaps and corners
 generator/, script/     synthetic match generator and match scripts (incl. the cup match)
 fixtures/               test moments and scouting reports
-docs/                   architecture diagram, hand-over notes, tactics playbook
+docs/                   architecture diagram, hand-over notes
 ```
 
 </details>
