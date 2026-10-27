@@ -129,6 +129,10 @@ ITG_CORS_ORIGINS=<de URL('s) van de frontend, met komma's ertussen>
 TACTICS_ENABLED=1
 FOUNDRY_SCOUT_AGENT=itg-scout
 FOUNDRY_SCOUT_AGENT_VERSION=3
+# talen (README, sectie Languages)
+ITG_LANGUAGES=nl,es,fr
+FOUNDRY_TRANSLATOR_AGENT=itg-translator
+FOUNDRY_TRANSLATOR_AGENT_VERSION=3
 ```
 
 | Variabele | Nodig? | Betekenis |
@@ -141,6 +145,9 @@ FOUNDRY_SCOUT_AGENT_VERSION=3
 | `FOUNDRY_SCOUT_AGENT(_VERSION)` | bij `TACTICS_ENABLED=1` | `itg-scout`, versie **3**. Zonder versie blijft de rest werken, maar dan krijgen de tactische kaarten de fallback uit feiten en playbook. |
 | `AGENT_DEADLINE_S`, `SCOUT_DEADLINE_S`, `COMMENTARY_DEADLINE_S` | nee | deadlines van de momentkaarten (6 s), de Scout (15 s) en het commentaar (5 s) |
 | `ITG_SCOUTING_REPORT` | nee | het pad naar het scoutingrapport. De image bevat het al op de standaardplek. |
+| `ITG_LANGUAGES` | nee | standaard `nl,es,fr`; leeg zet de vertaling uit. Engels werkt precies zoals zonder. |
+| `FOUNDRY_TRANSLATOR_AGENT(_VERSION)` | voor de vertalingen | `itg-translator`, versie **3**. Zonder versie blijft alles Engels, met het label EN. |
+| `TRANSLATE_DEADLINE_S`, `SCOUTING_TRANSLATE_DEADLINE_S` | nee | deadline per vertaling (6 s) en voor het scoutingrapport bij het laden (30 s) |
 
 De versienummers staan ook in `backend/.env.foundry-agents`. Dat bestand is lokaal en staat niet in git.
 

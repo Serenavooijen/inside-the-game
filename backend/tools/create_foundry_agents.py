@@ -1,5 +1,5 @@
 """
-Creates (or updates) the Analyst, the Narrator and the Scout as prompt agents in Foundry Agent Service.
+Creates (or updates) the Analyst, the Narrator, the Scout and the Translator as prompt agents in Foundry Agent Service.
 
 They use exactly the same instructions and output schemas as the code agents
 (app/agents/prompts.py, app/agents/models.py), so a comparison is fair.
@@ -10,11 +10,12 @@ They use exactly the same instructions and output schemas as the code agents
     $env:MODEL_ANALYST = "gpt-4.1-mini"     # deployment names in your project
     $env:MODEL_NARRATOR = "gpt-4.1-mini"
     $env:MODEL_SCOUT = "gpt-4.1-mini"
+    $env:MODEL_TRANSLATOR = "gpt-4.1-mini"
     uv run python tools/create_foundry_agents.py
 
 Every run publishes a new version. The script prints the versions and writes them
 to backend/.env.foundry-agents so you can load them before running the workflow.
-`--only scout` (or `--only analyst,narrator`) publishes just those; the others keep their version.
+`--only translator` (or `--only analyst,narrator`) publishes just those; the others keep their version.
 """
 
 from __future__ import annotations
@@ -25,8 +26,10 @@ import warnings
 
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
 
-from app.agents.models import AnalystDraft, ScoutDraft  # noqa: E402
-from app.agents.prompts import ANALYST_INSTRUCTIONS, NARRATOR_INSTRUCTIONS, SCOUT_INSTRUCTIONS  # noqa: E402
+from app.agents.models import AnalystDraft, ScoutDraft, TranslationDraft  # noqa: E402
+from app.agents.prompts import (  # noqa: E402
+    ANALYST_INSTRUCTIONS, NARRATOR_INSTRUCTIONS, SCOUT_INSTRUCTIONS, TRANSLATOR_INSTRUCTIONS,
+)
 
 
 def main() -> int:
@@ -40,6 +43,8 @@ def main() -> int:
     narrator_name = os.getenv("FOUNDRY_NARRATOR_AGENT", "itg-narrator")
     scout_model = os.getenv("MODEL_SCOUT", analyst_model)
     scout_name = os.getenv("FOUNDRY_SCOUT_AGENT", "itg-scout")
+    translator_model = os.getenv("MODEL_TRANSLATOR", analyst_model)
+    translator_name = os.getenv("FOUNDRY_TRANSLATOR_AGENT", "itg-translator")
 
     from agent_framework import Agent
     from agent_framework.foundry import FoundryChatClient, to_prompt_agent
@@ -60,7 +65,7 @@ def main() -> int:
         return str(version.version)
 
     # --only scout: publish just these agents; the others keep the version in .env.foundry-agents.
-    only = set(sys.argv[sys.argv.index("--only") + 1].split(",")) if "--only" in sys.argv else {"analyst", "narrator", "scout"}
+    only = set(sys.argv[sys.argv.index("--only") + 1].split(",")) if "--only" in sys.argv else {"analyst", "narrator", "scout", "translator"}
     env_path = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".env.foundry-agents"))
     env = {}
     if os.path.exists(env_path):
@@ -80,6 +85,11 @@ def main() -> int:
             scout_name, scout_model, SCOUT_INSTRUCTIONS,
             "Inside the Game · Scout: opposition analyst; 2–3 tactical observations with consequence, citing fact ids.",
             ScoutDraft))
+    if "translator" in only:
+        env.update(FOUNDRY_TRANSLATOR_AGENT=translator_name, FOUNDRY_TRANSLATOR_AGENT_VERSION=publish(
+            translator_name, translator_model, TRANSLATOR_INSTRUCTIONS,
+            "Inside the Game · Translator: translates checked English cards (nl, es, fr); the code checks numbers and names again.",
+            TranslationDraft))
 
     with open(env_path, "w") as f:
         f.writelines(f"{k}={v}\n" for k, v in env.items())

@@ -1,7 +1,8 @@
 'use client';
 
 import type { TeamId } from '@/lib/contracts';
-import { ZONE_LABEL, ordinal, type Corner, type CornerPlayer, type LineupPlayer, type Lineups } from '@/lib/lineups';
+import { cornerOutcome, useLang, type Key } from '@/lib/i18n';
+import { type Corner, type CornerPlayer, type LineupPlayer, type Lineups } from '@/lib/lineups';
 import { useTeams } from '@/lib/teams';
 import { Chip, useKit } from './Lineups';
 
@@ -39,6 +40,7 @@ function OutcomeIcon({ kind }: { kind: Corner['outcome']['kind'] }) {
 export function CornerCard({ corner: c }: { corner: Corner }) {
   const teams = useTeams();
   const kit = useKit();
+  const { t, lang, ordinal } = useLang();
   const R = c.side === 'right';
   const U = (u: number) => (R ? 68 - u : u);
   const opp: TeamId = c.team === teams.home.id ? teams.away.id : teams.home.id;
@@ -48,9 +50,9 @@ export function CornerCard({ corner: c }: { corner: Corner }) {
   const fu = U(-1.3);
   const short = c.outcome.kind === 'short';
   const ball = `M${fu} -1.2 Q${(fu + tu) / 2} ${short ? (tv - 1.2) / 2 : -5} ${tu} ${tv}`;
-  const zones: { k: string; u: number; v: number; left?: boolean }[] = [
-    { k: 'Near post', u: 22, v: -1.6 }, { k: 'Far post', u: 46, v: -1.6 },
-    { k: 'Penalty spot', u: 35, v: 11, left: true }, { k: 'Edge of the box', u: 34, v: 22.6 }, { k: 'Short', u: 1.5, v: 15, left: true },
+  const zones: { k: Key; u: number; v: number; left?: boolean }[] = [
+    { k: 'nearPost', u: 22, v: -1.6 }, { k: 'farPost', u: 46, v: -1.6 },
+    { k: 'penaltySpot', u: 35, v: 11, left: true }, { k: 'edgeOfBox', u: 34, v: 22.6 }, { k: 'short', u: 1.5, v: 15, left: true },
   ];
   const chip = (p: CornerPlayer, team: TeamId) => {
     const k = kit({ team, gk: p.gk });
@@ -68,10 +70,10 @@ export function CornerCard({ corner: c }: { corner: Corner }) {
   const heights = [...c.attackers, ...c.defenders].filter((p) => p.height && p.v <= 16.5);
 
   return (
-    <article className="box-border flex w-full flex-col gap-3 rounded-lg border border-line bg-surface px-[18px] py-4" aria-label={`Corner ${teams.short(c.team)} ${c.minute}'`}>
+    <article className="box-border flex w-full flex-col gap-3 rounded-lg border border-line bg-surface px-[18px] py-4" aria-label={`${t('corner')} ${teams.short(c.team)} ${c.minute}'`}>
       <header className="flex items-center gap-[10px]">
         <FlagBox />
-        <div className="font-display text-card-type font-extrabold uppercase leading-none tracking-[.05em]">Corner</div>
+        <div className="font-display text-card-type font-extrabold uppercase leading-none tracking-[.05em]">{t('corner')}</div>
         <div className="flex items-center gap-[6px] font-mono text-[13px] text-fg-2">
           <span className="inline-block h-3 w-3 rounded-[3px]" style={{ background: teams.color(c.team) }} />
           {teams.short(c.team)}
@@ -80,9 +82,9 @@ export function CornerCard({ corner: c }: { corner: Corner }) {
       </header>
 
       <div className="flex flex-wrap items-center gap-2 text-[14px] text-fg-2">
-        <span>{ordinal(c.nth)} corner for {teams.short(c.team)}</span>
-        <span className="flex h-[22px] items-center rounded-sm border border-line-strong px-2 font-mono text-[11px] uppercase tracking-[.08em] text-fg">From the {c.side}</span>
-        <span className="ml-auto font-mono text-label uppercase tracking-[.12em] text-fg-3">Event data</span>
+        <span>{t('cornerFor', { nth: ordinal(c.nth), team: teams.short(c.team) })}</span>
+        <span className="flex h-[22px] items-center rounded-sm border border-line-strong px-2 font-mono text-[11px] uppercase tracking-[.08em] text-fg">{t(c.side === 'left' ? 'fromLeft' : 'fromRight')}</span>
+        <span className="ml-auto font-mono text-label uppercase tracking-[.12em] text-fg-3">{t('eventData')}</span>
       </div>
 
       <div className="relative w-full overflow-hidden rounded-md" style={{ aspectRatio: '74 / 27', background: 'var(--itg-grass-a)' }}>
@@ -107,7 +109,7 @@ export function CornerCard({ corner: c }: { corner: Corner }) {
             className="pointer-events-none absolute whitespace-nowrap font-mono text-[9px] uppercase tracking-[.1em] text-white/70"
             style={{ ...pos(U(z.u), z.v), transform: z.left ? (R ? 'translate(-100%,-50%)' : 'translate(0,-50%)') : 'translate(-50%,-50%)' }}
           >
-            {z.k}
+            {t(z.k)}
           </div>
         ))}
         {c.defenders.map((p) => chip(p, opp))}
@@ -122,7 +124,7 @@ export function CornerCard({ corner: c }: { corner: Corner }) {
 
       <div className="flex items-center gap-[10px]">
         <OutcomeIcon kind={c.outcome.kind} />
-        <div className="min-w-0 text-[15px] font-semibold [text-wrap:pretty]">{c.outcome.text}</div>
+        <div className="min-w-0 text-[15px] font-semibold [text-wrap:pretty]">{cornerOutcome(c.outcome.text, lang)}</div>
       </div>
     </article>
   );
@@ -131,8 +133,11 @@ export function CornerCard({ corner: c }: { corner: Corner }) {
 type SummaryProps = { corners: Corner[]; cup: Lineups['cup']; players: LineupPlayer[]; range: string };
 
 /** Corners per team so far (Analyst mode, on top of the Line-ups tab): sides, delivery zones, main target, goals. */
+const ZONE: Record<Corner['zone'], Key> = { near: 'nearPost', far: 'farPost', spot: 'penaltySpot', short: 'short' };
+
 export function CornerSummary({ corners, cup, players, range }: SummaryProps) {
   const teams = useTeams();
+  const { t: tr } = useLang();
   const column = (team: TeamId) => {
     const own = corners.filter((c) => c.team === team);
     const left = own.filter((c) => c.side === 'left').length;
@@ -149,11 +154,11 @@ export function CornerSummary({ corners, cup, players, range }: SummaryProps) {
   const cols = [column(teams.home.id), column(teams.away.id)];
 
   return (
-    <section className="box-border flex w-full flex-col gap-4 rounded-lg border border-line bg-surface px-[18px] pb-[18px] pt-4" aria-label="Corners">
+    <section className="box-border flex w-full flex-col gap-4 rounded-lg border border-line bg-surface px-[18px] pb-[18px] pt-4" aria-label={tr('corners')}>
       <header className="flex items-center gap-3">
         <FlagBox />
-        <div className="font-display text-card-type font-extrabold uppercase leading-none tracking-[.05em]">Corners</div>
-        <div className="ml-auto font-mono text-label uppercase tracking-[.08em] text-fg-3">{range} · Event data</div>
+        <div className="font-display text-card-type font-extrabold uppercase leading-none tracking-[.05em]">{tr('corners')}</div>
+        <div className="ml-auto font-mono text-label uppercase tracking-[.08em] text-fg-3">{range} · {tr('eventData')}</div>
       </header>
       <div className="grid grid-cols-2 gap-5">
         {cols.map((t) => (
@@ -165,7 +170,7 @@ export function CornerSummary({ corners, cup, players, range }: SummaryProps) {
             <div className="flex items-end gap-[10px]">
               <div className="font-display text-[48px] font-extrabold leading-[.85]">{t.total}</div>
               <div className="flex min-w-0 flex-1 flex-col gap-[5px] pb-[2px]">
-                <div className="flex justify-between gap-2 font-mono text-[12px] text-fg-2"><span>Left {t.left}</span><span>Right {t.right}</span></div>
+                <div className="flex justify-between gap-2 font-mono text-[12px] text-fg-2"><span>{tr('left')} {t.left}</span><span>{tr('right')} {t.right}</span></div>
                 <div className="flex h-[6px] gap-[3px]">
                   {t.total === 0 && <div className="flex-1 rounded-full bg-surface-2" />}
                   {t.left > 0 && <div className="rounded-full" style={{ flex: t.left, background: teams.color(t.team) }} />}
@@ -174,34 +179,34 @@ export function CornerSummary({ corners, cup, players, range }: SummaryProps) {
               </div>
             </div>
             <div className="flex flex-col gap-[6px]">
-              <div className="font-mono text-label uppercase tracking-[.12em] text-fg-3">Delivery zone</div>
+              <div className="font-mono text-label uppercase tracking-[.12em] text-fg-3">{tr('deliveryZone')}</div>
               {t.zones.map(({ z, v }) => (
-                <div key={z} className="grid grid-cols-[minmax(0,76px)_minmax(0,1fr)_16px] items-center gap-2 text-[13px]">
-                  <span className={`truncate ${v ? 'text-fg' : 'text-fg-3'}`}>{ZONE_LABEL[z]}</span>
+                <div key={z} className="grid grid-cols-[minmax(0,112px)_minmax(0,1fr)_16px] items-center gap-2 text-[13px]">
+                  <span className={`truncate ${v ? 'text-fg' : 'text-fg-3'}`}>{tr(ZONE[z])}</span>
                   <span className="h-2 overflow-hidden rounded-full bg-surface-2"><span className="block h-full rounded-full" style={{ width: `${(v / t.zmax) * 100}%`, background: teams.color(t.team) }} /></span>
                   <span className="text-right font-mono text-[12px]">{v}</span>
                 </div>
               ))}
             </div>
             <div className="flex flex-col gap-[6px]">
-              <div className="font-mono text-label uppercase tracking-[.12em] text-fg-3">Main target</div>
+              <div className="font-mono text-label uppercase tracking-[.12em] text-fg-3">{tr('mainTarget')}</div>
               {t.target ? (
                 <div className="flex min-w-0 items-center gap-2">
                   <Chip p={t.target} size={24} />
                   <div className="flex min-w-0 flex-col">
                     <span className="truncate text-[14px] font-semibold">{t.target.name}</span>
-                    <span className="font-mono text-label text-fg-3">{t.hits} of {t.aimed} first contacts</span>
+                    <span className="font-mono text-label text-fg-3">{tr('firstContacts', { h: t.hits, n: t.aimed })}</span>
                   </div>
                 </div>
               ) : (
-                <span className="text-[13px] text-fg-3">{t.total ? 'No first contact won yet' : 'No corners yet'}</span>
+                <span className="text-[13px] text-fg-3">{t.total ? tr('noFirstContact') : tr('noCorners')}</span>
               )}
             </div>
             <div className="flex flex-col gap-[6px]">
-              <div className="font-mono text-label uppercase tracking-[.12em] text-fg-3">Goals from corners</div>
+              <div className="font-mono text-label uppercase tracking-[.12em] text-fg-3">{tr('goalsFromCorners')}</div>
               <div className="grid grid-cols-2 gap-px overflow-hidden rounded-md border border-line bg-line">
-                <div className="flex flex-col bg-surface px-[10px] py-[6px]"><span className="font-display text-[24px] font-extrabold leading-none">{t.goals}</span><span className="font-mono text-label text-fg-3">This match</span></div>
-                <div className="flex flex-col bg-surface px-[10px] py-[6px]"><span className="font-display text-[24px] font-extrabold leading-none">{t.cupGoals ?? '–'}</span><span className="font-mono text-label text-fg-3">Cup match</span></div>
+                <div className="flex flex-col bg-surface px-[10px] py-[6px]"><span className="font-display text-[24px] font-extrabold leading-none">{t.goals}</span><span className="font-mono text-label text-fg-3">{tr('thisMatch')}</span></div>
+                <div className="flex flex-col bg-surface px-[10px] py-[6px]"><span className="font-display text-[24px] font-extrabold leading-none">{t.cupGoals ?? '–'}</span><span className="font-mono text-label text-fg-3">{tr('cupShort')}</span></div>
               </div>
             </div>
           </div>

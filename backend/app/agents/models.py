@@ -25,7 +25,7 @@ from app.contracts import (
 
 __all__ = [
     "AnalystDraft", "Claim", "CorrectionStats", "Fact", "FactSheet", "Insight",
-    "MatchSnapshot", "Moment", "RejectedClaim", "ScoutDraft", "ScoutObservationDraft", "TeamId",
+    "MatchSnapshot", "Moment", "RejectedClaim", "ScoutDraft", "ScoutObservationDraft", "TeamId", "TranslationDraft",
 ]
 
 
@@ -57,3 +57,9 @@ class ScoutDraft(BaseModel):
     """Structured output of the Scout agent."""
 
     observations: list[ScoutObservationDraft] = Field(description="2 or 3 observations, most important first")
+
+
+class TranslationDraft(BaseModel):
+    """Structured output of the Translator agent."""
+
+    texts: list[str] = Field(description="one translation per text, in the same order")

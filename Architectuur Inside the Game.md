@@ -65,6 +65,7 @@ De frontend krijgt alle overlays binnen via één SSE-verbinding (Server-Sent Ev
 | --- | --- |
 | Azure Container Apps | De backend, en de frontend als die niet op Static Web Apps Free komt. |
 | Microsoft Foundry | Modellen voor de demo: kleine modellen voor de meeste agents, een groter model voor de Analyst. Ook de tracing van de agents. |
+| Foundry Agent Service: `itg-translator` | De Translator (gpt-4.1-mini, gehost zoals `itg-analyst`, `itg-narrator` en `itg-scout`). Vertaalt alleen gecontroleerde Engelse kaarten naar NL, ES en FR. De code controleert elke vertaling opnieuw tegen de bron: dezelfde getallen en namen, een redelijke lengte. |
 | GitHub Models | Gratis modellen tijdens de ontwikkeling. Je wisselt met één env var tussen GitHub Models en Foundry. |
 | Application Insights | Traces van elke agent-run, via OpenTelemetry. |
 | Blob Storage | De draaiboek-bibliotheek en de opgenomen runs. |

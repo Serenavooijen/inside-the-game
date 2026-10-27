@@ -147,6 +147,7 @@ Tactician (code, app/tactics.py)  →  Scout (LLM)  →  Fact-checker (code)
 - De Narrator maakt daar één zin van, maximaal 25 woorden.
 - De zin gaat door `check_text` en `unknown_names` en daarna als SSE-bericht `commentary` naar de frontend.
 - Afgekeurd, te lang of later dan 5 s: dan blijft de minuut stil.
+- **Bekende beperking:** op Foundry en 10× snelheid blijven de meeste minuten stil. Gemeten tot 54': 10 regels zonder vertaling (`ITG_LANGUAGES=` leeg), 11 met `nl,es,fr`. De regels die er komen zijn op tijd, 0,2 wedstrijdminuut na hun minuut. De balk toont de laatste regel die er was, dus op 30' kan dat die van 23' zijn. De vertaling is niet de oorzaak; die komt na de Engelse regel en houdt hem niet op.
 
 | Variabele | Betekenis |
 | --- | --- |
@@ -167,6 +168,28 @@ uv run python tools/build_scouting_report.py --provider foundry-agents
 ```
 
 Gemeten met `itg-scout` v3 (gpt-4.1-mini) op 5 vensters, de rust en de wissels van 64': alle 7 analyses `checked`, 4,5–5,6 s per analyse.
+
+## Talen: de Translator
+
+Eerst controleren, dan vertalen, dan opnieuw controleren (`translator.py`, `app/translation_lane.py`):
+
+1. De bestaande workflow maakt de Engelse kaart, zoals altijd.
+2. Is de kaart klaar en `checked` of `corrected`? Dan vertaalt de **Translator** (`itg-translator`) alleen die tekst, per taal, in brokken van 3 teksten tegelijk. Hij wacht zolang er een moment geanalyseerd wordt.
+3. `check_translation` (`checker.py`) vergelijkt elke vertaalde tekst met de Engelse bron: dezelfde getallen (ook telwoorden van de doeltaal, 0,41 = 0.41), dezelfde namen en geen nieuwe, hoogstens ongeveer twee keer zo lang.
+4. Dezelfde kaart gaat nog een keer de deur uit, met `translations`. Afgekeurd of later dan 6 s: `rejected` met een reden, en de UI toont Engels met het label EN. Elke afgekeurde vertaling komt in het log, met bron en vertaling.
+
+| Variabele | Betekenis |
+| --- | --- |
+| `ITG_LANGUAGES` | standaard `nl,es,fr`; leeg zet het uit. Geen talen van rechts naar links. |
+| `MODEL_TRANSLATOR` | modelnaam bij `github` en `foundry`, standaard `gpt-4.1-mini` |
+| `FOUNDRY_TRANSLATOR_AGENT`, `FOUNDRY_TRANSLATOR_AGENT_VERSION` | de gehoste Translator, standaard `itg-translator`, nu versie 3. Zonder versie blijft alles Engels. |
+| `TRANSLATE_DEADLINE_S`, `SCOUTING_TRANSLATE_DEADLINE_S` | standaard `6` en `30` (het scoutingrapport, bij het laden) |
+
+```powershell
+uv run python tools/create_foundry_agents.py --only translator     # alleen itg-translator publiceren
+```
+
+Gemeten met `itg-translator` v3 op Foundry: de goal van 24' in alle drie talen `checked`, 1,5–2,5 s na de Engelse kaart, ongeveer 400–450 tokens per taal; een tactiekkaart ongeveer 2,2–2,6 s en 1.300–1.500 tokens per taal.
 
 ## Testen
 

@@ -49,7 +49,7 @@ Elk bericht is `event: <type>` + `data: <json>`. De vormen staan in `lib/contrac
 | `tick` | `Tick`: frame, stand, xG, balbezit, tempo, `generation`, `keyMomentId` | elke nieuwe wedstrijdseconde |
 | `overlay` | `Overlay` (`tag`, `pass`, `shot`, `sprint`) | snelle rijstrook, direct |
 | `event` | `MatchEvent` (goal, kaart, wissel) | op het moment zelf |
-| `insight` | `Insight` | meerdere keren per id: `analysing` → `streaming` (groeiende tekst) → `done` |
+| `insight` | `Insight` | meerdere keren per id: `analysing` → `streaming` (groeiende tekst) → `done`, daarna nog één keer met `translations` |
 | `state` | `MatchState` | na (her)verbinden en na een seek |
 
 ### Afspraken met de backend
@@ -59,6 +59,7 @@ Elk bericht is `event: <type>` + `data: <json>`. De vormen staan in `lib/contrac
 - **Key moment:** bij een event met `key: true` zet de backend het tempo op 1× en vult `keyMomentId` in de tick. Zodra het inzicht klaar is en ongeveer 7 seconden in beeld stond, maakt de backend `keyMomentId` weer `null` en zet het tempo terug. De frontend schuift de kaart dan naar de feed.
 - **Fallback:** komt er na 6 s geen modeltekst, dan stuurt de backend het inzicht met `status: "fallback"` en een `fallbackReason`.
 - **Reconnect:** `EventSource` maakt zelf opnieuw verbinding. Daarna roept de frontend `GET /state` aan.
+- **Talen:** na `done` stuurt de backend hetzelfde inzicht (en dezelfde commentaarregel) nog een keer, met het optionele veld `translations: { nl, es, fr }`. Een kaart toont een vertaling alleen als die `status: "checked"` heeft, met het label *translated · checked* (klik: het Engelse origineel). Anders toont hij het Engels met het label EN. Evidence blijft Engels. De vaste teksten staan in `lib/dictionary.ts`, de taalkeuze per kijker in `localStorage` (`itg-lang`).
 
 ## Data: de echte generator
 

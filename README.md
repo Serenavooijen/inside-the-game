@@ -48,6 +48,7 @@ The backend replays the reference match from `output/` and streams it over SSE i
 | `app/tactics.py` | Tactician: tactical facts per window, one detector per concept in `agents/knowledge/tactics_playbook.md` |
 | `app/scout_lane.py` | Runs the Scout every 5 minutes, at half time and after substitutions (`TACTICS_ENABLED=1`) |
 | `app/commentary_lane.py` | One checked line of commentary per minute, SSE `commentary` (`TACTICS_ENABLED=1`) |
+| `app/translation_lane.py` | Translates every finished, checked card afterwards (`ITG_LANGUAGES`); the live agents go first |
 
 ### Tactical analysis (`TACTICS_ENABLED=1`)
 
@@ -70,6 +71,26 @@ Container App settings for it (all of them in `docs/overdracht-agents.md`, secti
 | `FOUNDRY_SCOUT_AGENT` / `FOUNDRY_SCOUT_AGENT_VERSION` | `itg-scout` / `3` (publish with `tools/create_foundry_agents.py --only scout`) |
 | `SCOUT_DEADLINE_S`, `COMMENTARY_DEADLINE_S` | optional, default 15 and 5 |
 
+### Languages (`ITG_LANGUAGES`)
+
+Insights for fans in English, Dutch, Spanish and French. The rule stays: the AI writes, the code checks. The fact-check is built on English (number words, comparatives, the game state), so the agents keep writing and checking in English. Translation is a separate step:
+
+1. **English first, unchanged.** The workflow makes a checked English card (status `checked` or `corrected`) and streams it as before.
+2. **Translate.** When the card is done, the **Translator** (`itg-translator`, gpt-4.1-mini, hosted in Foundry like the other agents) translates only that checked text: literally and naturally, nothing added or left out, numbers as digits, names of players and clubs unchanged. A card goes in chunks of 3 texts, in parallel. A translation waits while a live moment is being analysed (at most 10 s), so it never takes model capacity from a goal.
+3. **Check again, in code** (`check_translation` in `app/agents/checker.py`). Every translated text is compared with its English source:
+   - the same numbers: 0,41 = 0.41; English number words count in the source, the target language's in the translation (`drie`, `tres`, `trois`);
+   - the same names: every player and club of the source is in it (a Dutch genitive `Brouwers` is fine), and no capitalised word comes in that is not in the source;
+   - a sane length: at most about twice the source.
+4. **Send.** The same insight (same id) goes out once more with `translations: { nl: {...}, es: {...}, fr: {...} }`, each with the translated fields and a status `checked` or `rejected` plus a reason. The same applies to the commentary line.
+
+A translation that fails the check, or comes later than `TRANSLATE_DEADLINE_S` (6 s, separate from the agents' deadlines), is `rejected`: the app shows the English text with a small **EN** label. An unchecked translation is never shown.
+
+- **What is translated:** the text of moment cards; observation, consequence and coach advice of tactics cards; the Scout's substitution cards (watch points and impact); the commentary line; the scouting report (translated at load, `SCOUTING_TRANSLATE_DEADLINE_S` 30 s). **Evidence** lines are the facts and stay English; the UI marks them as *Source data · EN*.
+- **Cache:** per text and per language, in memory, so the same text is never translated twice, also not after a seek. Translations of an old generation are dropped.
+- **Frontend:** a language picker next to the theme toggle (EN · NL · ES · FR), per viewer, in `localStorage`. A translated card has the label *translated · checked*; a click shows the English original. Fixed UI texts come from a small dictionary, `frontend/lib/dictionary.ts` (no library).
+- **Settings:** `ITG_LANGUAGES=nl,es,fr` (default; empty turns translation off). No right-to-left languages: they need layout work first. `MODEL_TRANSLATOR` for `github` and `foundry`; `FOUNDRY_TRANSLATOR_AGENT` / `FOUNDRY_TRANSLATOR_AGENT_VERSION` (`itg-translator` / `3`) for `foundry-agents`, published with `tools/create_foundry_agents.py --only translator`. `offline` gives a fixed "translation" (`[nl] …`) for tests.
+- **Cost, measured on Foundry:** about 1.5–2.5 s after the English card and about 400–450 tokens per language for a moment card, about 1,300–1,500 tokens per language for a tactics card. The English card itself does not change.
+
 ### Docker and Azure Container Apps
 
 `backend/Dockerfile` builds the backend image from the repo root. The reference match is generated from its seed during the build, so the image does not depend on `output/` in git.
@@ -88,4 +109,5 @@ Container App settings:
 | Health probe | `GET /health` |
 | `ITG_CORS_ORIGINS` | the frontend URL(s), comma-separated |
 | `MODEL_PROVIDER` and Foundry variables | see `docs/overdracht-agents.md`, section 5 |
+| `ITG_LANGUAGES`, `FOUNDRY_TRANSLATOR_AGENT` / `FOUNDRY_TRANSLATOR_AGENT_VERSION` | `nl,es,fr`, `itg-translator` / `3` (see *Languages*) |
 | Identity | system-assigned managed identity with *Cognitive Services User* on the Foundry resource |

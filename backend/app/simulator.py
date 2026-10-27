@@ -9,7 +9,9 @@ Behaves like the frontend's mock (frontend/lib/mock/engine.ts):
 - every moment the Statistician recognises goes to the smart lane; its insights are
   sent as `insight` (analysing -> streaming -> done), only for the current generation;
 - seek raises `generation`, cancels running agents, recomputes everything from
-  kick-off and sends `state`.
+  kick-off and sends `state`;
+- a finished, checked insight or commentary line is translated afterwards (translation lane) and sent
+  once more with `translations`, same id; the English version goes out first, unchanged.
 """
 import asyncio
 import time
@@ -27,6 +29,7 @@ from app.scout_lane import ScoutLane
 from app.smart_lane import SmartLane
 from app.sources import MatchItem, MatchSource
 from app.stats import StatsEngine
+from app.translation_lane import TranslationLane
 from app.wire import markers, minute_from_clock, to_frame, to_match_event
 
 STEP_S = 0.05               # real seconds between simulation steps
@@ -37,12 +40,13 @@ HOLD_AFTER_INSIGHT_S = 7.0  # keep the finished insight of a key moment on scree
 class Simulator:
     def __init__(self, bus: EventBus, sources: dict[str, Callable[[], MatchSource]],
                  smart_lane: SmartLane | None = None, scout_lane: ScoutLane | None = None,
-                 commentary_lane: CommentaryLane | None = None) -> None:
+                 commentary_lane: CommentaryLane | None = None, translation_lane: TranslationLane | None = None) -> None:
         self.bus = bus
         self.sources = sources
         self.smart_lane = smart_lane
         self.scout_lane = scout_lane            # tactical analysis, only with TACTICS_ENABLED
         self.commentary_lane = commentary_lane  # a line of commentary per minute, only with TACTICS_ENABLED
+        self.translation_lane = translation_lane  # ITG_LANGUAGES: checked translations after the English text
         self.source: MatchSource | None = None
         self.mode: Mode = "replay"
         self.t = 0.0
@@ -82,6 +86,9 @@ class Simulator:
             await self.scout_lane.load(source.info, source.roster, items)
         self._items = items
         self.source, self.mode = source, mode
+        if self.translation_lane:               # names of players and clubs stay as they are in every language
+            self.translation_lane.set_names({*source.info.team_names.values(),
+                                             *(p.surname for p in source.roster.values())})
         self._stats = StatsEngine(source.info.home, source.info.away)
         self._overlays = OverlayComposer(source.info, source.roster)
         self._frame_at = FrameIndex([i for i in self._items if isinstance(i, SourceFrame)])
@@ -90,6 +97,9 @@ class Simulator:
         self._all_events = [e for i in self._items if not isinstance(i, SourceFrame)
                             if (e := to_match_event(i, source.roster))]
         self._reset(0)
+        scouting = next((i for i in self.insights.values() if i.trigger == "scouting"), None)
+        if self.translation_lane and scouting and scouting.translations is None:
+            self.translation_lane.prepare(scouting, lambda tr: self._attach(scouting.id, tr))
         self.playing, self.speed = True, 10
         self._publish_state()
 
@@ -156,6 +166,8 @@ class Simulator:
             self.scout_lane.cancel_all()
         if self.commentary_lane:
             self.commentary_lane.cancel_all()
+        if self.translation_lane:
+            self.translation_lane.cancel_all()
         if self.key_moment_id:
             self.speed = self._speed_before_key
         self.key_moment_id = None
@@ -165,7 +177,8 @@ class Simulator:
         self._cursor, self._frame, self.events, self.insights, self._history = 0, None, [], {}, []
         self.t = t
         if self.scout_lane and (card := self.scout_lane.kickoff_card(self.generation)):
-            self.insights[card.id] = card       # the scouting report is the first card of the match (t = 0)
+            # the scouting report is the first card of the match (t = 0); translated at load, then from the cache
+            self.insights[card.id] = self._translated(card, submit=False)
         self._advance(t, publish=False)
         self._last_second = int(t)
 
@@ -214,8 +227,14 @@ class Simulator:
         return fs[bisect_left(ts, a):bisect_right(ts, b)]
 
     def _on_commentary(self, line: Commentary) -> None:
-        if line.generation == self.generation:
-            self.bus.publish("commentary", line.to_json())
+        if line.generation != self.generation:
+            return
+        self.bus.publish("commentary", line.to_json())
+        if self.translation_lane:
+            def translated(tr) -> None:
+                if line.generation == self.generation:
+                    self.bus.publish("commentary", line.model_copy(update={"translations": tr}).to_json())
+            self.translation_lane.submit(line, translated)
 
     def _publish_overlays(self, overlays: list[Overlay], publish: bool) -> None:
         if not publish:
@@ -237,10 +256,42 @@ class Simulator:
         """Called by the smart lane for every update of an insight."""
         if insight.generation != self.generation:
             return                                  # from before a seek: drop it
+        if insight.phase == "done":
+            insight = self._translated(insight)
         self.insights[insight.id] = insight
         self.bus.publish("insight", insight.to_json())
         if insight.phase == "done" and insight.moment_id and insight.moment_id == self.key_moment_id:
             self._key_deadline = min(self._key_deadline, self._clock + HOLD_AFTER_INSIGHT_S)
+
+    def _translated(self, insight: Insight, submit: bool = True) -> Insight:
+        """The insight with its translations when the cache has them all; else as it is, and the translation
+        lane sends it again with translations later, unless the card has changed or the generation is old."""
+        lane = self.translation_lane
+        if not lane or insight.translations is not None:
+            return insight
+        if (cached := lane.cached(insight)) is not None:
+            return insight.model_copy(update={"translations": cached})
+        if not submit:
+            return insight
+
+        def translated(tr) -> None:
+            if insight.generation != self.generation or self.insights.get(insight.id) is not insight:
+                return                              # old generation, or a newer version of the card is out
+            update = insight.model_copy(update={"translations": tr})
+            self.insights[update.id] = update
+            self.bus.publish("insight", update.to_json())
+
+        lane.submit(insight, translated)
+        return insight
+
+    def _attach(self, insight_id: str, translations) -> None:
+        """The translations of a card made before kick-off, for its version in the current generation."""
+        card = self.insights.get(insight_id)
+        if card is None or card.translations is not None:
+            return
+        update = card.model_copy(update={"translations": self.translation_lane.cached(card) or translations})
+        self.insights[insight_id] = update
+        self.bus.publish("insight", update.to_json())
 
     def _start_key_moment(self, event_id: str) -> None:
         if self.key_moment_id:

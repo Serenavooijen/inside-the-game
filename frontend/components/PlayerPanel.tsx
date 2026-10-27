@@ -5,6 +5,7 @@ import {
   average, endAt, heatCells, minuteAt, minutesBetween, samples, statsAt, statusAt,
   type LineupPlayer, type Lineups, type PlayerStats,
 } from '@/lib/lineups';
+import { useLang, type Key, type T } from '@/lib/i18n';
 import { useTeams } from '@/lib/teams';
 import { SmallBall } from './icons';
 import { ArrowDown, AttackRow, CardIcon, Chip, HeatPitch, SectionLabel } from './Lineups';
@@ -40,17 +41,17 @@ function Tile({ k, v, sub, muted }: { k: string; v: string; sub?: string; muted?
   );
 }
 
-function tiles(s: PlayerStats | null) {
-  if (!s) return ['Touches', 'Passes', 'Shots', 'Sprints', 'Distance', 'Top speed', 'Duels won', 'Recoveries'].map((k) => ({ k, v: '–', sub: '' }));
+function tiles(s: PlayerStats | null, t: T) {
+  if (!s) return (['tileTouches', 'passes', 'shots', 'sprints', 'distance', 'tileTopSpeed', 'tileDuelsWon', 'tileRecoveries'] as const).map((k) => ({ k: t(k), v: '–', sub: '' }));
   return [
-    { k: 'Touches', v: String(s.touches), sub: '' },
-    { k: 'Passes', v: `${s.passes}/${s.attempts}`, sub: s.attempts ? `${Math.round((s.passes / s.attempts) * 100)}%` : '' },
-    { k: 'Shots', v: String(s.shots), sub: `xG ${s.xg.toFixed(2)}` },
-    { k: 'Sprints', v: String(s.sprints), sub: '' },
-    { k: 'Distance', v: s.km.toFixed(1), sub: 'km' },
-    { k: 'Top speed', v: s.top.toFixed(1), sub: 'km/h' },
-    { k: 'Duels won', v: `${s.duelsWon}/${s.duels}`, sub: '' },
-    { k: 'Recoveries', v: String(s.recoveries), sub: '' },
+    { k: t('tileTouches'), v: String(s.touches), sub: '' },
+    { k: t('passes'), v: `${s.passes}/${s.attempts}`, sub: s.attempts ? `${Math.round((s.passes / s.attempts) * 100)}%` : '' },
+    { k: t('shots'), v: String(s.shots), sub: `xG ${s.xg.toFixed(2)}` },
+    { k: t('sprints'), v: String(s.sprints), sub: '' },
+    { k: t('distance'), v: s.km.toFixed(1), sub: 'km' },
+    { k: t('tileTopSpeed'), v: s.top.toFixed(1), sub: 'km/h' },
+    { k: t('tileDuelsWon'), v: `${s.duelsWon}/${s.duels}`, sub: '' },
+    { k: t('tileRecoveries'), v: String(s.recoveries), sub: '' },
   ];
 }
 
@@ -59,6 +60,7 @@ const range = (data: Lineups, a: number, b: number) => `${minuteAt(a, data.halft
 
 /** Two players of one substitution side by side: heatmaps and five numbers. */
 function Comparison({ data, before, after, t, title }: { data: Lineups; before: LineupPlayer; after: LineupPlayer; t: number; title: string }) {
+  const { t: tr } = useLang();
   const side = (p: LineupPlayer) => {
     const a = p.on![0], b = endAt(p, t);
     const pts = samples(data, p, a, b);
@@ -66,11 +68,11 @@ function Comparison({ data, before, after, t, title }: { data: Lineups; before: 
   };
   const L = side(before), R = side(after);
   const rows: { k: string; a: string; as?: string; b: string; bs?: string }[] = [
-    { k: 'Minutes', a: String(minutesBetween(L.a, L.b, data.halftime)), b: String(minutesBetween(R.a, R.b, data.halftime)) },
-    { k: 'Touches', a: String(L.s?.touches ?? 0), b: String(R.s?.touches ?? 0) },
-    { k: 'Shots', a: String(L.s?.shots ?? 0), as: `xG ${(L.s?.xg ?? 0).toFixed(2)}`, b: String(R.s?.shots ?? 0), bs: `xG ${(R.s?.xg ?? 0).toFixed(2)}` },
-    { k: 'Goals', a: String(goals(before, t)), b: String(goals(after, t)) },
-    { k: 'Sprints', a: String(L.s?.sprints ?? 0), b: String(R.s?.sprints ?? 0) },
+    { k: tr('minutes'), a: String(minutesBetween(L.a, L.b, data.halftime)), b: String(minutesBetween(R.a, R.b, data.halftime)) },
+    { k: tr('touches'), a: String(L.s?.touches ?? 0), b: String(R.s?.touches ?? 0) },
+    { k: tr('shots'), a: String(L.s?.shots ?? 0), as: `xG ${(L.s?.xg ?? 0).toFixed(2)}`, b: String(R.s?.shots ?? 0), bs: `xG ${(R.s?.xg ?? 0).toFixed(2)}` },
+    { k: tr('goals'), a: String(goals(before, t)), b: String(goals(after, t)) },
+    { k: tr('sprints'), a: String(L.s?.sprints ?? 0), b: String(R.s?.sprints ?? 0) },
   ];
   return (
     <div className="flex flex-col gap-3 border-t border-line pt-4">
@@ -100,11 +102,12 @@ function Comparison({ data, before, after, t, title }: { data: Lineups; before: 
   );
 }
 
-const LABEL = { goal: 'Goal', assist: 'Assist', yellow: 'Yellow', red: 'Red', off: 'Off', on: 'On' } as const;
+const LABEL: Record<'goal' | 'assist' | 'yellow' | 'red' | 'off' | 'on', Key> = { goal: 'mGoal', assist: 'mAssist', yellow: 'mYellow', red: 'mRed', off: 'mOff', on: 'mOn' };
 
 /** Player analysis in the right column: header, live numbers, heatmap, moments, substitution. */
 export function PlayerPanel({ data, player: p, t, shown, onShow, onBack, onSeek }: Props) {
   const teams = useTeams();
+  const { t: tr, role } = useLang();
   const [span, setSpan] = useState<'all' | 'last'>('all');
   useEffect(() => setSpan('all'), [p.id]);
   const st = statusAt(p, t);
@@ -141,7 +144,7 @@ export function PlayerPanel({ data, player: p, t, shown, onShow, onBack, onSeek 
           className="flex h-9 items-center gap-[6px] rounded-full border border-line bg-transparent pl-[10px] pr-[14px] text-[14px] font-semibold text-fg hover:bg-surface-2"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
-          Back
+          {tr('back')}
         </button>
         <button
           type="button"
@@ -151,7 +154,7 @@ export function PlayerPanel({ data, player: p, t, shown, onShow, onBack, onSeek 
           className={`flex h-9 items-center gap-2 whitespace-nowrap rounded-full border pl-3 pr-[14px] text-[14px] font-semibold ${canShow && shown ? 'border-fg bg-fg text-bg' : 'border-line-strong bg-transparent text-fg'} ${canShow ? 'cursor-pointer' : 'cursor-not-allowed opacity-[.45]'}`}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="3" /></svg>
-          {!canShow ? 'Not on the pitch' : shown ? 'Shown on pitch' : 'Show on pitch'}
+          {!canShow ? tr('notOnPitch') : shown ? tr('shownOnPitch') : tr('showOnPitch')}
         </button>
       </div>
 
@@ -161,7 +164,7 @@ export function PlayerPanel({ data, player: p, t, shown, onShow, onBack, onSeek 
           <h2 className="truncate font-display text-[34px] font-extrabold uppercase leading-[.9]">{p.name}</h2>
           <div className="flex flex-wrap items-center gap-2 text-[14px] text-fg-2">
             <span className="inline-block h-[10px] w-[10px] rounded-[3px]" style={{ background: teams.color(p.team) }} />
-            {teams.label(p.team)} · {p.roleName}
+            {teams.label(p.team)} · {role(p.roleName)}
           </div>
         </div>
       </div>
@@ -169,65 +172,65 @@ export function PlayerPanel({ data, player: p, t, shown, onShow, onBack, onSeek 
       <div className="flex flex-wrap items-center gap-2">
         {st === 'on' && (
           <span className="flex h-[30px] items-center gap-2 rounded-full bg-surface-2 px-3 text-[14px] font-semibold">
-            <span className="h-2 w-2 rounded-full bg-corrected" />On the pitch
+            <span className="h-2 w-2 rounded-full bg-corrected" />{tr('onThePitch')}
           </span>
         )}
         {st === 'off' && (
           <span className="flex h-[30px] items-center gap-[6px] rounded-full bg-surface-2 pl-[10px] pr-3 text-[14px] font-semibold">
-            <ArrowDown size={14} />Subbed off {p.off!.minute}&apos;
+            <ArrowDown size={14} />{tr('subbedOff', { m: p.off!.minute })}
           </span>
         )}
         {st === 'red' && (
           <span className="flex h-[30px] items-center gap-2 rounded-full bg-corrected-soft pl-[10px] pr-3 text-[14px] font-semibold text-corrected">
-            <CardIcon red w={10} h={14} />Sent off {p.off!.minute}&apos;
+            <CardIcon red w={10} h={14} />{tr('sentOff', { m: p.off!.minute })}
           </span>
         )}
         {bench && (
-          <span className="flex h-[30px] items-center rounded-full bg-surface-2 px-3 text-[14px] font-semibold text-fg-2">On the bench · not played yet</span>
+          <span className="flex h-[30px] items-center rounded-full bg-surface-2 px-3 text-[14px] font-semibold text-fg-2">{tr('benchNotPlayed')}</span>
         )}
         {(st === 'off' || st === 'red') && (
-          <span className="flex h-[30px] items-center rounded-full border border-line-strong px-3 font-mono text-[12px] uppercase tracking-[.12em]">Final</span>
+          <span className="flex h-[30px] items-center rounded-full border border-line-strong px-3 font-mono text-[12px] uppercase tracking-[.12em]">{tr('final')}</span>
         )}
         <span className="ml-auto flex items-baseline gap-[6px]">
           <span className="font-display text-[30px] font-extrabold leading-none">{bench ? 0 : minutesBetween(start, end, data.halftime)}&apos;</span>
-          <span className="font-mono text-label uppercase tracking-[.08em] text-fg-3">played</span>
+          <span className="font-mono text-label uppercase tracking-[.08em] text-fg-3">{tr('played')}</span>
         </span>
       </div>
 
       <div className="flex flex-col gap-[10px]">
         <div className="flex items-center justify-between gap-3">
-          <SectionLabel>Key numbers</SectionLabel>
+          <SectionLabel>{tr('keyNumbers')}</SectionLabel>
           <SectionLabel className="text-right">
-            {st === 'on' ? 'Live · updates every 10 s' : bench ? 'Starts when he comes on' : `Frozen at ${p.off!.minute}'`}
+            {st === 'on' ? tr('liveEvery10') : bench ? tr('startsWhenOn') : tr('frozenAt', { m: p.off!.minute })}
           </SectionLabel>
         </div>
         <div className="grid grid-cols-4 gap-2">
-          {tiles(stats).map((x) => <Tile key={x.k} k={x.k} v={x.v} sub={x.sub} muted={bench} />)}
+          {tiles(stats, tr).map((x) => <Tile key={x.k} k={x.k} v={x.v} sub={x.sub} muted={bench} />)}
         </div>
       </div>
 
       <div className="flex flex-col gap-[10px]">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <SectionLabel>Heatmap · {bench ? 'no data' : range(data, from, end)}</SectionLabel>
+          <SectionLabel>{tr('heatmap')} · {bench ? tr('noData') : range(data, from, end)}</SectionLabel>
           {!bench && (
-            <div className="flex gap-[2px] rounded-md bg-surface-2 p-[3px]" role="group" aria-label="Heatmap period">
-              {toggle('all', 'Whole match')}
-              {toggle('last', 'Last 15 min')}
+            <div className="flex gap-[2px] rounded-md bg-surface-2 p-[3px]" role="group" aria-label={tr('heatmap')}>
+              {toggle('all', tr('wholeMatch'))}
+              {toggle('last', tr('last15'))}
             </div>
           )}
         </div>
-        <HeatPitch team={p.team} cells={heatCells(pts)} avg={average(pts)} empty={bench ? 'No data yet. The heatmap starts when he comes on.' : undefined} />
+        <HeatPitch team={p.team} cells={heatCells(pts)} avg={average(pts)} empty={bench ? tr('heatmapEmpty') : undefined} />
         {!bench && (
           <>
-            <AttackRow note="Both halves shown left to right" />
+            <AttackRow note={tr('bothHalves')} />
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px] text-fg-2">
-              <span className="flex items-center gap-2"><span className="h-[10px] w-[10px] rounded-full bg-fg" />Average position</span>
+              <span className="flex items-center gap-2"><span className="h-[10px] w-[10px] rounded-full bg-fg" />{tr('averagePosition')}</span>
               <span className="flex items-center gap-[6px]">
-                Less
+                {tr('less')}
                 <span className="flex gap-[2px]">
                   {[0.14, 0.3, 0.5, 0.7, 0.9].map((o) => <span key={o} className="h-[10px] w-[14px] rounded-[2px]" style={{ background: teams.color(p.team), opacity: o }} />)}
                 </span>
-                More
+                {tr('more')}
               </span>
             </div>
           </>
@@ -235,7 +238,7 @@ export function PlayerPanel({ data, player: p, t, shown, onShow, onBack, onSeek 
       </div>
 
       <div className="flex flex-col gap-[10px]">
-        <SectionLabel>Moments</SectionLabel>
+        <SectionLabel>{tr('moments')}</SectionLabel>
         <div className="relative h-16">
           <div className="absolute left-0 right-0 top-[30px] h-[6px] rounded-full bg-surface-2">
             {!bench && <div className="absolute bottom-0 top-0 rounded-full bg-fg-3" style={{ left: `${at(start)}%`, width: `${at(end) - at(start)}%` }} />}
@@ -246,7 +249,7 @@ export function PlayerPanel({ data, player: p, t, shown, onShow, onBack, onSeek 
               key={`${k}-${s}`}
               type="button"
               onClick={() => onSeek(Math.max(0, s - 8))}
-              title={`Jump to ${minute}'`}
+              title={tr('jumpTo', { m: minute })}
               className={`absolute top-0 flex flex-col gap-[10px] bg-transparent p-0 text-fg ${at(s) > 88 ? '-translate-x-full items-end' : at(s) < 8 ? 'items-start' : '-translate-x-1/2 items-center'}`}
               style={{ left: `${at(s)}%` }}
             >
@@ -257,19 +260,19 @@ export function PlayerPanel({ data, player: p, t, shown, onShow, onBack, onSeek 
                 {k === 'red' && <CardIcon red w={11} h={15} />}
                 {k === 'off' && <ArrowDown size={16} />}
               </span>
-              <span className="whitespace-nowrap pt-[6px] font-mono text-[12px] text-fg-2">{minute}&apos; {LABEL[k]}</span>
+              <span className="whitespace-nowrap pt-[6px] font-mono text-[12px] text-fg-2">{minute}&apos; {tr(LABEL[k])}</span>
             </button>
           ))}
-          {bench && <div className="absolute left-0 top-11 text-[13px] text-fg-3">No minutes yet</div>}
+          {bench && <div className="absolute left-0 top-11 text-[13px] text-fg-3">{tr('noMinutes')}</div>}
         </div>
       </div>
 
-      {by && <Comparison data={data} before={p} after={by} t={t} title={`Replaced by · ${p.off!.minute}'`} />}
-      {replaced && <Comparison data={data} before={replaced} after={p} t={t} title={`Replaced · ${replaced.off!.minute}'`} />}
+      {by && <Comparison data={data} before={p} after={by} t={t} title={tr('replacedByAt', { m: p.off!.minute })} />}
+      {replaced && <Comparison data={data} before={replaced} after={p} t={t} title={tr('replacedAt', { m: replaced.off!.minute })} />}
       {st === 'red' && (
         <div className="flex flex-col gap-[6px] border-t border-line pt-4">
-          <SectionLabel>Substitution</SectionLabel>
-          <div className="text-[15px] text-fg-2">No replacement. {teams.label(p.team)} played with 10 men from {p.off!.minute}&apos;.</div>
+          <SectionLabel>{tr('substitution')}</SectionLabel>
+          <div className="text-[15px] text-fg-2">{tr('noReplacement', { team: teams.label(p.team), m: p.off!.minute })}</div>
         </div>
       )}
     </div>

@@ -132,7 +132,11 @@ def unknown_names(text: str, sheet: Sheet, claims: list[Claim], allowed: frozens
     the headline, the team names or the accepted claims. `allowed`: extra lower-case words that
     are no names, e.g. the playbook's concept names for the Scout."""
     source = " ".join([_headline(sheet), *sheet.team_names.values(), *(c.text for c in claims)])
-    known = {w.lower() for w in re.findall(r"[\w\-]+", source)} | set(allowed)
+    return _names_not_in(text, {w.lower() for w in re.findall(r"[\w\-]+", source)} | set(allowed))
+
+
+def _names_not_in(text: str, known: set[str]) -> list[str]:
+    """Capitalised words in `text` that look like names and are not in `known` (lower case)."""
     out = []
     for m in NAME.finditer(text):
         raw = m.group()
@@ -240,3 +244,127 @@ def check_text(text: str, sheet: Sheet, fact_ids: list[str]) -> list[float]:
     """Numbers in a free text (the Narrator's) that are not backed by these facts."""
     allowed = _allowed_numbers(sheet, fact_ids)
     return [n for n in numbers_in(text) if not _matches(n, allowed)]
+
+
+# ---------------------------------------------------------------- translation
+
+MAX_LENGTH_RATIO = 2.0      # a translation may be about twice as long as its English source, not more
+_LENGTH_SLACK = 20          # characters, so a two-word source can become a three-word translation
+
+
+# Number words of the target languages, 2 and up: "one" is also an article there (een, un, uno), so 1 only
+# counts as a digit. English words do not count in a translation ("ten opzichte van" is no 10).
+_TARGET_WORDS: dict[str, dict[str, int]] = {
+    "nl": dict(zip("twee drie vier vijf zes zeven acht negen tien elf twaalf dertien veertien vijftien zestien "
+                   "zeventien achttien negentien twintig dertig veertig vijftig".split(),
+                   [*range(2, 21), 30, 40, 50])),
+    "es": dict(zip("dos tres cuatro cinco seis siete ocho nueve diez once doce trece catorce quince dieciséis "
+                   "diecisiete dieciocho diecinueve veinte treinta cuarenta cincuenta".split(),
+                   [*range(2, 21), 30, 40, 50])),
+    "fr": dict(zip("deux trois quatre cinq six sept huit neuf dix onze douze treize quatorze quinze seize "
+                   "dix-sept dix-huit dix-neuf vingt trente quarante cinquante".split(),
+                   [*range(2, 21), 30, 40, 50])),
+}
+_ORDINALS = dict(zip("first second third fourth fifth sixth seventh eighth ninth tenth".split(), range(1, 11)))
+# English words that carry a number another language may write out: "nil-nil" is 0-0, "neither side" is
+# "ninguno de los dos". The number may come back, it need not.
+_IMPLIED = [(re.compile(r"\b(?:nil|goalless|scoreless)\b", re.I), 0.0),
+            (re.compile(r"\b(?:both|neither|either)\b", re.I), 2.0)]
+
+
+def _digits(text: str) -> set[float]:
+    return {round(float(m.replace(",", ".")), 2) for m in NUM.findall(text)}
+
+
+_ZERO = {"nl": "nul", "es": "cero", "fr": "zéro"}
+_VEINTI = dict(zip("veintiuno veintidós veintitrés veinticuatro veinticinco veintiséis veintisiete veintiocho "
+                   "veintinueve".split(), range(21, 30)))
+# "les deux côtés", "los dos equipos": both. Such a 2 may stand for a 2 of the source, but is never a new number.
+_BOTH = re.compile(r"\b(?:les|des|aux|los|las) (?:deux|dos)\b", re.I)
+
+
+def _translated_numbers(text: str, lang: str | None) -> tuple[set[float], set[float]]:
+    """(numbers, numbers that only an idiom for "both" gives) in a translation."""
+    words = {**_TARGET_WORDS.get(lang or "", {}), **({_ZERO[lang]: 0} if lang in _ZERO else {}),
+             **(_VEINTI if lang == "es" else {})}
+    both = {2.0} if lang in ("fr", "es") and _BOTH.search(text) else set()
+    found = set()
+    for token in re.findall(r"[^\W\d_]+(?:-[^\W\d_]+)*", _BOTH.sub(" ", text.lower()) if both else text.lower()):
+        parts = token.split("-")
+        if token in words:                      # also "dix-sept" as a whole
+            found.add(float(words[token]))
+        elif len(parts) == 2 and words.get(parts[0], 0) >= 20 and 0 < words.get(parts[1], 0) < 10:   # "vingt-quatre"
+            found.add(float(words[parts[0]] + words[parts[1]]))
+        elif parts[0] in words and "-" in token:   # "drie-actiespel"
+            found.add(float(words[parts[0]]))
+    return _digits(text) | found, both
+
+
+_NAME_IN_TRANSLATION = re.compile(r"\b[A-Z][\w\-]*(?:[’'][\w]+)?")
+_ELISION = re.compile(r"^(?:[A-Za-z]|Qu)[’']", re.I)       # L'adversaire, D'abord, Qu'il
+_SENTENCE_START = ".!?¿¡:«\"“"
+
+
+def _new_names(text: str, known: set[str]) -> list[str]:
+    """Capitalised words in a translation that are in neither the English source nor the names of the match.
+    Aware of the target languages: elisions (L'équipe), contractions (zo'n) and the Dutch genitive (Brouwers)."""
+    out = []
+    for m in _NAME_IN_TRANSLATION.finditer(text):
+        raw = m.group()
+        if _ELISION.match(raw):
+            continue
+        word = re.sub(r"[’'][\w]+$", "", raw)
+        before = text[: m.start()].rstrip()
+        # The first word of a sentence is capitalised anyway; it only looks like a name with a possessive 's
+        # or as a double-barrelled name ("Zo'n", "L'équipe" and "Dix-sept" are no names; Adeyemi-Clarke is).
+        double = "-" in word and all(part[:1].isupper() for part in word.split("-"))
+        if (not before or before[-1] in _SENTENCE_START) and not double and not re.search(r"[’']s$", raw):
+            continue
+        low = word.lower()
+        if low in known or low in _COMMON or (low.endswith("s") and low[:-1] in known):   # Dutch genitive: Brouwers
+            continue
+        if all(part in known for part in low.split("-")):
+            continue
+        out.append(word)
+    return list(dict.fromkeys(out))
+
+
+def check_translation(source: str, translated: str, names: set[str] | frozenset[str] = frozenset(),
+                      lang: str | None = None) -> str | None:
+    """Why this translation of a checked English text is rejected, or None when it passes.
+
+    1. the same numbers: every number of the source is in the translation, and no new one comes in.
+       0,41 and 0.41 are the same number; number words count (English in the source, the target language's
+       in the translation). A 1 that the source only has as a word ("one") may go: it is an article in
+       Dutch, Spanish and French. An ordinal of the source ("first half") may come back as a digit (1re).
+    2. the same names: every name of `names` (players, clubs) in the source is in the translation (a
+       genitive s is fine), and no capitalised word comes in that is not in the source;
+    3. a sane length: at most about twice the source.
+    The text is the Translator's; the code checks it, as with every other agent."""
+    if not translated.strip():
+        return "Empty translation"
+    required = {round(n, 2) for n in numbers_in(source)}
+    optional = {float(v) for w, v in _ORDINALS.items() if re.search(rf"\b{w}\b", source, re.I)}
+    optional |= {n for rx, n in _IMPLIED if rx.search(source)}
+    if 1.0 in required and 1.0 not in _digits(source):
+        required.discard(1.0)
+        optional.add(1.0)
+    out, both = _translated_numbers(translated, lang)
+    lost, new = required - out - both, out - required - optional
+    if lost or new:
+        show = lambda xs: ", ".join(f"{n:g}" for n in sorted(xs))  # noqa: E731
+        parts = ([f"new number(s) {show(new)}"] if new else []) + ([f"missing {show(lost)}"] if lost else [])
+        return f"Numbers differ from the English source: {'; '.join(parts)}"
+    # In the translation a name may get a genitive s (Brouwers) or start a compound (Kingsbridge-aanvallen).
+    missing = [n for n in sorted(names, key=len, reverse=True)
+               if re.search(rf"(?<![\w-]){re.escape(n)}(?![\w-])", source)
+               and not re.search(rf"(?<![\w-]){re.escape(n)}(?:[’']?s)?(?!\w)", translated)]
+    if missing:
+        return f"Name(s) missing from the translation: {', '.join(missing)}"
+    # Only the source: a player of the squad who is not in the checked English text is a new name too.
+    extra = _new_names(translated, {w.lower() for w in re.findall(r"[\w\-]+", source)})
+    if extra:
+        return f"Name(s) not in the English source: {', '.join(extra)}"
+    if len(translated) > MAX_LENGTH_RATIO * len(source) + _LENGTH_SLACK:
+        return f"Translation too long: {len(translated)} characters for {len(source)}"
+    return None
