@@ -3,24 +3,31 @@
 Endpoints and SSE messages follow frontend/README.md; the frontend switches from its
 mock to this backend with NEXT_PUBLIC_API_URL=http://localhost:8000.
 """
-import asyncio
-import json
-import os
-from contextlib import asynccontextmanager
+import logging
 
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.middleware.cors import CORSMiddleware
-from sse_starlette.sse import EventSourceResponse
+from app.envfiles import load_env_files
 
-from app.agents.llm import model_from_env
-from app.bus import EventBus
-from app.commentary_lane import CommentaryLane
-from app.contracts import LoadRequest, SeekRequest, SpeedRequest
-from app.fixture import MATCH_ID, SCOUTING_REPORT, SUMMARY, GeneratorSource
-from app.scout_lane import ScoutLane, tactics_enabled
-from app.simulator import Simulator
-from app.smart_lane import SmartLane
-from app.translation_lane import TranslationLane
+# Before the other app imports: some of them read their settings at import time (deadlines, languages).
+_from_files = load_env_files()
+
+import asyncio  # noqa: E402
+import json  # noqa: E402
+import os  # noqa: E402
+from contextlib import asynccontextmanager  # noqa: E402
+
+from fastapi import FastAPI, HTTPException, Request  # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+from sse_starlette.sse import EventSourceResponse  # noqa: E402
+
+from app.agents.llm import model_from_env  # noqa: E402
+from app.bus import EventBus  # noqa: E402
+from app.commentary_lane import CommentaryLane  # noqa: E402
+from app.contracts import LoadRequest, SeekRequest, SpeedRequest  # noqa: E402
+from app.fixture import MATCH_ID, SCOUTING_REPORT, SUMMARY, GeneratorSource  # noqa: E402
+from app.scout_lane import ScoutLane, tactics_enabled  # noqa: E402
+from app.simulator import Simulator  # noqa: E402
+from app.smart_lane import SmartLane  # noqa: E402
+from app.translation_lane import TranslationLane  # noqa: E402
 
 CORS_ORIGINS = os.environ.get("ITG_CORS_ORIGINS", "http://localhost:3000").split(",")
 
@@ -36,6 +43,11 @@ simulator = Simulator(bus, {MATCH_ID: GeneratorSource}, smart_lane, scout_lane, 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Which settings this process runs with, so a missing flag shows at start-up (names only, never values).
+    log = logging.getLogger("uvicorn.error")
+    log.info("Settings from backend/.env files: %s", ", ".join(_from_files) or "none")
+    log.info("Model %s · tactics %s · languages %s", smart_lane.model.name, "on" if scout_lane else "off",
+             ",".join(translation_lane.langs) or "off")
     await smart_lane.warmup()
     task = asyncio.create_task(simulator.run())
     yield
